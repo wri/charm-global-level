@@ -200,16 +200,8 @@ def plot_36countries():
 
 
 def run_model():
-    # datafile = './CHARM input Nancy Data v1 w substitution.xlsx'
-    # outfile = './CHARM output v1.csv'
 
-    # datafile = './CHARM input Nancy Data v2.xlsx'
-    # outfile = './CHARM output v2.csv'
-
-    # datafile = './CHARM input Nancy Data v2 w substitution GR cap.xlsx'
-    # outfile = './CHARM output v2 GR cap.csv'
-
-    datafile = './CHARM input USA sensitivity Dec 22.xlsx'
+    datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)

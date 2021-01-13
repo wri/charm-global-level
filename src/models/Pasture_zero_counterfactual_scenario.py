@@ -115,7 +115,10 @@ class CarbonTracker:
 
             # ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_plantation
+                if year < 22:
+                    self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_young_plantation
+                else:
+                    self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_old_plantation
                 self.belowground_biomass_live_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year] * self.Global.ratio_root_shoot
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength

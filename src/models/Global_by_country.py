@@ -60,7 +60,7 @@ class Parameters:
 
     def setup_biophysical_parameters(self):
         # Growth rates, C density
-        self.GR_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0]
+        self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0]
         self.GR_old_plantation = self.input_country['Old Plantation GR (MgC/ha/year) (Harris)'].values[0]
         self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]
         self.GR_old_secondary = self.input_country['Old Secondary GR (MgC/ha/year) (Harris)'].values[0]

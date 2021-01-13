@@ -117,7 +117,7 @@ class CarbonTracker:
             for year in range(st_cycle, ed_cycle):
                 # FIXME changing growth rate
                 if year < 22:
-                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_plantation
+                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_old_plantation
 
