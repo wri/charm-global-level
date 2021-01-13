@@ -14,13 +14,14 @@ import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenari
 
 ################################################### TESTING ####################################################
 
+root = '../../'
 
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'USA7'
+    iso = 'BRA'
     # datafile = './CHARM input Nancy Data v2 w substitution GR cap.xlsx'
-    datafile = './CHARM input USA sensitivity Dec 22.xlsx'
+    datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # Pasture_zero_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Pasture_with_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
@@ -37,8 +38,7 @@ def test_carbon_tracker():
 def test_land_area_calculator():
     "TEST land area calculator"
     iso = 'BRA'
-    # datafile = './CHARM input Nancy Data v2.xlsx'
-    datafile = './CHARM input Nancy Data v2 w substitution.xlsx'
+    datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings)
