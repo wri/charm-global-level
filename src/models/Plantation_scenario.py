@@ -103,7 +103,7 @@ class CarbonTracker:
             for year in range(st_cycle, ed_cycle):
                 # FIXME this is to set up two plantation growth rate, test, not finally in the parameters file
                 if year < 22:
-                    aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_plantation
+                    aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_old_plantation
             # plt.plot(aboveground_biomass_plantation_pilot.T)
