@@ -8,7 +8,6 @@ Plantation scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual starting from zero and grow back
 3. Harvest with potential thinnings
-
 """
 
 import numpy as np
@@ -101,14 +100,11 @@ class CarbonTracker:
             aboveground_biomass_plantation_pilot[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - harvest_percentage_plantation[year_harvest_thinning])
             ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                # FIXME this is to set up two plantation growth rate, test, not finally in the parameters file
                 if year < 22:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_old_plantation
-            # plt.plot(aboveground_biomass_plantation_pilot.T)
-            # plt.show()
-            # exit()
+
         return aboveground_biomass_plantation_pilot[ncycles_first-1, year_index_both_plantation_hypothetical[1]-1]
 
 
@@ -240,46 +236,7 @@ class CarbonTracker:
         # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
-    def plot_C_pools_counterfactual(self):
-
-        plt.plot(self.totalC_stand_pool[1:], label='stand')
-        plt.plot(self.totalC_product_pool[1:], label='product')
-        # plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
-        # plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
-        # plt.plot(self.totalC_product_VSLP_pool[1:], label='VSLP')
-
-        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
-        plt.plot(self.totalC_slash_pool[1:], label='slash')
-        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[1:], label='substitution')
-        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[1:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
-
-        return
-
 ######################## STEP 5: Present discounted value ##############################
-
-    def calculate_PDV_old(self):
-        # Gap between current scenario and baseline
-        benefit_minus_counterfactual = self.total_carbon_benefit[1:] - self.counterfactual_biomass[1:]
-        # Keep the initial benefit, and calculate the first-difference in the gap
-        benefit_minus_counterfactual = np.insert(benefit_minus_counterfactual, 0, 0)
-        self.benefit_minus_counterfactual_diff = np.diff(benefit_minus_counterfactual)
-
-        discounted_year = np.zeros((self.Global.nyears))
-        for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
-            st_cycle = cycle * self.Global.rotation_length_harvest + 1
-            ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
-
-            for year in range(st_cycle, ed_cycle):
-                discounted_year[year] = year - st_cycle + 1
-
-        self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (1 + self.Global.discount_rate) ** discounted_year
-
-        print("year_start_for_PDV:", self.year_start_for_PDV)
-        # print("", annual_discounted_value[:(self.Global.nyears - year_start_for_PDV)])
 
     def calculate_PDV(self):
         # Gap between current scenario and baseline
@@ -308,16 +265,6 @@ class CarbonTracker:
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
 
-
-    def plot_PDV(self):
-        present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
-        print('PDV (tC): ', present_discounted_carbon_fullperiod)
-        plt.plot(self.total_carbon_benefit, label='Total carbon benefit')
-        plt.plot(self.counterfactual_biomass, label='Counterfactual')
-        plt.plot(self.benefit_minus_counterfactual_diff, label='Net gain year-to-year changes')
-        plt.plot(self.annual_discounted_value, label='Annual discounted carbon')
-        plt.legend(fontsize=20); plt.show(); exit()
-        return
 
     def plot_C_pools_counterfactual_print_PDV(self):
 
