@@ -274,7 +274,7 @@ class CarbonTracker:
     def plot_C_pools_counterfactual_print_PDV(self):
 
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
-        print('PDV (tC): ', present_discounted_carbon_fullperiod)
+        print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
         plt.plot(self.totalC_stand_pool[1:], label='stand')
         plt.plot(self.totalC_product_pool[1:], label='product')

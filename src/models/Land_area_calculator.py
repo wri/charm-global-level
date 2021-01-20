@@ -25,8 +25,7 @@ class LandCalculator:
     def __init__(self, Global, plantation_counterfactual_code=None):
         # set up the country profile
         self.Global = Global
-        # calculate output per ha
-        # output per ha for plantation
+        ## Choose plantation scenario
         if plantation_counterfactual_code == 'secondary_historic':
             self.plantation_counterfactual_scenario = Plantation_counterfactual_secondary_historic_scenario
         elif plantation_counterfactual_code == 'secondary_plantation_age':
@@ -35,6 +34,9 @@ class LandCalculator:
             self.plantation_counterfactual_scenario = Plantation_counterfactual_unharvested_scenario
         else:  # The previous version
             self.plantation_counterfactual_scenario = Plantation_scenario
+
+        # calculate output per ha
+        # output per ha for plantation
         self.output_ha_plantation = self.calculate_output_ha(self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=0), self.Global.slash_percentage_plantation)
 
         # output per ha for secondary
@@ -312,6 +314,7 @@ class LandCalculator:
             np.zeros((self.Global.nyears, self.Global.nyears)) for _ in range(3)]
         # Get PDV values for the large matrix nyears x nyears
         for year in range(self.Global.nyears):
+            # Update the PDV per ha
             annual_discounted_value_nyears_plantation[year:, year] = self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
             annual_discounted_value_nyears_secondary_conversion[year:, year] = Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
             annual_discounted_value_nyears_secondary_regrowth[year:, year] = Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
