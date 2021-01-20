@@ -17,15 +17,27 @@ Produce the area required from plantation, secondary forest by year
 import numpy as np
 import pandas as pd
 import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario
+import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
 
 class LandCalculator:
 
-    def __init__(self, Global):
+    def __init__(self, Global, plantation_counterfactual_code=None):
         # set up the country profile
         self.Global = Global
         # calculate output per ha
-        self.output_ha_plantation = self.calculate_output_ha(Plantation_scenario.CarbonTracker(self.Global, year_start_for_PDV=0), self.Global.slash_percentage_plantation)
+        # output per ha for plantation
+        if plantation_counterfactual_code == 'secondary_historic':
+            self.plantation_counterfactual_scenario = Plantation_counterfactual_secondary_historic_scenario
+        elif plantation_counterfactual_code == 'secondary_plantation_age':
+            self.plantation_counterfactual_scenario = Plantation_counterfactual_secondary_plantation_age_scenario
+        elif plantation_counterfactual_code == 'unharvested':
+            self.plantation_counterfactual_scenario = Plantation_counterfactual_unharvested_scenario
+        else:  # The previous version
+            self.plantation_counterfactual_scenario = Plantation_scenario
+        self.output_ha_plantation = self.calculate_output_ha(self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=0), self.Global.slash_percentage_plantation)
+
+        # output per ha for secondary
         self.output_ha_secondary_conversion = self.calculate_output_ha(Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
             self.Global.slash_percentage_secondary_conversion)
         self.output_ha_secondary_regrowth = self.calculate_output_ha(Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
@@ -163,7 +175,7 @@ class LandCalculator:
 
             # Get the output per ha
             output_ha_plantation_thinning = self.calculate_output_ha_thinning(
-                Plantation_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
+                self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
                 self.Global.slash_percentage_plantation)
 
             for current_cycle in range(0, ncycles_thinning):
@@ -300,7 +312,7 @@ class LandCalculator:
             np.zeros((self.Global.nyears, self.Global.nyears)) for _ in range(3)]
         # Get PDV values for the large matrix nyears x nyears
         for year in range(self.Global.nyears):
-            annual_discounted_value_nyears_plantation[year:, year] = Plantation_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
+            annual_discounted_value_nyears_plantation[year:, year] = self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
             annual_discounted_value_nyears_secondary_conversion[year:, year] = Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
             annual_discounted_value_nyears_secondary_regrowth[year:, year] = Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:(self.Global.nyears - year)]
         # Sum up the yearly values

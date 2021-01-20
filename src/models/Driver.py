@@ -9,7 +9,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import Global_by_country, Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Land_area_calculator
-import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenario
+# import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenario
+import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
 
 ################################################### TESTING ####################################################
@@ -37,11 +38,15 @@ def test_carbon_tracker():
 
 def test_land_area_calculator():
     "TEST land area calculator"
-    iso = 'BRA'
+    iso = 'USA'
     datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
-    LAC = Land_area_calculator.LandCalculator(global_settings)
+    LAC = Land_area_calculator.LandCalculator(global_settings) #, plantation_counterfactual_code='')
+    # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
+    # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
+    # print("Area conversion", sum(LAC.area_harvested_new_secondary_conversion))
+    # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth))
 
     return
 # test_land_area_calculator()
@@ -268,4 +273,122 @@ def run_model():
 
     return
 
-run_model()
+# run_model()
+
+
+def run_model_new_plantation_scenarios():
+    datafile = '{}/data/processed/CHARM input v3 - new plantation scenarios.xlsx'.format(root)
+
+    scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+    input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+
+    scenarionames, codes = [], []
+    pdv_per_ha_conversion, pdv_per_ha_regrowth = [], []
+    area_conversion_legacy, area_regrowth_legacy = [], []
+    pdv_per_ha_plantation_legacy, pdv_conversion_legacy, pdv_regrowth_legacy = [], [], []
+    pdv_per_ha_plantation_secondary_historic, pdv_conversion_secondary_historic, pdv_regrowth_secondary_historic = [], [], []
+    pdv_per_ha_plantation_secondary_plantation_age, pdv_conversion_secondary_plantation_age, pdv_regrowth_secondary_plantation_age = [], [], []
+    pdv_per_ha_plantation_unharvested, pdv_conversion_unharvested, pdv_regrowth_unharvested = [], [], []
+
+    for scenario, code in zip(scenarios['Country'], scenarios['ISO']):
+        # Test if the parameters are set up for this scenario, if there is one missing, will not do any calculation
+        input_scenario = input_data.loc[input_data['Country'] == scenario]
+        input_scenario = input_scenario.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
+        if input_scenario.isnull().values.any():
+            print("Please fill in the abbreviation and all the missing parameters for scenario '{}'!".format(scenario))
+        else:
+            # read in global parameters
+            global_settings = Global_by_country.Parameters(datafile, country_iso=code)
+            # run different policy scenarios
+            # FIXME select one final plantation scenario
+            result_plantation_legacy = Plantation_scenario.CarbonTracker(global_settings)
+            # FIXME New plantation scenarios
+            result_plantation_secondary_historic = Plantation_counterfactual_secondary_historic_scenario.CarbonTracker(
+                global_settings)
+            result_plantation_secondary_plantation_age = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(
+                global_settings)
+            result_plantation_unharvested = Plantation_counterfactual_unharvested_scenario.CarbonTracker(
+                global_settings)
+
+            result_secondary_conversion = Secondary_conversion_scenario.CarbonTracker(global_settings)
+            result_secondary_regrowth = Secondary_regrowth_scenario.CarbonTracker(global_settings)
+
+            # run the land area calculator
+            # new plantation scenarios
+            LAC_legacy = Land_area_calculator.LandCalculator(global_settings)
+            LAC_secondary_historic = Land_area_calculator.LandCalculator(global_settings,plantation_counterfactual_code='secondary_historic')
+            LAC_secondary_plantation_age = Land_area_calculator.LandCalculator(global_settings,                                  plantation_counterfactual_code='secondary_plantation_age')
+            LAC_unharvested = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='unharvested')
+
+            # Prepare output
+            scenarionames.append(scenario)
+            codes.append(code)
+
+            pdv_per_ha_conversion.append(np.sum(result_secondary_conversion.annual_discounted_value))
+            pdv_per_ha_regrowth.append(np.sum(result_secondary_regrowth.annual_discounted_value))
+
+            # Plantation scenarios
+            pdv_per_ha_plantation_legacy.append(np.sum(result_plantation_legacy.annual_discounted_value))
+            pdv_conversion_legacy.append(LAC_legacy.total_pdv_plantation_secondary_conversion)
+            pdv_regrowth_legacy.append(LAC_legacy.total_pdv_plantation_secondary_regrowth)
+            area_conversion_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_conversion))
+            area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth))
+
+            pdv_per_ha_plantation_secondary_historic.append(np.sum(result_plantation_secondary_historic.annual_discounted_value))
+            pdv_conversion_secondary_historic.append(LAC_secondary_historic.total_pdv_plantation_secondary_conversion)
+            pdv_regrowth_secondary_historic.append(LAC_secondary_historic.total_pdv_plantation_secondary_regrowth)
+
+            pdv_per_ha_plantation_secondary_plantation_age.append(np.sum(result_plantation_secondary_plantation_age.annual_discounted_value))
+            pdv_conversion_secondary_plantation_age.append(LAC_secondary_plantation_age.total_pdv_plantation_secondary_conversion)
+            pdv_regrowth_secondary_plantation_age.append(LAC_secondary_plantation_age.total_pdv_plantation_secondary_regrowth)
+
+            pdv_per_ha_plantation_unharvested.append(np.sum(result_plantation_unharvested.annual_discounted_value))
+            pdv_conversion_unharvested.append(LAC_unharvested.total_pdv_plantation_secondary_conversion)
+            pdv_regrowth_unharvested.append(LAC_unharvested.total_pdv_plantation_secondary_regrowth)
+
+
+    # Save to the output
+    dataframe = pd.DataFrame({'Country': scenarionames,
+                              'ISO': codes,
+
+                              'Secondary area conversion (ha)': area_conversion_legacy,
+                              'Secondary area regrowth (ha)': area_regrowth_legacy,
+
+                              'PDV Secondary forest conversion (tC/ha)': pdv_per_ha_conversion,
+                              'PDV Secondary regrowth conversion (tC/ha)': pdv_per_ha_regrowth,
+                              'PDV Plantation old (tC/ha)': pdv_per_ha_plantation_legacy,
+                              'PDV Plantation secondary_historic (tC/ha)': pdv_per_ha_plantation_secondary_historic,
+                              'PDV Plantation secondary_plantation_age (tC/ha)': pdv_per_ha_plantation_secondary_plantation_age,
+                              'PDV Plantation unharvested (tC/ha)': pdv_per_ha_plantation_unharvested,
+
+                              'PDV secondary conversion plantation old (tC)': pdv_conversion_legacy,
+                              'PDV secondary conversion plantation secondary_historic (tC)': pdv_conversion_secondary_historic,
+                              'PDV secondary conversion plantation secondary_plantation_age (tC)': pdv_conversion_secondary_plantation_age,
+                              'PDV secondary conversion plantation unharvested (tC)': pdv_conversion_unharvested,
+
+                              'PDV secondary regrowth plantation old (tC)': pdv_regrowth_legacy,
+                              'PDV secondary regrowth plantation secondary_historic (tC)': pdv_regrowth_secondary_historic,
+                              'PDV secondary regrowth plantation scenario (tC)': pdv_regrowth_secondary_plantation_age,
+                              'PDV secondary regrowth plantation unharvested (tC)': pdv_regrowth_unharvested,
+
+                              })
+
+    def write_excel(filename, sheetname, dataframe):
+        "This function will overwrite the Outputs sheet"
+        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
+            workbook = writer.book
+            try:
+                workbook.remove(workbook[sheetname])
+                print("Updating Outputs sheet...")
+            except:
+                print("Creating Outputs sheet...")
+            finally:
+                dataframe.to_excel(writer, sheet_name=sheetname, index=False)
+                writer.save()
+
+    write_excel(datafile, 'Outputs', dataframe)
+
+    return
+
+
+run_model_new_plantation_scenarios()

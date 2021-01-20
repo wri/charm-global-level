@@ -225,7 +225,6 @@ class CarbonTracker:
         """
         ### Steady growth no-harvest
         # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
-
         # Grows at the old secondary rate
         for year in range(2, self.Global.arraylength):
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
