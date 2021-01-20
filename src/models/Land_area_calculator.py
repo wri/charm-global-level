@@ -25,7 +25,7 @@ class LandCalculator:
     def __init__(self, Global, plantation_counterfactual_code=None):
         # set up the country profile
         self.Global = Global
-        ## Choose plantation scenario
+        ## Choose plantation scenario. This only change the PDV per ha, will not change output per ha and area calculation
         if plantation_counterfactual_code == 'secondary_historic':
             self.plantation_counterfactual_scenario = Plantation_counterfactual_secondary_historic_scenario
         elif plantation_counterfactual_code == 'secondary_plantation_age':
