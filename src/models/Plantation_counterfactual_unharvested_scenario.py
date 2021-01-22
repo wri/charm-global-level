@@ -31,7 +31,7 @@ class CarbonTracker:
 
         ##### Initialize carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 1.50
+        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -225,13 +225,13 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
+        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
 
         # Grows at the old plantation growth rate
         for year in range(2, self.Global.arraylength):
             self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_plantation
         self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
-        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+        self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
 ######################## STEP 5: Present discounted value ##############################

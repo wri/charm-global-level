@@ -33,7 +33,7 @@ class CarbonTracker:
 
         ##### Initialize carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 1.50
+        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP

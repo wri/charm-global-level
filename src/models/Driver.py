@@ -153,7 +153,6 @@ def run_model_new_plantation_scenarios():
             # read in global parameters
             global_settings = Global_by_country.Parameters(datafile, country_iso=code)
             # run different policy scenarios
-            # FIXME select one final plantation scenario
             result_plantation_legacy = Plantation_scenario.CarbonTracker(global_settings)
             # FIXME New plantation scenarios
             result_plantation_secondary_historic = Plantation_counterfactual_secondary_historic_scenario.CarbonTracker(
