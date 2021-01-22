@@ -128,7 +128,8 @@ def run_model_legacy():
 
 
 def run_model_new_plantation_scenarios():
-    datafile = '{}/data/processed/CHARM input v3 - new plantation scenarios.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - constant demand.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
@@ -187,8 +188,8 @@ def run_model_new_plantation_scenarios():
             area_conversion_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_conversion))
             area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth))
 
-            secondary_wood.append(sum(LAC_legacy.output_need_secondary))
-            plantation_wood.append(sum(LAC_legacy.product_total_carbon) - sum(LAC_legacy.output_need_secondary))
+            secondary_wood.append(sum(LAC_legacy.output_need_secondary)/1000000)
+            plantation_wood.append(sum(LAC_legacy.product_total_carbon)/1000000 - sum(LAC_legacy.output_need_secondary)/1000000)
 
             pdv_per_ha_plantation_secondary_historic.append(np.sum(result_plantation_secondary_historic.annual_discounted_value))
             pdv_conversion_secondary_historic.append(LAC_secondary_historic.total_pdv_plantation_secondary_conversion)
@@ -210,25 +211,25 @@ def run_model_new_plantation_scenarios():
                               'Secondary area conversion (ha)': area_conversion_legacy,
                               'Secondary area regrowth (ha)': area_regrowth_legacy,
 
-                              'Plantation supply wood (tC)': plantation_wood,
-                              'Secondary supply wood (tC)': secondary_wood,
+                              'Plantation supply wood (mega tC)': plantation_wood,
+                              'Secondary supply wood (mega tC)': secondary_wood,
 
                               'PDV per ha Secondary conversion (tC/ha)': pdv_per_ha_conversion,
                               'PDV per ha Secondary regrowth (tC/ha)': pdv_per_ha_regrowth,
                               'PDV per ha Plantation old version (tC/ha)': pdv_per_ha_plantation_legacy,
                               'PDV per ha Plantation secondary historic (tC/ha)': pdv_per_ha_plantation_secondary_historic,
-                              'PDV per ha Plantation secondary at plantation age (tC/ha)': pdv_per_ha_plantation_secondary_plantation_age,
+                              'PDV per ha Plantation secondary plantation age (tC/ha)': pdv_per_ha_plantation_secondary_plantation_age,
                               'PDV per ha Plantation unharvested (tC/ha)': pdv_per_ha_plantation_unharvested,
 
-                              'Total PDV conversion plantation old version (tC)': pdv_conversion_legacy,
-                              'Total PDV conversion plantation secondary_historic (tC)': pdv_conversion_secondary_historic,
-                              'Total PDV conversion plantation secondary_plantation_age (tC)': pdv_conversion_secondary_plantation_age,
-                              'Total PDV conversion plantation unharvested (tC)': pdv_conversion_unharvested,
+                              'Total PDV conversion plantation old version (mega tC)': pdv_conversion_legacy,
+                              'Total PDV conversion plantation secondary historic (mega tC)': pdv_conversion_secondary_historic,
+                              'Total PDV conversion plantation secondary plantation age (mega tC)': pdv_conversion_secondary_plantation_age,
+                              'Total PDV conversion plantation unharvested (mega tC)': pdv_conversion_unharvested,
 
-                              'Total PDV regrowth plantation old (tC)': pdv_regrowth_legacy,
-                              'Total PDV regrowth plantation secondary_historic (tC)': pdv_regrowth_secondary_historic,
-                              'Total PDV regrowth plantation scenario (tC)': pdv_regrowth_secondary_plantation_age,
-                              'Total PDV regrowth plantation unharvested (tC)': pdv_regrowth_unharvested,
+                              'Total PDV regrowth plantation old version (mega tC)': pdv_regrowth_legacy,
+                              'Total PDV regrowth plantation secondary historic (mega tC)': pdv_regrowth_secondary_historic,
+                              'Total PDV regrowth plantation secondary plantation age (mega tC)': pdv_regrowth_secondary_plantation_age,
+                              'Total PDV regrowth plantation unharvested (mega tC)': pdv_regrowth_unharvested,
 
                               })
 
