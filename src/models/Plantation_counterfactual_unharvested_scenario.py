@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Projec
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 """
-Plantation counterfactual secondary historic scenario
+Plantation counterfactual unharvested scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual is the plantation growth rate * the rotation period, and it continues growing at the plantation growth rate
 3. Harvest with potential thinnings

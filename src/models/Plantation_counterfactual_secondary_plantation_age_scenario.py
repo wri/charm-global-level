@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Projec
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 """
-Plantation counterfactual secondary historic scenario
+Plantation counterfactual secondary at the age of plantation scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual:
 i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * rotation period.
