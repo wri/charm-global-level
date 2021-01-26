@@ -6,7 +6,7 @@ __email__ = "liqing.peng@wri.org"
 """
 Secondary forest regrowth scenario
 1. Aboveground biomass before the first harvest is the average C density of secondary forest
-2. Counterfactual starting from the old growth forest
+2. Counterfactual starting from (20*young secondary GR)+(20*old secondary GR)
 3. Only has the first harvest 
 """
 
