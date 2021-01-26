@@ -38,8 +38,8 @@ def test_carbon_tracker():
 
 def test_land_area_calculator():
     "TEST land area calculator"
-    iso = 'USA'
-    datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
+    iso = 'BRA'
+    datafile = '{}/data/processed/CHARM regional - BAU - Jan 25.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings) #, plantation_counterfactual_code='')
@@ -128,15 +128,15 @@ def run_model_legacy():
 
 
 def run_model_new_plantation_scenarios():
-    # datafile = '{}/data/processed/CHARM regional - BAU.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - constant demand.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU - Jan 25.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - constant demand - Jan 25.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
 
     scenarionames, codes = [], []
     pdv_per_ha_conversion, pdv_per_ha_regrowth = [], []
-    area_conversion_legacy, area_regrowth_legacy = [], []
+    area_conversion_legacy, area_regrowth_legacy, area_plantation = [], [], []
     secondary_wood, plantation_wood = [], []
     pdv_per_ha_plantation_legacy, pdv_conversion_legacy, pdv_regrowth_legacy = [], [], []
     pdv_per_ha_plantation_secondary_historic, pdv_conversion_secondary_historic, pdv_regrowth_secondary_historic = [], [], []
@@ -186,6 +186,7 @@ def run_model_new_plantation_scenarios():
 
             area_conversion_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_conversion))
             area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth))
+            area_plantation.append(sum(LAC_legacy.area_harvested_new_plantation))
 
             secondary_wood.append(sum(LAC_legacy.output_need_secondary)/1000000)
             plantation_wood.append(sum(LAC_legacy.product_total_carbon)/1000000 - sum(LAC_legacy.output_need_secondary)/1000000)
@@ -209,6 +210,7 @@ def run_model_new_plantation_scenarios():
 
                               'Secondary area conversion (ha)': area_conversion_legacy,
                               'Secondary area regrowth (ha)': area_regrowth_legacy,
+                              'Plantation area (ha)': area_plantation,
 
                               'Plantation supply wood (mega tC)': plantation_wood,
                               'Secondary supply wood (mega tC)': secondary_wood,

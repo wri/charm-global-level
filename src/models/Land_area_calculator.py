@@ -16,6 +16,7 @@ Produce the area required from plantation, secondary forest by year
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
@@ -144,8 +145,7 @@ class LandCalculator:
         # Check if the demand in Year is greater than or less than the maximum plantation output
         # If it’s greater than max output, plantation hectares harvested is equal to the maximum
         # If it’s less than the maximum output, hectares harvested = total wood products / output per hectare
-        self.area_harvested_plantation[
-            self.product_total_carbon > total_output_plantation_maximum] = area_harvested_plantation_maximum
+        self.area_harvested_plantation[ self.product_total_carbon > total_output_plantation_maximum] = area_harvested_plantation_maximum
 
         "Step 3. Calculate residue wood supply that deduct from the plantation harvest output"
         self.output_need_secondary = self.product_total_carbon - total_output_plantation_maximum
@@ -329,23 +329,27 @@ class LandCalculator:
         total_pdv_secondary_regrowth = self.area_harvested_new_secondary_regrowth * pdv_yearly_secondary_regrowth
 
         total_pdv_plantation = np.zeros((self.Global.nyears))
+        self.area_harvested_new_plantation = np.zeros((self.Global.nyears))
 
         if self.Global.rotation_length_harvest < self.Global.nyears:
             # From year 0 until the next harvest, the total PDV is equal to the number of plantation hectares harvested multiplied by the PDV of harvesting one hectare in year x.
             for year in range(0, self.Global.rotation_length_harvest):
                 total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
             # Beyond the next harvest, the total PDV is equal to
             # (#plantation hectares harvested(x) - # plantation hectares harvested (x – harvest rotation)) * PDV of harvesting one hectare in year x.
             # We have to do this extra step to avoid double counting.
             # There are some cases where a country might be able to supply all of its wood from plantations only, so we have to separate out the re-harvests from the new harvests.
             for year in range(self.Global.rotation_length_harvest, self.Global.nyears):
                 total_pdv_plantation[year] = (self.area_harvested_plantation[year] - self.area_harvested_plantation[year - self.Global.rotation_length_harvest]) * pdv_yearly_plantation[year]
+                self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year] - self.area_harvested_plantation[year - self.Global.rotation_length_harvest]
 
         else:
             for year in range(0, self.Global.nyears):
                 total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
 
-        # plt.plot(area_harvested_plantation)
+        # plt.plot(self.area_harvested_new_plantation)
         # plt.plot(total_pdv_plantation)
         # plt.show()
         # exit()
