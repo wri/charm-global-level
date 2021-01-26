@@ -7,9 +7,8 @@ __email__ = "liqing.peng@wri.org"
 Plantation counterfactual secondary at the age of plantation scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual:
-i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * rotation period.
-ii.	If rotation period is GREATER THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * 20+ old secondary growth rate * (rotation period – 20)
-both would continue to grow at the old secondary growth rate
+i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate, continue to grow at young secondary GR until 20 years, and then grow at old secondary GR.
+ii.	If rotation period is GREATER THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * 20+ old secondary growth rate * (rotation period – 20), continue to grow at the old secondary growth rate
 
 3. Harvest with potential thinnings
 """
@@ -234,7 +233,7 @@ class CarbonTracker:
         ### Steady growth no-harvest
         self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
 
-        # Grows at the old secondary rate
+        # Grows at the secondary rates depending on the rotation length
         if self.Global.rotation_length_harvest < 20:
             for year in range(2, 22 - self.Global.rotation_length_harvest):
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
