@@ -125,7 +125,12 @@ def run_model_legacy():
 
 def run_model_new_plantation_scenarios():
     # datafile = '{}/data/processed/CHARM regional - BAU - Jan 25.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - constant demand - Jan 25.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand - Jan 25.xlsx'.format(root)
+
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - Jan 26.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - Jan 26.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - Jan 26.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
