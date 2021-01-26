@@ -235,7 +235,13 @@ class CarbonTracker:
         self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
 
         # Grows at the old secondary rate
-        for year in range(2, self.Global.arraylength):
+        if self.Global.rotation_length_harvest < 20:
+            for year in range(2, 22 - self.Global.rotation_length_harvest):
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
+            for year in range(22 - self.Global.rotation_length_harvest, self.Global.arraylength):
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
+        else:
+            for year in range(2, self.Global.arraylength):
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
         self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
         self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum

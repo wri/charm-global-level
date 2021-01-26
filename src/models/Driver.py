@@ -20,16 +20,12 @@ def test_carbon_tracker():
     # set up the country
     iso = 'BRA'
     # datafile = './CHARM input Nancy Data v2 w substitution GR cap.xlsx'
-    datafile = '{}/data/processed/CHARM input v3.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU - Jan 26.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
-    # Pasture_zero_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Pasture_with_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-
+    # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual()
+    Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
     return
 

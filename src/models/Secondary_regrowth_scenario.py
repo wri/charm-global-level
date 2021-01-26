@@ -64,8 +64,10 @@ class CarbonTracker:
         self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
         self.belowground_biomass_live_secondary[0, 0] = self.aboveground_biomass_secondary[0, 0] * self.Global.ratio_root_shoot
         # set to the Nancy's average carbon density
-        self.counterfactual_biomass[0] = self.aboveground_biomass_secondary[0, 0]
-        self.counterfactual_biomass[1] = self.aboveground_biomass_secondary[0, 0]
+        # self.counterfactual_biomass[0] = self.aboveground_biomass_secondary[0, 0]
+        # self.counterfactual_biomass[1] = self.aboveground_biomass_secondary[0, 0]
+        # 2021/01/26 change the initial to (20*young secondary GR)+(20*old secondary GR)
+        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * 20
 
     def carbon_pool_simulator_per_cycle(self):
         ######################## STEP 2: Carbon tracker ##############################
