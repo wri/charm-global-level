@@ -182,9 +182,13 @@ class Parameters:
             # if harvest happened within N years time period
             if len(self.year_index_harvest_plantation) > 1:
                 year_index_thinning_plantation = []
-                for cycle_harvest in range(len(self.year_index_harvest_plantation)-1):
-                    year_index_thinning_plantation.append(np.arange(self.year_index_harvest_plantation[cycle_harvest], self.year_index_harvest_plantation[cycle_harvest+1], self.rotation_length_thinning, dtype=int))
-                self.year_index_thinning_plantation = np.array(year_index_thinning_plantation).flatten().tolist()
+                # include the end year to fix the issue that the thinning does not occur in the second rotation period
+                year_index_harvest_end_year = self.year_index_harvest_plantation.tolist().copy()
+                year_index_harvest_end_year.append(self.nyears)
+                for cycle_harvest in range(len(year_index_harvest_end_year)-1):
+                    year_index_thinning_in_cycle = np.arange(year_index_harvest_end_year[cycle_harvest], year_index_harvest_end_year[cycle_harvest + 1], self.rotation_length_thinning, dtype=int)
+                    year_index_thinning_plantation.append(year_index_thinning_in_cycle.tolist())
+                self.year_index_thinning_plantation = [item for sublist in year_index_thinning_plantation for item in sublist]
             # if no second harvest in the time frame
             else:
                 self.year_index_thinning_plantation = np.arange(self.year_index_harvest_plantation[0], self.arraylength, self.rotation_length_thinning, dtype=int).tolist()
