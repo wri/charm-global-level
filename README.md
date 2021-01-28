@@ -4,18 +4,22 @@ CHarM (Carbon Harvest Model) is a timber carbon tracker model developed by the W
 
 ## Download
 
-Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **CHARM_STAND**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
+Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-regional-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
 
-- Driver_stand.py
-- Global_stand.py
-- Plantation.py
-- Secondary_conversion.py
-- Secondary_regrowth.py
-- Pasture_zero_counterfactual.py
-- Pasture_with_counterfactual.py
-- CHarM.xlsx
 - requirements.txt
 - README.md
+
+./src/models/
+- Driver.py
+- Global_by_country.py
+- Plantation_counterfactual_secondary_plantation_age_scenario.py
+- Secondary_conversion_scenario.py
+- Secondary_regrowth_scnenario.py
+- Land_area_calculator.py
+
+./data/processed/
+- CHARM.xlsx
+
 
 ## Installation
 
@@ -54,38 +58,40 @@ Download and prepare the scripts and data files in your computer. Create a new m
     In the command prompt/Powershell (Windows) or Terminal (OSX/Linux), use **cd** to change directory to the model folder location. Use **pip** to install required python packages.
 
     ```powershell
-    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\CHARM_STAND\
-    C:\Users\USERNAME\Documents\CHARM_STAND>pip install -r requirements.txt
+    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\charm-regional-level\
+    C:\Users\USERNAME\Documents\charm-regional-level>pip install -r requirements.txt
     ```
 
 ## Usage
 
-1. Edit the input parameters
+1. Review or edit the input parameters
 
-    Open the **CHarM.xlsx** and click on *Inputs* tab. Define scenario name and its abbreviation in columns A and B and input associated parameters in the same row (columns C:AL).
-
-    We provide two country examples Brazil and Austria in this tab. You can modify these examples or simply add the new scenarios below. More country average parameters are also available in the *Samples* tab. You can directly copy a row of parameters from *Samples* to *Inputs*.
-
-    **Note that all the parameters from columns C:AL are required, except for column AI, which is a calculated value.** If you copy the values of an entire row from *Samples* to *Inputs*, and if you modify the parameters within AD:AH, this value in column AI will not update in the excel file. It will not affect the model run, but to make sure it will update and link to your changes in the excel file, you should drag the calculation from AI3 and apply to this copied row.
+    Open the **CHARM.xlsx** and click on *Inputs* tab. We provide the country name and ISO in columns A and B and input associated parameters in the same row (columns C:AQ).
 
 2. Run the model
 
     Make sure you have changed the location to the model folder, then type the following:
 
     ```powershell
-    C:\Users\USERNAME\Documents\CHARM_STAND>python Driver_stand.py
+    C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver.py
     ```
 
 3. Check the results
 
-    The results are updated in CHarM.xlsx *Outputs*. They include the present discounted values of carbon benefit per hectare for five policy decisions:
-    - Decision: Plantation, Counterfactual: start from free land and grow back
-    - Decision: Secondary forest conversion to plantation, Counterfactual: start from old growth forest and grow
-    - Decision: Secondary forest regrowth, Counterfactual: start from old growth forest and grow back
-    - Decision: Pasture conversion to plantation, Counterfactual: free land
-    - Decision: Pasture conversion to plantation, Counterfactual: start from free land forest and grow back
+    The results are updated in CHARM.xlsx *Outputs*:
+    - Secondary area conversion (ha)
+    - Secondary area regrowth (ha)
+    - Plantation area (ha)
+    - Plantation supply wood (mega tC)
+    - Secondary supply wood (mega tC)
+    The present discounted values of carbon benefit per hectare for three policy decisions:
+    - PDV per ha Plantation secondary plantation age (tC/ha) for decision: Plantation
+    - PDV per ha Secondary conversion (tC/ha) for decision: Secondary forest conversion to plantation
+    - PDV per ha Secondary regrowth (tC/ha) for decision: Secondary forest regrowth
+    The total PDV:
+    - Total PDV conversion plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest converted to plantations
+    - Total PDV regrowth plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest regrowth after a harvest
 
-    The carbon stock dynamics for different pools in the decision and counterfactual groups are printed in the subfolder *Results/*. Each scenario is exported as a png file and named by its abbreviation (column B).
 
 ## License
 
