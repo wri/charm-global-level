@@ -105,7 +105,9 @@ class CarbonTracker:
                 else:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_old_plantation
 
-        return aboveground_biomass_plantation_pilot[ncycles_first-1, year_index_both_plantation_hypothetical[1]-1]
+        totalC_aboveground_biomass_pool_pilot = np.sum(aboveground_biomass_plantation_pilot, axis=0)
+
+        return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1]-1]
 
 
     def initialization(self):
@@ -163,8 +165,10 @@ class CarbonTracker:
 
             # ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                # FIXME changing growth rate
-                if year < 22:
+                # FIXME grows at young growth rate for 20 years after the harvest
+                year_after_all_harvests = year - self.Global.year_index_harvest_plantation
+                year_after_current_harvest = np.min(year_after_all_harvests[year_after_all_harvests > 0])
+                if year_after_current_harvest <= 20:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_old_plantation
