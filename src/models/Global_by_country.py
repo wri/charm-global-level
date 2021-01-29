@@ -189,6 +189,7 @@ class Parameters:
                     year_index_thinning_in_cycle = np.arange(year_index_harvest_end_year[cycle_harvest], year_index_harvest_end_year[cycle_harvest + 1], self.rotation_length_thinning, dtype=int)
                     year_index_thinning_plantation.append(year_index_thinning_in_cycle.tolist())
                 self.year_index_thinning_plantation = [item for sublist in year_index_thinning_plantation for item in sublist]
+
             # if no second harvest in the time frame
             else:
                 self.year_index_thinning_plantation = np.arange(self.year_index_harvest_plantation[0], self.arraylength, self.rotation_length_thinning, dtype=int).tolist()
