@@ -18,14 +18,14 @@ root = '../../'
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'BRA'
-    # datafile = './CHARM input Nancy Data v2 w substitution GR cap.xlsx'
-    datafile = '{}/data/processed/CHARM regional - BAU - Jan 26.xlsx'.format(root)
+    iso = 'USA'
+    # datafile = '{}/data/processed/CHARM regional - BAU - Jan 22.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
     return
 
@@ -35,7 +35,7 @@ def test_carbon_tracker():
 def test_land_area_calculator():
     "TEST land area calculator"
     iso = 'BRA'
-    datafile = '{}/data/processed/CHARM regional - BAU - Jan 25.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings) #, plantation_counterfactual_code='')
