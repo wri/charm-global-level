@@ -5,8 +5,8 @@ __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 """
 Secondary forest regrowth scenario
-1. Aboveground biomass before the first harvest is the average C density of secondary forest
-2. Counterfactual starting from (20*young secondary GR)+(20*old secondary GR)
+1. Aboveground biomass before the first harvest is (20*young secondary GR)+(20*old secondary GR)
+2. Counterfactual starting from (20*young secondary GR)+(20*old secondary GR) and growing at the old secondary growth rate
 3. Only has the first harvest 
 """
 
@@ -61,7 +61,10 @@ class CarbonTracker:
 
 
     def initialization(self):
-        self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
+        # # Secondary regrowth scenario, initial aboveground biomass is the C density from secondary
+        # self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
+        # 2021/01/28 change the decision initial also to the (20*young secondary GR)+(20*old secondary GR)
+        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * 20
         self.belowground_biomass_live_secondary[0, 0] = self.aboveground_biomass_secondary[0, 0] * self.Global.ratio_root_shoot
         # set to the Nancy's average carbon density
         # self.counterfactual_biomass[0] = self.aboveground_biomass_secondary[0, 0]
@@ -76,13 +79,9 @@ class CarbonTracker:
         Every harvest cycle: decay
         Later to edd: add SOC, deadwood
         """
-
-        ############### Different from secondary conversion, calculate own parameters
-
         for cycle in range(0, self.Global.ncycles_regrowth):
             ### year of harvest / thinning
             year_harvest_thinning = self.Global.year_index_both_regrowth[cycle]
-
             ### Start and end year of the cycle. If it is the last cycle, it is cut off to the length of the array.
             st_cycle = year_harvest_thinning + 1
             if cycle < self.Global.ncycles_regrowth - 1:
@@ -147,10 +146,6 @@ class CarbonTracker:
                 self.landfill_emission_secondary[cycle, year] = self.landfill_cumulative_secondary[cycle, year] * (1 - np.exp(-np.log(2) / self.Global.half_life_landfill))
                 self.landfill_methane_emission_secondary[cycle, year] = - self.landfill_emission_secondary[cycle, year] * self.Global.landfill_methane_ratio * 34 * 12 / 44
 
-        # plt.plot(aboveground_biomass_secondary.T)
-        # plt.show()
-        # exit()
-
 
     def total_carbon_benefit(self):
         """
@@ -158,7 +153,6 @@ class CarbonTracker:
             - Sum up multiple cycles to get the total carbon stock
         - Substitution effect
         """
-
         self.totalC_aboveground_biomass_pool = np.sum(self.aboveground_biomass_secondary, axis=0)
         self.totalC_root_live_pool = np.sum(self.belowground_biomass_live_secondary, axis=0)
         self.totalC_stand_pool = self.totalC_aboveground_biomass_pool + self.totalC_root_live_pool
@@ -180,6 +174,7 @@ class CarbonTracker:
 
         self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit
 
+
     def counterfactual(self):
         """
         Counterfactural scenario
@@ -190,26 +185,8 @@ class CarbonTracker:
         # If there is no harvest, the forest restoration becomes secondary forest
         for year in range(2, self.Global.arraylength):
             self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
-            # print(self.Global.GR_old_secondary)
         self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
         self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
-
-
-    def plot_C_pools_counterfactual(self):
-
-        plt.plot(self.totalC_stand_pool[1:], label='stand')
-        plt.plot(self.totalC_product_pool[1:], label='product')
-        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
-        plt.plot(self.totalC_slash_pool[1:], label='slash')
-        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[1:], label='substitution')
-        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[1:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
-
-        return
-
 
 ######################## STEP 5: Present discounted value ##############################
 
@@ -226,9 +203,7 @@ class CarbonTracker:
         if self.Global.rotation_length_harvest > 40:
             for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
                 st_cycle = cycle * self.Global.rotation_length_harvest + 1
-                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (
-                            cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (
-                                   cycle == len(self.Global.year_index_harvest_plantation) - 1)
+                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
 
                 for year in range(st_cycle, ed_cycle):
                     discounted_year[year] = year - st_cycle + 1
@@ -237,33 +212,17 @@ class CarbonTracker:
             for year in range(0, self.Global.nyears):
                 discounted_year[year] = year
 
-        self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (
-                    1 + self.Global.discount_rate) ** discounted_year
+        self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (1 + self.Global.discount_rate) ** discounted_year
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
-
-    def plot_PDV(self):
-        present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
-        print('PDV (tC): ', present_discounted_carbon_fullperiod)
-        plt.plot(self.total_carbon_benefit, label='Total carbon benefit')
-        plt.plot(self.counterfactual_biomass, label='Counterfactual')
-        plt.plot(self.benefit_minus_counterfactual_diff, label='Net gain year-to-year changes')
-        plt.plot(self.annual_discounted_value, label='Annual discounted carbon')
-        plt.legend(fontsize=20); plt.show(); exit()
-
-        return
 
     def plot_C_pools_counterfactual_print_PDV(self):
 
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
-        print('PDV (tC): ', present_discounted_carbon_fullperiod)
+        print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
         plt.plot(self.totalC_stand_pool[1:], label='stand')
         plt.plot(self.totalC_product_pool[1:], label='product')
-        # plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
-        # plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
-        # plt.plot(self.totalC_product_VSLP_pool[1:], label='VSLP')
-
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
         plt.plot(self.totalC_slash_pool[1:], label='slash')
@@ -274,8 +233,6 @@ class CarbonTracker:
         plt.legend(fontsize=20); plt.show(); exit()
 
         return
-
-
 
 
 
