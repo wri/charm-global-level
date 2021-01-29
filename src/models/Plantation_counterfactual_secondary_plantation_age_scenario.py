@@ -34,7 +34,7 @@ class CarbonTracker:
 
         ##### Initialize carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
+        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -61,15 +61,19 @@ class CarbonTracker:
         self.calculate_PDV()
 
     def calculate_aboveground_biomass_initial_plantation(self):
-        # Initial condition for aboveground and belowground live biomass FOR PLANTATION
+        "Initial condition for aboveground and belowground live biomass FOR PLANTATION"
         # Initial = end of the first cycle after several thinnings
-        # FIXED the rotation length is longer than the time frame, how to calculate the initial value
+
+        ### Define all the harvest, thinning arrays/indices
+        # Harvest year index copy
         year_index_harvest_plantation_hypothetical = self.Global.year_index_harvest_plantation.tolist()
+        # FIXED: when the rotation length is longer than the time frame, how to calculate the initial value
         if self.Global.nyears < self.Global.rotation_length_harvest:
             year_index_harvest_plantation_hypothetical.append(self.Global.nyears)
 
         # If thinnings
         if (np.isnan(self.Global.rotation_length_thinning) == False) & (self.Global.rotation_length_thinning > 0):
+            # Thinnings year index for the n-1 rotation periods, except for the last not complete one
             year_index_thinning_plantation_hypothetical = []
             for cycle_harvest in range(len(year_index_harvest_plantation_hypothetical) - 1):
                 year_index_thinning_plantation_hypothetical.append(np.arange(year_index_harvest_plantation_hypothetical[cycle_harvest], year_index_harvest_plantation_hypothetical[cycle_harvest + 1], self.Global.rotation_length_thinning, dtype=int))
@@ -88,7 +92,10 @@ class CarbonTracker:
             harvest_percentage_plantation[year_index_harvest_plantation_hypothetical] = self.Global.harvest_percentage_default
         else:
             harvest_percentage_plantation[year_index_harvest_plantation_hypothetical] = self.Global.harvest_percentage_default
+        # Only look at the first rotation cycle, get the first harvest all the thinnings before the second harvest
         ncycles_first = year_index_both_plantation_hypothetical.index(year_index_harvest_plantation_hypothetical[1])
+
+        ### Initialize and grow the aboveground biomass array
         aboveground_biomass_plantation_pilot = np.zeros((ncycles_first, self.Global.arraylength))
 
         for cycle in range(0, ncycles_first):
@@ -99,18 +106,22 @@ class CarbonTracker:
                 aboveground_biomass_before_harvest = 0
             else: # The following cycles
                 aboveground_biomass_before_harvest = aboveground_biomass_plantation_pilot[cycle - 1, year_harvest_thinning - 1]
+
             ### Carbon intensity at the year of harvest
             aboveground_biomass_plantation_pilot[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - harvest_percentage_plantation[year_harvest_thinning])
             ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                if year < 22:
+                # FIXED: grows at young growth rate for 20 years after the harvest
+                year_after_all_harvests = year - self.Global.year_index_harvest_plantation
+                year_after_current_harvest = np.min(year_after_all_harvests[year_after_all_harvests > 0])
+                if year_after_current_harvest <= 20:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     aboveground_biomass_plantation_pilot[cycle, year] = aboveground_biomass_plantation_pilot[cycle, year - 1] + self.Global.GR_old_plantation
 
         totalC_aboveground_biomass_pool_pilot = np.sum(aboveground_biomass_plantation_pilot, axis=0)
 
-        return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1] - 1]
+        return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1]-1]
 
 
     def initialization(self):
@@ -123,7 +134,6 @@ class CarbonTracker:
             self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * (self.Global.rotation_length_harvest - 20)
 
 
-
     def carbon_pool_simulator_per_cycle(self):
         ######################## STEP 2: Carbon tracker ##############################
         """
@@ -134,7 +144,6 @@ class CarbonTracker:
         for cycle in range(0, self.Global.ncycles_harvest):
             ### year of harvest / thinning
             year_harvest_thinning = self.Global.year_index_both_plantation[cycle]   # year_harvest = cycle * self.Global.rotation_length_harvest + 1
-
             ### Start and end year of the cycle. If it is the last cycle, it is cut off to the length of the array.
             st_cycle = year_harvest_thinning + 1
             if cycle < self.Global.ncycles_harvest - 1:
@@ -223,7 +232,6 @@ class CarbonTracker:
         self.totalC_landfill_pool = np.sum(self.landfill_pool_plantation, axis=0)
         self.totalC_methane_emission = np.sum(self.landfill_methane_emission_plantation, axis=0)
 
-
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
         self.LLP_substitution_benefit = self.totalC_product_LLP_pool * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
 
@@ -237,7 +245,7 @@ class CarbonTracker:
         ### Steady growth no-harvest
         self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
 
-        # Grows at the secondary rates depending on the rotation length
+        # starts at the rotation length * secondary young, and then grows at the secondary young rate until for 20 years, then grows at secondary old growth rate
         if self.Global.rotation_length_harvest < 20:
             for year in range(2, 22 - self.Global.rotation_length_harvest):
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
@@ -265,8 +273,7 @@ class CarbonTracker:
         if self.Global.rotation_length_harvest > 40:
             for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
                 st_cycle = cycle * self.Global.rotation_length_harvest + 1
-                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (
-                                   cycle == len(self.Global.year_index_harvest_plantation) - 1)
+                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
 
                 for year in range(st_cycle, ed_cycle):
                     discounted_year[year] = year - st_cycle + 1
@@ -279,7 +286,6 @@ class CarbonTracker:
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
 
-
     def plot_C_pools_counterfactual_print_PDV(self):
 
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
@@ -287,7 +293,6 @@ class CarbonTracker:
 
         plt.plot(self.totalC_stand_pool[1:], label='stand')
         plt.plot(self.totalC_product_pool[1:], label='product')
-
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
         plt.plot(self.totalC_slash_pool[1:], label='slash')
@@ -298,7 +303,6 @@ class CarbonTracker:
         plt.legend(fontsize=20); plt.show(); exit()
 
         return
-
 
 
 
