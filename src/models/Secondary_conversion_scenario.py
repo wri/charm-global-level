@@ -172,9 +172,8 @@ class CarbonTracker:
 
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
         self.LLP_substitution_benefit = self.totalC_product_LLP_pool * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
-
-        self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit
-
+        self.VSLP_substitution_benefit = self.totalC_product_VSLP_pool * self.Global.coef_bioenergy_substitution
+        self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit + self.VSLP_substitution_benefit
 
     def counterfactual(self):
         """
