@@ -42,6 +42,7 @@ class Parameters:
         self.setup_biophysical_parameters()
         self.setup_product_parameters()
         self.setup_LLP_substitution()
+        self.setup_VSLP_substitution()
         self.setup_misc()
         self.setup_harvest_slash_percentage()
 
@@ -161,6 +162,8 @@ class Parameters:
             # Fourth, % reduction of timber system relative to steel/concrete or composite systems.
             self.carbon_reduction_timber_to_cs = 1 * EF_timber / (saved_concrete_by_wooduse * EF_concrete + saved_steel_by_wooduse * EF_steel) - 1
 
+    def setup_VSLP_substitution(self):
+        self.coef_bioenergy_substitution = self.input_country['Emissions substitution factor for VSLP (tC saved/tons C in VSLP)'].values[0]
 
     def setup_misc(self):
         # Others
