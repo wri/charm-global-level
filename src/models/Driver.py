@@ -35,10 +35,10 @@ def test_carbon_tracker():
 def test_land_area_calculator():
     "TEST land area calculator"
     iso = 'BRA'
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 05.xlsx'.format(root)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
-    LAC = Land_area_calculator.LandCalculator(global_settings) #, plantation_counterfactual_code='')
+    LAC = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
     # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
     # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
     # print("Area conversion", sum(LAC.area_harvested_new_secondary_conversion))
@@ -127,10 +127,10 @@ def run_model_new_plantation_scenarios():
     # datafile = '{}/data/processed/CHARM regional - BAU - Jan 25.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - constant demand - Jan 25.xlsx'.format(root)
 
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - Jan 26.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - Jan 26.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - Jan 26.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 05.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - Feb 03.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - Feb 03.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - Feb 03.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
@@ -138,7 +138,7 @@ def run_model_new_plantation_scenarios():
     scenarionames, codes = [], []
     pdv_per_ha_conversion, pdv_per_ha_regrowth = [], []
     area_conversion_legacy, area_regrowth_legacy, area_plantation = [], [], []
-    secondary_wood, plantation_wood = [], []
+    secondary_conversion_wood, secondary_regrowth_wood, plantation_wood = [], [], []
     pdv_per_ha_plantation_legacy, pdv_conversion_legacy, pdv_regrowth_legacy = [], [], []
     pdv_per_ha_plantation_secondary_historic, pdv_conversion_secondary_historic, pdv_regrowth_secondary_historic = [], [], []
     pdv_per_ha_plantation_secondary_plantation_age, pdv_conversion_secondary_plantation_age, pdv_regrowth_secondary_plantation_age = [], [], []
@@ -189,8 +189,9 @@ def run_model_new_plantation_scenarios():
             area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth))
             area_plantation.append(sum(LAC_legacy.area_harvested_new_plantation))
 
-            secondary_wood.append(sum(LAC_legacy.output_need_secondary)/1000000)
-            plantation_wood.append(sum(LAC_legacy.product_total_carbon)/1000000 - sum(LAC_legacy.output_need_secondary)/1000000)
+            secondary_conversion_wood.append(sum(LAC_secondary_plantation_age.wood_harvest_accumulate_secondary_conversion)/1000000)
+            secondary_regrowth_wood.append(sum(LAC_secondary_plantation_age.wood_harvest_accumulate_secondary_regrowth)/1000000)
+            plantation_wood.append(sum(LAC_secondary_plantation_age.product_total_carbon)/1000000 - sum(LAC_legacy.output_need_secondary)/1000000)
 
             pdv_per_ha_plantation_secondary_historic.append(np.sum(result_plantation_secondary_historic.annual_discounted_value))
             pdv_conversion_secondary_historic.append(LAC_secondary_historic.total_pdv_plantation_secondary_conversion)
@@ -214,7 +215,8 @@ def run_model_new_plantation_scenarios():
                               'Plantation area (ha)': area_plantation,
 
                               'Plantation supply wood (mega tC)': plantation_wood,
-                              'Secondary supply wood (mega tC)': secondary_wood,
+                              'Secondary conversion supply wood (mega tC)': secondary_conversion_wood,
+                              'Secondary regrowth supply wood (mega tC)': secondary_regrowth_wood,
 
                               'PDV per ha Secondary conversion (tC/ha)': pdv_per_ha_conversion,
                               'PDV per ha Secondary regrowth (tC/ha)': pdv_per_ha_regrowth,
