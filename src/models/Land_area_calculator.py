@@ -52,9 +52,9 @@ class LandCalculator:
         self.calculate_thinning_amount_plantation()
 
         ### Area required in secondary conversion scenario
-        self.area_harvested_new_secondary_conversion = self.calculate_new_area_secondary_conversion(self.output_ha_secondary_conversion)
+        self.area_harvested_new_secondary_conversion, self.wood_harvest_accumulate_secondary_conversion = self.calculate_new_area_secondary_conversion(self.output_ha_secondary_conversion)
         ### Area required in secondary regrowth scenario
-        self.area_harvested_new_secondary_regrowth = self.calculate_new_area_secondary_regrowth(self.output_ha_secondary_regrowth)
+        self.area_harvested_new_secondary_regrowth, self.wood_harvest_accumulate_secondary_regrowth = self.calculate_new_area_secondary_regrowth(self.output_ha_secondary_regrowth)
 
         # plt.plot(self.output_ha_plantation, label='plantation')
         # plt.plot(self.output_ha_secondary_conversion, label='conversion')
@@ -145,7 +145,7 @@ class LandCalculator:
         # Check if the demand in Year is greater than or less than the maximum plantation output
         # If it’s greater than max output, plantation hectares harvested is equal to the maximum
         # If it’s less than the maximum output, hectares harvested = total wood products / output per hectare
-        self.area_harvested_plantation[ self.product_total_carbon > total_output_plantation_maximum] = area_harvested_plantation_maximum
+        self.area_harvested_plantation[self.product_total_carbon > total_output_plantation_maximum] = area_harvested_plantation_maximum
 
         "Step 3. Calculate residue wood supply that deduct from the plantation harvest output"
         self.output_need_secondary = self.product_total_carbon - total_output_plantation_maximum
@@ -246,14 +246,17 @@ class LandCalculator:
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
 
                     wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] + area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]
-
+                    # print(year, area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead])
                 if (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
                     # !!!! divide by output from first harvest !!!!
                     area_harvested_new_secondary[year] = (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[0]
                 else:
                     area_harvested_new_secondary[year] = 0
+        # plt.plot(wood_harvest_accumulate_secondary)
+        # plt.plot(area_harvested_new_secondary)
+        # plt.show();exit()
 
-        return area_harvested_new_secondary
+        return area_harvested_new_secondary, wood_harvest_accumulate_secondary
 
 
     def calculate_new_area_secondary_regrowth(self, output_ha_secondary):
@@ -297,7 +300,7 @@ class LandCalculator:
                 else:
                     area_harvested_new_secondary[year] = 0
 
-        return area_harvested_new_secondary
+        return area_harvested_new_secondary, wood_harvest_accumulate_secondary
 
 
     def calculate_total_present_discounted_value(self):
