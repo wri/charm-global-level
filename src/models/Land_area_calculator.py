@@ -244,17 +244,14 @@ class LandCalculator:
                         Nyears_Ncycles_before = Nyears_Ncycles_before + cycle_lengths[i]
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
-
+                    # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
                     wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] + area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]
-                    # print(year, area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead])
                 if (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
                     # !!!! divide by output from first harvest !!!!
+                    # This is to track the secondary area that is first harvested (not the wood reharvesting from the same ha)
                     area_harvested_new_secondary[year] = (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[0]
                 else:
                     area_harvested_new_secondary[year] = 0
-        # plt.plot(wood_harvest_accumulate_secondary)
-        # plt.plot(area_harvested_new_secondary)
-        # plt.show();exit()
 
         return area_harvested_new_secondary, wood_harvest_accumulate_secondary
 
@@ -282,7 +279,6 @@ class LandCalculator:
                 ed_cycle = self.Global.year_index_both_regrowth[current_cycle + 1] - 1
             else:
                 ed_cycle = self.Global.nyears
-
             for year in range(st_cycle, ed_cycle):
                 for previous_cycle in range(0, current_cycle):
                     Nyears_Ncycles_before = 0
@@ -291,8 +287,9 @@ class LandCalculator:
                         Nyears_Ncycles_before = Nyears_Ncycles_before + cycle_lengths[i]
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
-
+                    # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
                     wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]
+
 
                 if (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
                     # !!!! divide by output from first harvest !!!!
