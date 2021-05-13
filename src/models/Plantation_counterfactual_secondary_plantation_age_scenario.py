@@ -269,6 +269,8 @@ class CarbonTracker:
 
         discounted_year = np.zeros((self.Global.nyears))
         # when the rotation length is short, set to 40 years
+        # The emissions for each hectare of harvest in each year need to be the PDV of that harvest in that year.
+        # In other words, it should incorporate all the changes in carbon pools, including regrowth, for 40 years and then discount TO THE YEAR OF HARVEST.
         # The PDV per ha reflect the decision of harvest. For longer rotation, like managed timber land, reset to zero because we treat it as a separate decision.
         if self.Global.rotation_length_harvest > 40:
             for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
