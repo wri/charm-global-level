@@ -18,13 +18,15 @@ root = '../../'
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'USA'
+    iso = 'BRA'
     # datafile = '{}/data/processed/CHARM regional - BAU - Jan 22.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Jan 26.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
+
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
     return
@@ -32,10 +34,44 @@ def test_carbon_tracker():
 # test_carbon_tracker()
 # exit()
 
+def test_PDV_module():
+    import matplotlib.pyplot as plt
+
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - DR_0p - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_6p - May 10.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
+    iso = 'BRA'
+
+    datafile = '{}/data/processed/CHARM regional - BAU SF_0 - DR_0p - May 12.xlsx'.format(root)
+    global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
+    obj = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
+
+    # obj = Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
+    # obj = Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
+    df = pd.DataFrame({'Harvest scenario': obj.total_carbon_benefit[1:],
+                       'Counterfactual': obj.counterfactual_biomass[1:],
+                       'Annual carbon impact': obj.annual_discounted_value,
+                       'Harvest scenario - Counterfactual': obj.total_carbon_benefit[1:]-obj.counterfactual_biomass[1:]
+                       }, index=np.arange(2010, 2051))
+    df.plot(color=["k", "limegreen", 'Red', 'Blue'], lw=2)
+
+    plt.title('Brazil Secondary Regrowth Carbon impact (tC/ha)')
+    plt.annotate('Harvest scenario - Counterfactual SUM: {:.0f}'.format(np.sum(df['Harvest scenario - Counterfactual'])), xy=(0.05, 0.45), xycoords='axes fraction', fontsize=12)
+    plt.annotate('Annual carbon impact (0% discount) SUM: {:.0f}'.format(np.sum(df['Annual carbon impact'])), xy=(0.05, 0.38), xycoords='axes fraction', fontsize=12)
+    plt.show()
+
+    return
+
+# test_PDV_module()
+# exit()
+
 def test_land_area_calculator():
     "TEST land area calculator"
-    iso = 'BRA'
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
+    iso = 'USA'
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
+
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
@@ -125,10 +161,15 @@ def run_model_legacy():
 
 def run_model_new_plantation_scenarios():
     # Read excel, if the cell has formula, it will be read as NaN
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - Apr 14.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - Apr 14.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - Apr 14.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - May 12.xlsx'.format(root)
+
+    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_0p - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - DR_0p - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - DR_0p - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - DR_0p - May 12.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
