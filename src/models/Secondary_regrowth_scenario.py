@@ -211,6 +211,15 @@ class CarbonTracker:
             for year in range(0, self.Global.nyears):
                 discounted_year[year] = year
 
+        # for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
+        #     st_cycle = cycle * self.Global.rotation_length_harvest + 1
+        #     ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (
+        #                 cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (
+        #                            cycle == len(self.Global.year_index_harvest_plantation) - 1)
+        #
+        #     for year in range(st_cycle, ed_cycle):
+        #         discounted_year[year] = year - st_cycle + 1
+
         self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (1 + self.Global.discount_rate) ** discounted_year
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
