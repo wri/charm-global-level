@@ -300,7 +300,7 @@ class LandCalculator:
         return area_harvested_new_secondary, wood_harvest_accumulate_secondary
 
 
-    def calculate_total_present_discounted_value(self):
+    def calculate_total_present_discounted_value_old(self):
         """
         - Number of plantation hectares harvested each year: area_harvested_plantation
         - Number of natural hectares harvested each year for BOTH the conversion and regrowth scenarios
@@ -354,19 +354,111 @@ class LandCalculator:
         # plt.show()
         # exit()
 
+        ### Generate yearly output
+        # dataframe = {}
+        # dataframe['pdv_yearly_plantation'] = pdv_yearly_plantation
+        # dataframe['area_harvested_new_plantation'] = self.area_harvested_new_plantation
+        # dataframe['total_pdv_plantation'] = total_pdv_plantation
+        # dataframe['pdv_yearly_secondary_regrowth'] = pdv_yearly_secondary_regrowth
+        # dataframe['area_harvested_new_secondary_regrowth'] = self.area_harvested_new_secondary_regrowth
+        # dataframe['total_pdv_secondary_regrowth'] = total_pdv_secondary_regrowth
+
         def total_PDV_scenario(total_pdv_secondary):
-            # Final discounting
-            years = range(0, self.Global.nyears)
 
             # Secondary conversion
             total_pdv_plantation_secondary = total_pdv_plantation + total_pdv_secondary
-            total_pdv_plantation_secondary_discounted = total_pdv_plantation_secondary / (
-                        1 + self.Global.discount_rate) ** years
-            # Convert to megatonnes
-            total_pdv_plantation_secondary_discounted_sum = np.sum(total_pdv_plantation_secondary_discounted) / 1000000
+            # Convert to megatonnes.
+            total_pdv_plantation_secondary_sum = np.sum(total_pdv_plantation_secondary) / 1000000
+            ### 2021 May 12 Remove the second discounting
+            # Final discounting
+            # years = range(0, self.Global.nyears)
+            # total_pdv_plantation_secondary_discounted = total_pdv_plantation_secondary / (
+            #             1 + self.Global.discount_rate) ** years
+            # total_pdv_plantation_secondary_discounted_sum = np.sum(total_pdv_plantation_secondary_discounted) / 1000000
 
-            return total_pdv_plantation_secondary_discounted_sum
+
+            # dataframe['total_pdv_plantation_secondary_regrowth'] = total_pdv_plantation_secondary
+            # dataframe['total_pdv_plantation_secondary_regrowth_discounted'] = total_pdv_plantation_secondary_discounted
+            return total_pdv_plantation_secondary_sum
 
         # Unit: megat tonnes C
         self.total_pdv_plantation_secondary_conversion = total_PDV_scenario(total_pdv_secondary_conversion)
         self.total_pdv_plantation_secondary_regrowth = total_PDV_scenario(total_pdv_secondary_regrowth)
+
+        # dataframe = pd.DataFrame(dataframe)
+        # dataframe.to_csv('../../total_pdv_Brazil_2p.csv')
+        # exit()
+
+
+    def calculate_total_present_discounted_value(self):
+            """
+            - Number of plantation hectares harvested each year: area_harvested_plantation
+            - Number of natural hectares harvested each year for BOTH the conversion and regrowth scenarios
+            - PDV of harvesting a hectare of plantation in year x
+                - This is done by running the plantation calculator over every year, changing the product share %s each time, and only doing the sum of the annual PDVs from 0 : duration-year (i.e. in year 5, you would do the sum from year 0 to year 40-5 (35))
+            - PDV of harvesting a hectare of secondary (regrow AND conversion) in year x
+                - This is done in the same way- by running the regrow and conversion calculators over every year, changing the product shares each time, and only including the annual PDVs from 0 : duration-year
+            """
+            # FIXME  extend the PDV to 40 years for each year, 2010, 2011, ... 2050, which means 2050, 2051, ... 2090
+            ### 2021 05 12
+            # every year’s discounting should incorporate 40 years of change regardless of when that harvest occurs.
+            # That is true right now for harvests in 2010, but for 2011, it only incorporates the next 39 years.
+            # And for 2049, it only incorporates 2049 and 2050.
+            # In a natural secondary forest that regrows as a secondary forest, for example, the PDV should be the same per hectare every year
+
+            # Initialize
+            # 41+40 years rows, 41 columns
+            annual_discounted_value_nyears_plantation, annual_discounted_value_nyears_secondary_conversion, annual_discounted_value_nyears_secondary_regrowth = [
+                np.zeros((self.Global.nyears+self.Global.nyears-1, self.Global.nyears)) for _ in range(3)]
+            # Get PDV values for the large matrix nyears+40 x nyears
+            for year in range(self.Global.nyears):
+                # Update the PDV per ha
+                annual_discounted_value_nyears_plantation[year:year+self.Global.nyears, year] = self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
+                annual_discounted_value_nyears_secondary_conversion[year:year+self.Global.nyears, year] = Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
+                annual_discounted_value_nyears_secondary_regrowth[year:year+self.Global.nyears, year] = Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
+
+            # Sum up the yearly values
+            pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
+            pdv_yearly_secondary_conversion = np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0)
+            pdv_yearly_secondary_regrowth = np.sum(annual_discounted_value_nyears_secondary_regrowth, axis=0)
+
+            # First, let’s do the secondary PDV (regrowth; conversion) since that’s easier.
+            # The total secondary PDV is simply equal to the number of secondary hectares harvested in year x multiplied by the PDV of harvesting one hectare in year x. We have to do this separately for the conversion and regrowth scenarios.
+            total_pdv_secondary_conversion = self.area_harvested_new_secondary_conversion * pdv_yearly_secondary_conversion
+            total_pdv_secondary_regrowth = self.area_harvested_new_secondary_regrowth * pdv_yearly_secondary_regrowth
+
+            total_pdv_plantation = np.zeros((self.Global.nyears))
+            self.area_harvested_new_plantation = np.zeros((self.Global.nyears))
+
+            if self.Global.rotation_length_harvest < self.Global.nyears:
+                # From year 0 until the next harvest, the total PDV is equal to the number of plantation hectares harvested multiplied by the PDV of harvesting one hectare in year x.
+                for year in range(0, self.Global.rotation_length_harvest):
+                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                    self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
+                # Beyond the next harvest, the total PDV is equal to
+                # (#plantation hectares harvested(x) - # plantation hectares harvested (x – harvest rotation)) * PDV of harvesting one hectare in year x.
+                # We have to do this extra step to avoid double counting.
+                # There are some cases where a country might be able to supply all of its wood from plantations only, so we have to separate out the re-harvests from the new harvests.
+                for year in range(self.Global.rotation_length_harvest, self.Global.nyears):
+                    total_pdv_plantation[year] = (self.area_harvested_plantation[year] - self.area_harvested_plantation[year - self.Global.rotation_length_harvest]) * pdv_yearly_plantation[year]
+                    self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year] - self.area_harvested_plantation[year - self.Global.rotation_length_harvest]
+
+            else:
+                for year in range(0, self.Global.nyears):
+                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                    self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
+
+
+            def total_PDV_scenario(total_pdv_secondary):
+
+                # Secondary conversion
+                total_pdv_plantation_secondary = total_pdv_plantation + total_pdv_secondary
+                # Convert to megatonnes.
+                total_pdv_plantation_secondary_sum = np.sum(total_pdv_plantation_secondary) / 1000000
+                ### 2021 May 12 Remove the second discounting
+
+                return total_pdv_plantation_secondary_sum
+
+            # Unit: megat tonnes C
+            self.total_pdv_plantation_secondary_conversion = total_PDV_scenario(total_pdv_secondary_conversion)
+            self.total_pdv_plantation_secondary_regrowth = total_PDV_scenario(total_pdv_secondary_regrowth)
