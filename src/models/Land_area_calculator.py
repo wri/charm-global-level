@@ -418,14 +418,14 @@ class LandCalculator:
                 annual_discounted_value_nyears_secondary_regrowth[year:year+self.Global.nyears, year] = Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
 
             # Sum up the yearly values
-            pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
-            pdv_yearly_secondary_conversion = np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0)
-            pdv_yearly_secondary_regrowth = np.sum(annual_discounted_value_nyears_secondary_regrowth, axis=0)
+            self.pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
+            self.pdv_yearly_secondary_conversion = np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0)
+            self.pdv_yearly_secondary_regrowth = np.sum(annual_discounted_value_nyears_secondary_regrowth, axis=0)
 
             # First, let’s do the secondary PDV (regrowth; conversion) since that’s easier.
             # The total secondary PDV is simply equal to the number of secondary hectares harvested in year x multiplied by the PDV of harvesting one hectare in year x. We have to do this separately for the conversion and regrowth scenarios.
-            total_pdv_secondary_conversion = self.area_harvested_new_secondary_conversion * pdv_yearly_secondary_conversion
-            total_pdv_secondary_regrowth = self.area_harvested_new_secondary_regrowth * pdv_yearly_secondary_regrowth
+            total_pdv_secondary_conversion = self.area_harvested_new_secondary_conversion * self.pdv_yearly_secondary_conversion
+            total_pdv_secondary_regrowth = self.area_harvested_new_secondary_regrowth * self.pdv_yearly_secondary_regrowth
 
             total_pdv_plantation = np.zeros((self.Global.nyears))
             self.area_harvested_new_plantation = np.zeros((self.Global.nyears))
@@ -433,7 +433,7 @@ class LandCalculator:
             if self.Global.rotation_length_harvest < self.Global.nyears:
                 # From year 0 until the next harvest, the total PDV is equal to the number of plantation hectares harvested multiplied by the PDV of harvesting one hectare in year x.
                 for year in range(0, self.Global.rotation_length_harvest):
-                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * self.pdv_yearly_plantation[year]
                     self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
                 # Beyond the next harvest, the total PDV is equal to
                 # (#plantation hectares harvested(x) - # plantation hectares harvested (x – harvest rotation)) * PDV of harvesting one hectare in year x.
@@ -445,7 +445,7 @@ class LandCalculator:
 
             else:
                 for year in range(0, self.Global.nyears):
-                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * pdv_yearly_plantation[year]
+                    total_pdv_plantation[year] = self.area_harvested_plantation[year] * self.pdv_yearly_plantation[year]
                     self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
 
 
