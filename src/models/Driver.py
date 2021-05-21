@@ -6,6 +6,7 @@ __email__ = "liqing.peng@wri.org"
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import Global_by_country, Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Land_area_calculator
 # import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
@@ -35,7 +36,6 @@ def test_carbon_tracker():
 # exit()
 
 def test_PDV_module():
-    import matplotlib.pyplot as plt
 
     # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - DR_0p - May 12.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_6p - May 10.xlsx'.format(root)
@@ -294,3 +294,166 @@ def run_model_new_plantation_scenarios():
 
 
 # run_model_new_plantation_scenarios()
+
+
+def get_global_annual_carbon_impact():
+    demand_levels = ['BAU SF_1.2', 'BAU SF_0', 'constant demand SF_1.2', 'constant demand SF_0']
+    demand_names = ['BAU 1.2', 'BAU 0', 'CON 1.2', 'CON 0']
+
+    outfile = '{}/data/processed/derivative/carbon_impact_nodiscount_4scenario_3foresttype.xlsx'.format(root)
+    writer = pd.ExcelWriter(outfile)
+
+    for demand_level, demand_name in zip(demand_levels, demand_names):
+        datafile = '{}/data/processed/CHARM regional - {} - DR_0p - May 12.xlsx'.format(root, demand_level)
+        scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+        input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+
+        array_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        array_conversion = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        array_regrowth = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        nc = 0
+
+        for scenario, code in zip(scenarios['Country'], scenarios['ISO']):
+            # Test if the parameters are set up for this scenario, if there is one missing, will not do any calculation
+            input_scenario = input_data.loc[input_data['Country'] == scenario]
+            input_scenario = input_scenario.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
+            if input_scenario.isnull().values.any():
+                print("Please fill in the abbreviation and all the missing parameters for scenario '{}'!".format(scenario))
+            else:
+                # read in global parameters
+                global_settings = Global_by_country.Parameters(datafile, country_iso=code)
+                LAC_secondary_plantation_age = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
+
+                array_plantation[nc, :] = LAC_secondary_plantation_age.total_pdv_plantation / 1000000
+                array_conversion[nc, :] = LAC_secondary_plantation_age.total_pdv_secondary_conversion / 1000000
+                array_regrowth[nc, :] = LAC_secondary_plantation_age.total_pdv_secondary_regrowth / 1000000
+
+                nc = nc + 1
+
+        df_plantation = pd.DataFrame(data=array_plantation, index=scenarios['Country'], columns=range(2010, 2051, 1))
+        df_conversion = pd.DataFrame(data=array_conversion, index=scenarios['Country'], columns=range(2010, 2051, 1))
+        df_regrowth = pd.DataFrame(data=array_regrowth, index=scenarios['Country'], columns=range(2010, 2051, 1))
+
+        df_plantation.loc['Global'] = df_plantation.sum()/0.8
+        df_conversion.loc['Global'] = df_conversion.sum()/0.8
+        df_regrowth.loc['Global'] = df_regrowth.sum()/0.8
+
+        df_plantation.to_excel(writer, sheet_name='{} plantation'.format(demand_name))
+        df_conversion.to_excel(writer, sheet_name='{} conversion'.format(demand_name))
+        df_regrowth.to_excel(writer, sheet_name='{} Regrowth'.format(demand_name))
+
+    writer.save()
+    writer.close()
+
+
+    return
+
+# get_global_annual_carbon_impact()
+
+def get_global_annual_carbon_flow():
+    demand_levels = ['BAU SF_1.2', 'BAU SF_0', 'constant demand SF_1.2', 'constant demand SF_0']
+    demand_names = ['BAU 1.2', 'BAU 0', 'CON 1.2', 'CON 0']
+
+    # outfile = '{}/data/processed/derivative/carbon_flow_nodiscount_4scenario_3foresttype.xlsx'.format(root)
+    # writer = pd.ExcelWriter(outfile)
+
+    for demand_level, demand_name in zip(demand_levels, demand_names):
+        datafile = '{}/data/processed/CHARM regional - {} - DR_0p - May 12.xlsx'.format(root, demand_level)
+        scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+        input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+
+        # Define the empty arrays
+        total_carbon = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        product_storage_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        product_storage_conversion = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        product_storage_regrowth = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        net_regrowth_regrowth = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        substitution_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        substitution_conversion = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        substitution_regrowth = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        wood_removed_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        wood_in_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+        wood_counterfactual_plantation = np.zeros((len(scenarios['Country']), Global_by_country.Parameters(datafile).nyears))
+
+        nc = 0
+
+        for scenario, code in zip(scenarios['Country'], scenarios['ISO']):
+            # Test if the parameters are set up for this scenario, if there is one missing, will not do any calculation
+            input_scenario = input_data.loc[input_data['Country'] == scenario]
+            input_scenario = input_scenario.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
+            if input_scenario.isnull().values.any():
+                print("Please fill in the abbreviation and all the missing parameters for scenario '{}'!".format(scenario))
+            else:
+                # read in global parameters
+                global_settings = Global_by_country.Parameters(datafile, country_iso=code)
+                result_plantation = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings)
+                result_secondary_conversion = Secondary_conversion_scenario.CarbonTracker(global_settings)
+                result_secondary_regrowth = Secondary_regrowth_scenario.CarbonTracker(global_settings)
+                LAC_secondary_plantation_age = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
+
+                # A. total wood harvested divided by the total reduction in carbon in the forest
+                total_carbon[nc, :] = LAC_secondary_plantation_age.product_total_carbon
+
+                # B. Net wood product carbon storage due to harvest after 40 years. This is the amount of wood still left in LLP & SLP or in landfills
+                product_storage_plantation[nc, :] = result_plantation.totalC_product_pool[1:] + result_plantation.totalC_landfill_pool[1:]
+                product_storage_conversion[nc, :] = result_secondary_conversion.totalC_product_pool[1:] + result_secondary_conversion.totalC_landfill_pool[1:]
+                product_storage_regrowth[nc, :] = result_secondary_regrowth.totalC_product_pool[1:] + result_secondary_regrowth.totalC_landfill_pool[1:]
+
+                # C. Net regrowth in the secondary regrowth scenario = means gross regrowth minus the ongoing growth in the counterfactual
+                # Example: Counterfactual year 1 = 50, Counterfactual year 40 = 75
+                # Regrowth year 1 = 0, Regrowth year 40 = 50
+                # Net regrowth = 50-(75-50)=25
+                net_regrowth_regrowth[nc, :] = (result_secondary_regrowth.totalC_stand_pool[1:] - result_secondary_regrowth.totalC_stand_pool[1]) - (result_secondary_regrowth.counterfactual_biomass[1:] - result_secondary_regrowth.counterfactual_biomass[1])
+
+                # D. Total substitution benefits and subtotals, total substitution for concrete & steel and total substitution for traditional bioenergy
+                substitution_plantation[nc, :] = result_plantation.LLP_substitution_benefit[1:] + result_plantation.VSLP_substitution_benefit[1:]
+                substitution_conversion[nc, :] = result_secondary_conversion.LLP_substitution_benefit[1:] + result_secondary_conversion.VSLP_substitution_benefit[1:]
+                substitution_regrowth[nc, :] = result_secondary_regrowth.LLP_substitution_benefit[1:] + result_secondary_regrowth.VSLP_substitution_benefit[1:]
+
+                ### Plantation specific
+                # E. Quantity of wood removed
+                wood_removed_plantation[nc, :] = result_plantation.totalC_stand_pool[1:]
+
+                # F. Quantity of carbon stored in plantations after 40 years
+                wood_in_plantation[nc, :] = result_plantation.totalC_stand_pool[1:]
+
+                # G. Quantity of carbon that would be stored in the counterfactual
+                wood_counterfactual_plantation[nc, :] = result_plantation.counterfactual_biomass[1:]
+
+
+
+
+                nc = nc + 1
+
+        def global_sum(array):
+            return array.sum(axis=0)
+
+        global_total_carbon = global_sum(total_carbon)
+        global_product_storage_plantation = global_sum(product_storage_plantation)
+        global_product_storage_conversion = global_sum(product_storage_conversion)
+        global_product_storage_regrowth = global_sum(product_storage_regrowth)
+
+        # The ratio of wood harvest divided by the total reduction in the secondary forest
+        print(global_total_carbon/(global_plantation+global_regrowth))
+        print(sum(global_plantation+global_regrowth))
+
+        exit()
+        # df_plantation = pd.DataFrame(data=array_plantation, index=scenarios['Country'], columns=range(2010, 2051, 1))
+        # df_conversion = pd.DataFrame(data=array_conversion, index=scenarios['Country'], columns=range(2010, 2051, 1))
+        # df_regrowth = pd.DataFrame(data=array_regrowth, index=scenarios['Country'], columns=range(2010, 2051, 1))
+
+        # df_plantation.loc['Global'] = df_plantation.sum()/0.8
+        # df_conversion.loc['Global'] = df_conversion.sum()/0.8
+        # df_regrowth.loc['Global'] = df_regrowth.sum()/0.8
+
+    #     df_plantation.to_excel(writer, sheet_name='{} plantation'.format(demand_name))
+    #     df_conversion.to_excel(writer, sheet_name='{} conversion'.format(demand_name))
+    #     df_regrowth.to_excel(writer, sheet_name='{} Regrowth'.format(demand_name))
+    #
+    # writer.save()
+    # writer.close()
+
+
+    return
+
+get_global_annual_carbon_flow()
