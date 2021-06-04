@@ -7,7 +7,7 @@ __email__ = "liqing.peng@wri.org"
 Plantation counterfactual secondary at the age of plantation scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual:
-i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate, continue to grow at young secondary GR until 20 years, and then grow at old secondary GR.
+i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * rotation period, continue to grow at young secondary GR until 20 years, and then grow at old secondary GR.
 ii.	If rotation period is GREATER THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * 20+ old secondary growth rate * (rotation period – 20), continue to grow at the old secondary growth rate
 
 3. Harvest with potential thinnings
