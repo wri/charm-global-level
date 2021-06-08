@@ -128,15 +128,19 @@ class CarbonTracker:
 
         return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1]-1]
 
+    def calculate_belowground_biomass(self, aboveground_biomass):
+        belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
+        return belowground_biomass
 
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = self.calculate_aboveground_biomass_initial_plantation()
-        self.belowground_biomass_live_plantation[0, 0] = self.aboveground_biomass_plantation[0, 0] * self.Global.ratio_root_shoot
+        self.belowground_biomass_live_plantation[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[0, 0])  #self.Global.ratio_root_shoot
         # Depending on rotation length
         if self.Global.rotation_length_harvest <= 20:
             self.counterfactual_biomass[1] = self.Global.GR_young_secondary * self.Global.rotation_length_harvest
         else:
             self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * (self.Global.rotation_length_harvest - 20)
+
 
 
     def carbon_pool_simulator_per_cycle(self):
@@ -166,8 +170,8 @@ class CarbonTracker:
 
             ### Carbon intensity at the year of harvest
             self.aboveground_biomass_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning])
-            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]) * self.Global.ratio_root_shoot
-            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.ratio_root_shoot
+            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]))  #* self.Global.ratio_root_shoot
+            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning])     #* self.Global.ratio_root_shoot
 
 
             # If this cycle is the harvest or thinning
@@ -196,7 +200,7 @@ class CarbonTracker:
                 else:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_old_plantation
 
-                self.belowground_biomass_live_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year] * self.Global.ratio_root_shoot
+                self.belowground_biomass_live_plantation[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[cycle, year])    # * self.Global.ratio_root_shoot
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
             for year in range(st_cycle, self.Global.arraylength):
@@ -256,7 +260,7 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
+        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)      #* (1 + self.Global.ratio_root_shoot)
 
         # starts at the rotation length * secondary young, and then grows at the secondary young rate until for 20 years, then grows at secondary old growth rate
         if self.Global.rotation_length_harvest < 20:
@@ -267,7 +271,7 @@ class CarbonTracker:
         else:
             for year in range(2, self.Global.arraylength):
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
-        self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
+        self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)     #* (1 + self.Global.ratio_root_shoot)
         self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
