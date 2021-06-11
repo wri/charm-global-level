@@ -132,8 +132,6 @@ class CarbonTracker:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_secondary
                 else:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_middle_secondary
-                # This creates a same cap as counterfactual for the maximum
-                self.aboveground_biomass_secondary[self.aboveground_biomass_secondary > self.aboveground_biomass_secondary_maximum] = self.aboveground_biomass_secondary_maximum
                 self.belowground_biomass_live_secondary[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[cycle, year])
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
@@ -196,7 +194,9 @@ class CarbonTracker:
         for year in range(2, self.Global.arraylength):
             self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
         self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
-        self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+        # 2021/06/10: remove the maximum cap
+        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+
 
 ######################## STEP 5: Present discounted value ##############################
 
@@ -240,21 +240,21 @@ class CarbonTracker:
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
-        plt.plot(self.totalC_stand_pool[:], label='stand')
-        plt.plot(self.totalC_product_pool[:], label='product')
-        plt.plot(self.totalC_product_LLP_pool[:], label='LLP')
-        plt.plot(self.totalC_product_SLP_pool[:], label='SLP')
-        plt.plot(self.totalC_product_LLP_harvest[:], label='LLP harvest')
-        plt.plot(self.totalC_product_VSLP_harvest[:], label='VSLP harvest')
-        plt.plot(self.totalC_root_decay_pool[:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[:], label='landfill')
-        plt.plot(self.totalC_slash_pool[:], label='slash')
-        plt.plot(self.totalC_methane_emission[:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[:], label='LLP substitution', marker='o')
-        plt.plot(self.VSLP_substitution_benefit[:], label='VSLP substitution', marker='^')
-        plt.plot(self.total_carbon_benefit[:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
+        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
+        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
+        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
+        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
+        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
+        plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
+        plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
+        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
+        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
+        plt.plot(self.totalC_slash_pool[1:], label='slash')
+        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
+        plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
+        plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
+        plt.legend(fontsize=16); plt.show(); exit()
 
         return
 
