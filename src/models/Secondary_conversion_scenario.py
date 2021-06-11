@@ -32,8 +32,7 @@ class CarbonTracker:
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
         # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
         # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
-        self.aboveground_biomass_secondary, self.belowground_biomass_decay_secondary, self.belowground_biomass_live_secondary = [
-            np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
+        self.aboveground_biomass_secondary, self.belowground_biomass_decay_secondary, self.belowground_biomass_live_secondary = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
         # Original, VSLP pool exists.
         # Update: 06/03/21. Now VSLP pool no longer exists, because VSLP disappear when the harvest happens
@@ -251,21 +250,21 @@ class CarbonTracker:
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
-        plt.plot(self.totalC_stand_pool[:], label='stand')
-        plt.plot(self.totalC_product_pool[:], label='product')
-        plt.plot(self.totalC_product_LLP_pool[:], label='LLP')
-        plt.plot(self.totalC_product_SLP_pool[:], label='SLP')
-        plt.plot(self.totalC_product_LLP_harvest[:], label='LLP harvest')
-        plt.plot(self.totalC_product_VSLP_harvest[:], label='VSLP harvest')
-        plt.plot(self.totalC_root_decay_pool[:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[:], label='landfill')
-        plt.plot(self.totalC_slash_pool[:], label='slash')
-        plt.plot(self.totalC_methane_emission[:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[:], label='LLP substitution', marker='o')
-        plt.plot(self.VSLP_substitution_benefit[:], label='VSLP substitution', marker='^')
-        plt.plot(self.total_carbon_benefit[:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
+        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
+        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
+        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
+        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
+        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
+        plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
+        plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
+        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
+        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
+        plt.plot(self.totalC_slash_pool[1:], label='slash')
+        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
+        plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
+        plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
+        plt.legend(fontsize=16); plt.show(); exit()
 
         return
 
