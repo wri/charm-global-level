@@ -62,13 +62,16 @@ class CarbonTracker:
         self.counterfactual()
         self.calculate_PDV()
 
+    def calculate_belowground_biomass(self, aboveground_biomass):
+        belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
+        return belowground_biomass
 
     def initialization(self):
         # # Secondary conversion scenario, initial aboveground biomass is the C density from secondary
         # self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
         # 2021/01/28 change the decision initial to the (20*young secondary GR)+(20*old secondary GR)
         self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
-        self.belowground_biomass_live_secondary[0, 0] = self.aboveground_biomass_secondary[0, 0] * self.Global.ratio_root_shoot
+        self.belowground_biomass_live_secondary[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[0, 0])
         # original counterfactual set to the Nancy's average carbon density
         # 2021/01/26 change the initial also to (20*young secondary GR)+(20*old secondary GR)
         self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
@@ -104,8 +107,8 @@ class CarbonTracker:
 
             ### Carbon intensity at the year of harvest
             self.aboveground_biomass_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning])
-            self.belowground_biomass_live_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]) * self.Global.ratio_root_shoot
-            self.belowground_biomass_decay_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.ratio_root_shoot
+            self.belowground_biomass_live_secondary[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]))
+            self.belowground_biomass_decay_secondary[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning])
 
 
             # If this cycle is the harvest or thinning
@@ -140,7 +143,7 @@ class CarbonTracker:
                 else:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_old_plantation
 
-                self.belowground_biomass_live_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year] * self.Global.ratio_root_shoot
+                self.belowground_biomass_live_secondary[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[cycle, year])
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
             for year in range(st_cycle, self.Global.arraylength):
@@ -201,8 +204,7 @@ class CarbonTracker:
         # If there is no harvest, the forest restoration becomes secondary forest
         for year in range(2, self.Global.arraylength):
             self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
-        # FIXME change the belowground biomass function
-        self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
+        self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
         # 2021/06/10: remove the maximum cap
         # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
