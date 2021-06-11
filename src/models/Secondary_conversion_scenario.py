@@ -28,9 +28,10 @@ class CarbonTracker:
         self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[(year_start_for_PDV+1):])
         self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[(year_start_for_PDV+1):])
 
-        ##### Initialize carbon flow variables
+        ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
+        # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
+        # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
         self.aboveground_biomass_secondary, self.belowground_biomass_decay_secondary, self.belowground_biomass_live_secondary = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -38,7 +39,7 @@ class CarbonTracker:
         # Update: 06/03/21. Now VSLP pool no longer exists, because VSLP disappear when the harvest happens
         self.product_LLP_pool_secondary, self.product_SLP_pool_secondary = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(2)]
         # Update: 06/03/21. Adding LLP harvest and VSLP harvest for substitution benefit calculation.
-        self.product_LLP_harvest_secondary, self.product_VSLP_harvest_secondary = [np.zeros((self.Global.ncycles_regrowth, self.Global.arraylength)) for _ in range(2)]
+        self.product_LLP_harvest_secondary, self.product_VSLP_harvest_secondary = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(2)]
 
         ### Slash pool
         self.slash_pool_secondary = np.zeros((self.Global.ncycles_harvest, self.Global.arraylength))
@@ -65,14 +66,15 @@ class CarbonTracker:
     def initialization(self):
         # # Secondary conversion scenario, initial aboveground biomass is the C density from secondary
         # self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
-        # 2021/01/28 change the decision initial also to the (20*young secondary GR)+(20*old secondary GR)
-        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * 20
+        # 2021/01/28 change the decision initial to the (20*young secondary GR)+(20*old secondary GR)
+        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
         self.belowground_biomass_live_secondary[0, 0] = self.aboveground_biomass_secondary[0, 0] * self.Global.ratio_root_shoot
-        # set to the Nancy's average carbon density
-        # self.counterfactual_biomass[0] = self.aboveground_biomass_secondary[0, 0]
-        # self.counterfactual_biomass[1] = self.aboveground_biomass_secondary[0, 0]
-        # 2021/01/26 change the initial to (20*young secondary GR)+(20*old secondary GR)
-        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * 20
+        # original counterfactual set to the Nancy's average carbon density
+        # 2021/01/26 change the initial also to (20*young secondary GR)+(20*old secondary GR)
+        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # Set up the threshold where the aboveground biomass will shift to second growth rate for plantation.
+        # 20 years is the IPCC threshold for young forest growth period
+        self.aboveground_biomass_oldgrowth_threshold = self.Global.GR_young_plantation * 20
 
 
     def carbon_pool_simulator_per_cycle(self):
@@ -84,7 +86,7 @@ class CarbonTracker:
         """
         for cycle in range(0, self.Global.ncycles_harvest):
             ### year of harvest / thinning
-            year_harvest_thinning = self.Global.year_index_both_plantation[cycle]   # year_harvest = cycle * self.Global.rotation_length_harvest + 1
+            year_harvest_thinning = self.Global.year_index_both_plantation[cycle]
             ### Start and end year of the cycle. If it is the last cycle, it is cut off to the length of the array.
             st_cycle = year_harvest_thinning + 1
             if cycle < self.Global.ncycles_harvest - 1:
@@ -124,11 +126,16 @@ class CarbonTracker:
 
             # ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                # FIXME grows at young growth rate for 20 years after the harvest
-                year_after_all_harvests = year - self.Global.year_index_harvest_plantation
-                year_after_current_harvest = np.min(year_after_all_harvests[year_after_all_harvests > 0])
-                # if year < 22:
-                if year_after_current_harvest <= 20:
+                # FIXME grows at young growth rate until reach the old growth threshold
+                # year_after_all_harvests = year - self.Global.year_index_harvest_plantation
+                # year_after_current_harvest = np.min(year_after_all_harvests[year_after_all_harvests > 0])
+                # # if year < 22:
+                # if year_after_current_harvest <= 20:
+                #     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_plantation
+                # else:
+                #     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_old_plantation
+
+                if self.aboveground_biomass_secondary[cycle, year - 1] < self.aboveground_biomass_oldgrowth_threshold:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
                     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_old_plantation
@@ -143,6 +150,7 @@ class CarbonTracker:
                 # Original version of VSLP product pool uses the exponential decay. Now we need to change it to immediate loss
                 # self.product_VSLP_pool_secondary[cycle, year] = self.product_VSLP_pool_secondary[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_VSLP * (year - year_harvest_thinning))
                 # Current version 06/02/21: the VSLP product pool does not mean the leftover of VSLP, it means the burnt emission (it should be considered emission pool, not the product pool)
+                # Slash is burnt the next year, so there is a jump the year after the harvest
                 self.slash_pool_secondary[cycle, year] = self.slash_pool_secondary[cycle, year_harvest_thinning] * (1 - self.Global.slash_burn) * np.exp(- np.log(2) / self.Global.half_life_slash * (year - year_harvest_thinning))
                 self.belowground_biomass_decay_secondary[cycle, year] = self.belowground_biomass_decay_secondary[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_root * (year - year_harvest_thinning))
 
@@ -189,13 +197,14 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
         # start zero, grow at growth rate
         # If there is no harvest, the forest restoration becomes secondary forest
         for year in range(2, self.Global.arraylength):
-            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
+            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+        # FIXME change the belowground biomass function
         self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
-        self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+        # 2021/06/10: remove the maximum cap
+        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
 ######################## STEP 5: Present discounted value ##############################
