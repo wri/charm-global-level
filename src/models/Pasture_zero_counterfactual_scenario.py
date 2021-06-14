@@ -35,7 +35,9 @@ class CarbonTracker:
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
-        self.product_LLP_pool_plantation, self.product_SLP_pool_plantation, self.product_VSLP_pool_plantation = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
+        self.product_LLP_pool_plantation, self.product_SLP_pool_plantation = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(2)]
+        self.product_LLP_harvest_plantation, self.product_VSLP_harvest_plantation = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(2)]
+
         ### Slash pool
         self.slash_pool_plantation = np.zeros((self.Global.ncycles_harvest, self.Global.arraylength))
         ### Landfill pool
@@ -56,11 +58,16 @@ class CarbonTracker:
         self.total_carbon_benefit()
         self.calculate_PDV()
 
+    def calculate_belowground_biomass(self, aboveground_biomass):
+        belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
+        return belowground_biomass
+
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = 0
-        self.belowground_biomass_live_plantation[0, 0] = self.aboveground_biomass_plantation[0, 0] * self.Global.ratio_root_shoot
+        self.belowground_biomass_live_plantation[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[0, 0])
         # Set to zero at the year of harvest, grow from zero if not continue used as plantation
         ### The counterfactual scenario is set to zero, no change need to be made
+
 
     def carbon_pool_simulator_per_cycle(self):
         ######################## STEP 2: Carbon tracker ##############################
@@ -89,8 +96,8 @@ class CarbonTracker:
 
             ### Carbon intensity at the year of harvest
             self.aboveground_biomass_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning])
-            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]) * self.Global.ratio_root_shoot
-            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.ratio_root_shoot
+            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]))
+            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning])
 
 
             # If this cycle is the harvest or thinning
@@ -98,14 +105,16 @@ class CarbonTracker:
             if self.Global.year_index_both_plantation[cycle] in self.Global.year_index_harvest_plantation:
                 self.product_LLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_LLP_plantation[year_harvest_thinning - 1]
                 self.product_SLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_SLP_plantation[year_harvest_thinning - 1]
-                self.product_VSLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_VSLP_plantation[year_harvest_thinning - 1]
                 self.slash_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_plantation[year_harvest_thinning]
+                self.product_LLP_harvest_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_LLP_plantation[year_harvest_thinning - 1]
+                self.product_VSLP_harvest_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_VSLP_plantation[year_harvest_thinning - 1]
 
             else:
                 self.product_LLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_LLP_thinning
                 self.product_SLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_SLP_thinning
-                self.product_VSLP_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_VSLP_thinning
                 self.slash_pool_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_plantation[year_harvest_thinning]
+                self.product_LLP_harvest_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_LLP_thinning
+                self.product_VSLP_harvest_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_VSLP_thinning
 
             # ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
@@ -118,14 +127,15 @@ class CarbonTracker:
                 else:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_old_plantation
 
-                self.belowground_biomass_live_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year] * self.Global.ratio_root_shoot
+                self.belowground_biomass_live_plantation[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[cycle, year])
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
             for year in range(st_cycle, self.Global.arraylength):
                 ### Product pool
                 self.product_LLP_pool_plantation[cycle, year] = self.product_LLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_LLP * (year - year_harvest_thinning))
                 self.product_SLP_pool_plantation[cycle, year] = self.product_SLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_SLP * (year - year_harvest_thinning))
-                self.product_VSLP_pool_plantation[cycle, year] = self.product_VSLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_VSLP * (year - year_harvest_thinning))
+                # Original version of VSLP product pool uses the exponential decay. Now we need to change it to immediate loss
+                # self.product_VSLP_pool_plantation[cycle, year] = self.product_VSLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_VSLP * (year - year_harvest_thinning))
                 self.slash_pool_plantation[cycle, year] = self.slash_pool_plantation[cycle, year_harvest_thinning] * (1 - self.Global.slash_burn) * np.exp(- np.log(2) / self.Global.half_life_slash * (year - year_harvest_thinning))
                 self.belowground_biomass_decay_plantation[cycle, year] = self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_root * (year - year_harvest_thinning))
 
@@ -151,8 +161,9 @@ class CarbonTracker:
 
         self.totalC_product_LLP_pool = np.sum(self.product_LLP_pool_plantation, axis=0)
         self.totalC_product_SLP_pool = np.sum(self.product_SLP_pool_plantation, axis=0)
-        self.totalC_product_VSLP_pool = np.sum(self.product_VSLP_pool_plantation, axis=0)
-        self.totalC_product_pool = self.totalC_product_LLP_pool + self.totalC_product_SLP_pool + self.totalC_product_VSLP_pool
+        self.totalC_product_LLP_harvest = np.sum(self.product_LLP_harvest_plantation, axis=0)
+        self.totalC_product_VSLP_harvest = np.sum(self.product_VSLP_harvest_plantation, axis=0)
+        self.totalC_product_pool = self.totalC_product_LLP_pool + self.totalC_product_SLP_pool #+ self.totalC_product_VSLP_pool
 
         self.totalC_root_decay_pool = np.sum(self.belowground_biomass_decay_plantation, axis=0)
         self.totalC_slash_pool = np.sum(self.slash_pool_plantation, axis=0)
@@ -162,8 +173,8 @@ class CarbonTracker:
         self.totalC_methane_emission = np.sum(self.landfill_methane_emission_plantation, axis=0)
 
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
-        self.LLP_substitution_benefit = self.totalC_product_LLP_pool * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
-        self.VSLP_substitution_benefit = self.totalC_product_VSLP_pool * self.Global.coef_bioenergy_substitution
+        self.LLP_substitution_benefit = self.totalC_product_LLP_harvest * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
+        self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest * self.Global.coef_bioenergy_substitution
         self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit + self.VSLP_substitution_benefit
 
     def counterfactual(self):
@@ -207,16 +218,21 @@ class CarbonTracker:
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
-        plt.plot(self.totalC_stand_pool[1:], label='stand')
-        plt.plot(self.totalC_product_pool[1:], label='product')
+        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
+        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
+        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
+        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
+        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
+        plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
+        plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
         plt.plot(self.totalC_slash_pool[1:], label='slash')
         plt.plot(self.totalC_methane_emission[1:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[1:], label='substitution')
-        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[1:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
+        plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
+        plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
+        plt.legend(fontsize=16); plt.show(); exit()
 
         return
 
