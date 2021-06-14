@@ -29,9 +29,10 @@ class CarbonTracker:
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
 
 
-        ##### Initialize carbon flow variables
+        ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
+        # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
+        # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -122,12 +123,18 @@ class CarbonTracker:
 
         return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1]-1]
 
+    def calculate_belowground_biomass(self, aboveground_biomass):
+        belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
+        return belowground_biomass
 
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = self.calculate_aboveground_biomass_initial_plantation()
-        self.belowground_biomass_live_plantation[0, 0] = self.aboveground_biomass_plantation[0, 0] * self.Global.ratio_root_shoot
+        self.belowground_biomass_live_plantation[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[0, 0])
         # Set to Nancy's secondary initial carbon density
         self.counterfactual_biomass[1] = self.Global.C_harvest_density_secondary
+        # Set up two threshold
+        self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_young_secondary * 20
+        self.aboveground_biomass_maturegrowth_threshold = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 60
 
 
     def carbon_pool_simulator_per_cycle(self):
@@ -157,8 +164,8 @@ class CarbonTracker:
 
             ### Carbon intensity at the year of harvest
             self.aboveground_biomass_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning])
-            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]) * self.Global.ratio_root_shoot
-            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.ratio_root_shoot
+            self.belowground_biomass_live_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * (1 - self.Global.harvest_percentage_plantation[year_harvest_thinning]))
+            self.belowground_biomass_decay_plantation[cycle, year_harvest_thinning] = self.calculate_belowground_biomass(aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning])
 
 
             # If this cycle is the harvest or thinning
@@ -187,7 +194,7 @@ class CarbonTracker:
                 else:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_old_plantation
 
-                self.belowground_biomass_live_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year] * self.Global.ratio_root_shoot
+                self.belowground_biomass_live_plantation[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[cycle, year])
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
             for year in range(st_cycle, self.Global.arraylength):
@@ -232,7 +239,6 @@ class CarbonTracker:
         self.totalC_landfill_pool = np.sum(self.landfill_pool_plantation, axis=0)
         self.totalC_methane_emission = np.sum(self.landfill_methane_emission_plantation, axis=0)
 
-
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
         self.LLP_substitution_benefit = self.totalC_product_LLP_harvest * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
         self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest * self.Global.coef_bioenergy_substitution
@@ -243,13 +249,20 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum * (1 + self.Global.ratio_root_shoot)
-
         # Grows at the old secondary rate
+        # for year in range(2, self.Global.arraylength):
+        #     self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+
+        ## Remove the old capping system. Use threshold to determine growth rate. Old version: before 06/09 2021
         for year in range(2, self.Global.arraylength):
-            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
-        self.counterfactual_biomass = self.counterfactual_biomass * (1 + self.Global.ratio_root_shoot)
-        self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+            if self.counterfactual_biomass[year-1] < self.aboveground_biomass_middlegrowth_threshold:
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year-1] + self.Global.GR_young_secondary
+            elif self.counterfactual_biomass[year-1] < self.aboveground_biomass_maturegrowth_threshold:
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year-1] + self.Global.GR_middle_secondary
+            else:
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year-1] + self.Global.GR_mature_secondary
+        self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
+        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
 ######################## STEP 5: Present discounted value ##############################
@@ -267,8 +280,7 @@ class CarbonTracker:
         if self.Global.rotation_length_harvest > 40:
             for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
                 st_cycle = cycle * self.Global.rotation_length_harvest + 1
-                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (
-                                   cycle == len(self.Global.year_index_harvest_plantation) - 1)
+                ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
 
                 for year in range(st_cycle, ed_cycle):
                     discounted_year[year] = year - st_cycle + 1
@@ -286,21 +298,21 @@ class CarbonTracker:
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
-        plt.plot(self.totalC_stand_pool[:], label='stand')
-        plt.plot(self.totalC_product_pool[:], label='product')
-        plt.plot(self.totalC_product_LLP_pool[:], label='LLP')
-        plt.plot(self.totalC_product_SLP_pool[:], label='SLP')
-        plt.plot(self.totalC_product_LLP_harvest[:], label='LLP harvest')
-        plt.plot(self.totalC_product_VSLP_harvest[:], label='VSLP harvest')
-        plt.plot(self.totalC_root_decay_pool[:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[:], label='landfill')
-        plt.plot(self.totalC_slash_pool[:], label='slash')
-        plt.plot(self.totalC_methane_emission[:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[:], label='LLP substitution', marker='o')
-        plt.plot(self.VSLP_substitution_benefit[:], label='VSLP substitution', marker='^')
-        plt.plot(self.total_carbon_benefit[:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
+        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
+        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
+        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
+        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
+        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
+        plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
+        plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
+        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
+        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
+        plt.plot(self.totalC_slash_pool[1:], label='slash')
+        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
+        plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
+        plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
+        plt.legend(fontsize=16); plt.show(); exit()
 
         return
 
