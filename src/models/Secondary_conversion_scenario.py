@@ -204,6 +204,7 @@ class CarbonTracker:
             self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
         self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
         # 2021/06/10: remove the maximum cap
+        # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)
         # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
 
