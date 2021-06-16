@@ -7,8 +7,9 @@ __email__ = "liqing.peng@wri.org"
 Plantation counterfactual secondary at the age of plantation scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual:
-i.	If rotation period is LESS THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * rotation period, continue to grow at young secondary GR until 20 years, and then grow at old secondary GR.
-ii.	If rotation period is GREATER THAN 20 years, counterfactual initial condition is equal to young secondary growth rate * 20+ old secondary growth rate * (rotation period – 20), continue to grow at the old secondary growth rate
+The initial (starting point) depends on the rotation period, as it is the secondary forest grows for one rotation period. 
+Then it continues to grow for another 40 years. 
+The growth rate depends on the stand age (0-20, 20-80, 80-120), not related to rotation period. 
 
 3. Harvest with potential thinnings
 """
@@ -32,9 +33,10 @@ class CarbonTracker:
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
 
 
-        ##### Initialize carbon flow variables
+        ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
+        # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
+        # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -135,12 +137,7 @@ class CarbonTracker:
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = self.calculate_aboveground_biomass_initial_plantation()
         self.belowground_biomass_live_plantation[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_plantation[0, 0])  #self.Global.ratio_root_shoot
-        # Depending on rotation length
-        if self.Global.rotation_length_harvest <= 20:
-            self.counterfactual_biomass[1] = self.Global.GR_young_secondary * self.Global.rotation_length_harvest
-        else:
-            self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_old_secondary * (self.Global.rotation_length_harvest - 20)
-
+        # Remove the initialization of counterfactual
 
 
     def carbon_pool_simulator_per_cycle(self):
@@ -260,19 +257,39 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)      #* (1 + self.Global.ratio_root_shoot)
+        # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)      #* (1 + self.Global.ratio_root_shoot)
 
+        ## FIXME remove the old capping system. Old version: before 06/09 2021
+        # Depending on rotation length
+        # if self.Global.rotation_length_harvest <= 20:
+        #     self.counterfactual_biomass[1] = self.Global.GR_young_secondary * self.Global.rotation_length_harvest
+        # else:
+        #     self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * (self.Global.rotation_length_harvest - 20)
         # starts at the rotation length * secondary young, and then grows at the secondary young rate until for 20 years, then grows at secondary old growth rate
-        if self.Global.rotation_length_harvest < 20:
-            for year in range(2, 22 - self.Global.rotation_length_harvest):
-                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
-            for year in range(22 - self.Global.rotation_length_harvest, self.Global.arraylength):
-                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
-        else:
-            for year in range(2, self.Global.arraylength):
-                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
-        self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)     #* (1 + self.Global.ratio_root_shoot)
-        self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+        # if self.Global.rotation_length_harvest < 20:
+        #     for year in range(2, 22 - self.Global.rotation_length_harvest):
+        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
+        #     for year in range(22 - self.Global.rotation_length_harvest, self.Global.arraylength):
+        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+        # else:
+        #     for year in range(2, self.Global.arraylength):
+        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+        # self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)     #* (1 + self.Global.ratio_root_shoot)
+        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
+        # FIXME UNCOMMENT
+        # The time series must have a length longer than 120 to store the full three growing stage, but it can have longer optional > 120 years.
+        tstep_max = max(self.Global.rotation_length_harvest + self.Global.nyears, 120+1)
+        counterfactual_biomass_start_zero = np.zeros((tstep_max))
+        # For three period
+        for tstep in range(1, 20):
+            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_young_secondary
+        for tstep in range(20, 80):
+            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_middle_secondary
+        for tstep in range(80, tstep_max):
+            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_mature_secondary
+
+        # Update: year 0 = 0, year 1 onwards are cropped from the counterfactual_biomass_start_zero
+        self.counterfactual_biomass[1:] = counterfactual_biomass_start_zero[self.Global.rotation_length_harvest:self.Global.rotation_length_harvest+self.Global.nyears]
 
 
 ######################## STEP 5: Present discounted value ##############################
@@ -319,21 +336,21 @@ class CarbonTracker:
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
-        plt.plot(self.totalC_stand_pool[1:], label='stand')
-        plt.plot(self.totalC_product_pool[1:], label='product')
+        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
+        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
+        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
+        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
+        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
         plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
         plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
-        plt.plot(self.totalC_product_LLP_harvest[1:], label='LLP harvest')
-        plt.plot(self.totalC_product_VSLP_harvest[1:], label='VSLP harvest')
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
         plt.plot(self.totalC_slash_pool[1:], label='slash')
         plt.plot(self.totalC_methane_emission[1:], label='methane emission')
         plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
         plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
-        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit')
-        plt.plot(self.counterfactual_biomass[1:], label='counterfactual')
-        plt.legend(fontsize=20); plt.show(); exit()
+        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
+        plt.legend(fontsize=16); plt.show(); exit()
 
         return
 
