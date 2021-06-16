@@ -257,26 +257,7 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)      #* (1 + self.Global.ratio_root_shoot)
-
-        ## FIXME remove the old capping system. Old version: before 06/09 2021
-        # Depending on rotation length
-        # if self.Global.rotation_length_harvest <= 20:
-        #     self.counterfactual_biomass[1] = self.Global.GR_young_secondary * self.Global.rotation_length_harvest
-        # else:
-        #     self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * (self.Global.rotation_length_harvest - 20)
-        # starts at the rotation length * secondary young, and then grows at the secondary young rate until for 20 years, then grows at secondary old growth rate
-        # if self.Global.rotation_length_harvest < 20:
-        #     for year in range(2, 22 - self.Global.rotation_length_harvest):
-        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
-        #     for year in range(22 - self.Global.rotation_length_harvest, self.Global.arraylength):
-        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
-        # else:
-        #     for year in range(2, self.Global.arraylength):
-        #         self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
-        # self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)     #* (1 + self.Global.ratio_root_shoot)
-        # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
-        # FIXME UNCOMMENT
+        ## Remove the old capping system. Old version: before 06/09 2021 Depending on rotation length
         # The time series must have a length longer than 120 to store the full three growing stage, but it can have longer optional > 120 years.
         tstep_max = max(self.Global.rotation_length_harvest + self.Global.nyears, 120+1)
         counterfactual_biomass_start_zero = np.zeros((tstep_max))
