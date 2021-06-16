@@ -68,12 +68,12 @@ class CarbonTracker:
     def initialization(self):
         # # Secondary regrowth scenario, initial aboveground biomass is the C density from secondary
         # self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
-        # 2021/01/28 change the decision initial to the (20*young secondary GR)+(20*old secondary GR)
-        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # 2021/06/09 change the decision initial to the (20*young secondary GR)+(60*old secondary GR)
+        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 60
         self.belowground_biomass_live_secondary[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[0, 0])
         # original counterfactual set to the Nancy's average carbon density
-        # 2021/01/26 change the initial also to (20*young secondary GR)+(20*old secondary GR)
-        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # 2021/06/09 change the initial also to (20*young secondary GR)+(60*old secondary GR)
+        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 60
         # Set up the threshold where the aboveground biomass will shift to second growth rate for secondary forest.
         # 20 years is the IPCC threshold for young forest growth period
         self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_young_secondary * 20
@@ -192,7 +192,7 @@ class CarbonTracker:
         # start zero, grow at growth rate
         # If there is no harvest, the forest restoration becomes secondary forest
         for year in range(2, self.Global.arraylength):
-            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_mature_secondary
         self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
         # 2021/06/10: remove the maximum cap
         # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
