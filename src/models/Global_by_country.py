@@ -240,42 +240,38 @@ class Parameters:
         self.harvest_percentage_plantation = np.zeros((self.arraylength))
         self.harvest_percentage_regrowth = np.zeros((self.arraylength))
         slash_percentage_plantation = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        # slash_percentage_secondary_conversion = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        # slash_percentage_secondary_regrowth = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        # FIXME: new slash rate for secondary forest, due to the varying product share, the weighted average slash rate change depending on the first harvest year
+        # 06/17/2021 New slash rate for secondary forest, due to the varying product share, the weighted average slash rate change depending on the first harvest year
         slash_percentage_secondary_conversion = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
         slash_percentage_secondary_regrowth = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
 
         ### For plantation/conversion scenario
+        # If there is thinning
         if (np.isnan(self.thinning_percentage_default) == False) & (self.thinning_percentage_default != 0) & (np.isnan(self.rotation_length_thinning) == False) & (self.rotation_length_thinning > 0):
             self.harvest_percentage_plantation[self.year_index_thinning_plantation] = self.thinning_percentage_default
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
 
-            # All harvest is plantation slash
+            # All harvest is plantation slash: 1 row x 42 column array. No changes with years
             slash_percentage_plantation[self.year_index_thinning_plantation] = self.product_share_slash_thinning
             slash_percentage_plantation[self.year_index_harvest_plantation] = self.product_share_slash_plantation
 
             # The first harvest is secondary slash, the others are plantation slash
-            # slash_percentage_secondary_conversion[self.year_index_thinning_plantation] = self.product_share_slash_thinning
-            # slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            # slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
-            # FIXME new array with different starting year of harvest
-            slash_percentage_secondary_conversion[np.arange(self.nyears), self.year_index_thinning_plantation] = self.product_share_slash_thinning
-            slash_percentage_secondary_conversion[np.arange(self.nyears), self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_thinning_plantation] = self.product_share_slash_thinning
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
             slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
-        else:
+        else:  # Default: if there is no thinning
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
             slash_percentage_plantation[self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            # The first harvest is secondary slash, the others are plantation slash
-            # slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_secondary
-            # slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
-            # FIXME new array with different starting year of harvest
+            # The first harvest is secondary slash, the others are plantation slash.
+            # 07/01/2021 BUG FIXED: conversion slash rate is plantation slash rate
+            # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
             slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
             slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         ### For regrowth scenario
         self.year_index_harvest_regrowth = [1]
+        # If there is a thinning
         if (np.isnan(self.thinning_percentage_regrowth) == False) & (self.thinning_percentage_regrowth != 0) & (np.isnan(self.rotation_length_thinning) == False) & (self.rotation_length_thinning > 0):
             self.year_index_thinning_regrowth = np.arange(1, self.arraylength, self.rotation_length_thinning, dtype=int)
             # Include the first harvest
@@ -284,18 +280,18 @@ class Parameters:
 
             self.harvest_percentage_regrowth[self.year_index_thinning_regrowth] = self.thinning_percentage_regrowth
             self.harvest_percentage_regrowth[self.year_index_harvest_regrowth] = self.harvest_percentage_default
+
             # The first harvest is secondary slash, remove following harvests
-            # slash_percentage_secondary_regrowth[self.year_index_thinning_regrowth] = self.product_share_slash_thinning
-            # slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
-            # FIXME new array with different starting year of harvest
-            slash_percentage_secondary_regrowth[np.arange(self.nyears), self.year_index_thinning_regrowth] = self.product_share_slash_thinning
+            # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
+            slash_percentage_secondary_regrowth[np.arange(self.nyears)[:, None], self.year_index_thinning_regrowth] = self.product_share_slash_thinning
             slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
-        else:
+
+        else:  # Default: if there is no thinning
             self.year_index_both_regrowth = self.year_index_harvest_regrowth
             self.harvest_percentage_regrowth[self.year_index_harvest_regrowth] = self.harvest_percentage_default
             self.ncycles_regrowth = len(self.year_index_both_regrowth)
-            # slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
-            # FIXME new array with different starting year of harvest
+            # The first harvest is secondary slash, remove following harvests
+            # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
             slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
 
