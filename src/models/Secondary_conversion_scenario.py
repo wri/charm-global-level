@@ -24,9 +24,9 @@ class CarbonTracker:
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
         self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [np.zeros((self.Global.nyears)) for _ in range(3)]
 
-        self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[(year_start_for_PDV+1):])
-        self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[(year_start_for_PDV+1):])
-        self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[(year_start_for_PDV+1):])
+        self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[year_start_for_PDV, (year_start_for_PDV+1):])  # slash_percentage_secondary has been changed to a 41x42 matrix
+        self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[year_start_for_PDV, (year_start_for_PDV+1):])  # slash_percentage_secondary has been changed to a 41x42 matrix
+        self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_conversion[year_start_for_PDV, (year_start_for_PDV+1):])   # slash_percentage_secondary has been changed to a 41x42 matrix
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
@@ -114,14 +114,14 @@ class CarbonTracker:
             if self.Global.year_index_both_plantation[cycle] in self.Global.year_index_harvest_plantation:
                 self.product_LLP_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_LLP_secondary[year_harvest_thinning - 1]
                 self.product_SLP_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_SLP_secondary[year_harvest_thinning - 1]
-                self.slash_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_secondary_conversion[year_harvest_thinning]
+                self.slash_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_secondary_conversion[self.year_start_for_PDV, year_harvest_thinning]
                 self.product_LLP_harvest_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_LLP_secondary[year_harvest_thinning - 1]
                 self.product_VSLP_harvest_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.product_share_VSLP_secondary[year_harvest_thinning - 1]
 
             else:
                 self.product_LLP_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_LLP_thinning
                 self.product_SLP_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_SLP_thinning
-                self.slash_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_secondary_conversion[year_harvest_thinning]
+                self.slash_pool_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.slash_percentage_secondary_conversion[self.year_start_for_PDV, year_harvest_thinning]
                 self.product_LLP_harvest_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_LLP_thinning
                 self.product_VSLP_harvest_secondary[cycle, year_harvest_thinning] = aboveground_biomass_before_harvest * self.Global.harvest_percentage_plantation[year_harvest_thinning] * self.Global.product_share_VSLP_thinning
 
