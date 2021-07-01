@@ -26,6 +26,7 @@ Global parameters required for carbon tracker for different scenarios
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 class Parameters:
 
@@ -63,11 +64,19 @@ class Parameters:
         # Growth rates, C density
         self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0]
         self.GR_old_plantation = self.input_country['Old Plantation GR (MgC/ha/year) (Harris)'].values[0]
-        self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]
-        self.GR_old_secondary = self.input_country['Old Secondary GR (MgC/ha/year) (Harris)'].values[0]
+        self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]     # Stand age 0-20
+        self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year) (Harris)'].values[0]   # Stand age 20-80
+        # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-80), use this relationship to estimate GR mature
+        # FIXME
+        self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
         self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
         self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
-        self.ratio_root_shoot = 0.26
+        self.secondary_mature_wood_share = self.input_country['% of secondary supply from mature secondary forest'].values[0]
+
+        # This constant approach is depreciated, used only in the Plantation scenario as a reference
+        # Mokany 2006
+        self.root_shoot_coef = 0.489
+        self.root_shoot_power = 0.89
         self.carbon_wood_ratio = 0.5
 
         # Decay parameters
@@ -87,7 +96,10 @@ class Parameters:
         # Calculate annual wood demand/production and product pool breakdown
         # Product share ratio, depending on country input data
         self.product_share_slash_plantation = self.input_country['% slash plantation'].values[0]
-        self.product_share_slash_secondary = self.input_country['% slash natural'].values[0]
+        # Update 06/17/2021: split the slash rate into LLP, SLP, and VSLP.
+        self.product_share_slash_secondary_llp = self.input_country['% slash natural for LLP'].values[0]
+        self.product_share_slash_secondary_slp = self.input_country['% slash natural for SLP'].values[0]
+        self.product_share_slash_secondary_vslp = self.input_country['% slash natural for VSLP'].values[0]
         self.product_share_VSLP_thinning = self.input_country['% in VSLP thinning'].values[0]
         self.product_share_SLP_thinning = self.input_country['% in SLP thinning'].values[0]
         self.product_share_LLP_thinning = self.input_country['% in LLP thinning'].values[0]
@@ -118,6 +130,13 @@ class Parameters:
         # Product numbers before accounting for slash
         self.product_share_LLP, self.product_share_SLP, self.product_share_VSLP = [product / self.product_total for product in
                                                                     (product_LLP, product_SLP, product_VSLP)]
+
+        ### 06/17/2021: calculate weighted average slash rate in time series, based on the product quantity
+        slash_LLP = product_LLP * self.product_share_slash_secondary_llp / (1 - self.product_share_slash_secondary_llp)
+        slash_SLP = product_SLP * self.product_share_slash_secondary_slp / (1 - self.product_share_slash_secondary_slp)
+        slash_VSLP = product_VSLP * self.product_share_slash_secondary_vslp / (1 - self.product_share_slash_secondary_vslp)
+        slash_total = slash_LLP + slash_SLP + slash_VSLP
+        self.product_share_slash_secondary_yearly = (slash_total / (self.product_total + slash_total))
 
     def setup_LLP_substitution(self):
         # LLP parameters
@@ -215,14 +234,17 @@ class Parameters:
         # For plantation or secondary conversion scenario
         self.thinning_percentage_default = self.input_country['% Removed in thinning plantation'].values[0]
         # For secondary regrowth scenario
-        self.thinning_percentage_regrowth = 0.1  # self.input_country['% Removed in thinning regrowth'].values[0]
+        self.thinning_percentage_regrowth = self.input_country['% Removed in thinning regrowth'].values[0]
 
         ### Harvest/slash percentage
         self.harvest_percentage_plantation = np.zeros((self.arraylength))
         self.harvest_percentage_regrowth = np.zeros((self.arraylength))
         slash_percentage_plantation = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        slash_percentage_secondary_conversion = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        slash_percentage_secondary_regrowth = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
+        # slash_percentage_secondary_conversion = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
+        # slash_percentage_secondary_regrowth = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
+        # FIXME: new slash rate for secondary forest, due to the varying product share, the weighted average slash rate change depending on the first harvest year
+        slash_percentage_secondary_conversion = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
+        slash_percentage_secondary_regrowth = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
 
         ### For plantation/conversion scenario
         if (np.isnan(self.thinning_percentage_default) == False) & (self.thinning_percentage_default != 0) & (np.isnan(self.rotation_length_thinning) == False) & (self.rotation_length_thinning > 0):
@@ -234,17 +256,23 @@ class Parameters:
             slash_percentage_plantation[self.year_index_harvest_plantation] = self.product_share_slash_plantation
 
             # The first harvest is secondary slash, the others are plantation slash
-            slash_percentage_secondary_conversion[self.year_index_thinning_plantation] = self.product_share_slash_thinning
-            slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
+            # slash_percentage_secondary_conversion[self.year_index_thinning_plantation] = self.product_share_slash_thinning
+            # slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            # slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
+            # FIXME new array with different starting year of harvest
+            slash_percentage_secondary_conversion[np.arange(self.nyears), self.year_index_thinning_plantation] = self.product_share_slash_thinning
+            slash_percentage_secondary_conversion[np.arange(self.nyears), self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         else:
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
             slash_percentage_plantation[self.year_index_harvest_plantation] = self.product_share_slash_plantation
             # The first harvest is secondary slash, the others are plantation slash
-            slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_secondary
-            slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
-
+            # slash_percentage_secondary_conversion[self.year_index_harvest_plantation] = self.product_share_slash_secondary
+            # slash_percentage_secondary_conversion[1] = self.product_share_slash_secondary
+            # FIXME new array with different starting year of harvest
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         ### For regrowth scenario
         self.year_index_harvest_regrowth = [1]
@@ -257,21 +285,32 @@ class Parameters:
             self.harvest_percentage_regrowth[self.year_index_thinning_regrowth] = self.thinning_percentage_regrowth
             self.harvest_percentage_regrowth[self.year_index_harvest_regrowth] = self.harvest_percentage_default
             # The first harvest is secondary slash, remove following harvests
-            slash_percentage_secondary_regrowth[self.year_index_thinning_regrowth] = self.product_share_slash_thinning
-            slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
+            # slash_percentage_secondary_regrowth[self.year_index_thinning_regrowth] = self.product_share_slash_thinning
+            # slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
+            # FIXME new array with different starting year of harvest
+            slash_percentage_secondary_regrowth[np.arange(self.nyears), self.year_index_thinning_regrowth] = self.product_share_slash_thinning
+            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
         else:
             self.year_index_both_regrowth = self.year_index_harvest_regrowth
             self.harvest_percentage_regrowth[self.year_index_harvest_regrowth] = self.harvest_percentage_default
             self.ncycles_regrowth = len(self.year_index_both_regrowth)
-            slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
+            # slash_percentage_secondary_regrowth[1] = self.product_share_slash_secondary
+            # FIXME new array with different starting year of harvest
+            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
 
         ### To get the staggered array for slash percentage
         def staircase(array):
-            array = pd.DataFrame(array)
             # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
-            array = array.replace(to_replace=0, method='ffill').values.reshape(self.arraylength)
-            return array
+            outarray = np.zeros(array.shape)
+            if len(array.shape) == 1:
+                df = pd.DataFrame(array)
+                outarray = df.replace(to_replace=0, method='ffill').values.reshape(array.shape)
+            else: # array.shape = 2
+                for row in range(array.shape[0]):
+                    df = pd.DataFrame(array[row, :])
+                    outarray[row, :] = df.replace(to_replace=0, value=None, method='ffill').values.reshape(array.shape[1])
+            return outarray
 
         self.slash_percentage_plantation, self.slash_percentage_secondary_conversion, self.slash_percentage_secondary_regrowth = [staircase(slash_percentage) for slash_percentage in [slash_percentage_plantation, slash_percentage_secondary_conversion, slash_percentage_secondary_regrowth]]
 
