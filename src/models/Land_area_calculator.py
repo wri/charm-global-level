@@ -17,7 +17,7 @@ Produce the area required from plantation, secondary forest by year
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario
+import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
 
@@ -36,7 +36,8 @@ class LandCalculator:
         else:  # The previous version
             self.plantation_counterfactual_scenario = Plantation_scenario
 
-        # calculate output per ha
+        # calculate output per ha.
+        # Use the first year of PDV (default), as it does not matter which year it starts, all the biomass after full harvest is the same.
         # output per ha for plantation
         self.output_ha_plantation = self.calculate_output_ha(self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=0), self.Global.slash_percentage_plantation)
 
@@ -45,6 +46,17 @@ class LandCalculator:
             self.Global.slash_percentage_secondary_conversion)
         self.output_ha_secondary_regrowth = self.calculate_output_ha(Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
             self.Global.slash_percentage_secondary_regrowth)
+        # Add new scenario for mature secondary forest regrowth (>80 years)
+        self.output_ha_secondary_mature_regrowth = self.calculate_output_ha(Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
+            self.Global.slash_percentage_secondary_regrowth)
+
+        # plt.plot(self.output_ha_plantation.T, label='plantation')
+        # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
+        # plt.plot(self.output_ha_secondary_regrowth.T, label='regrowth')
+        # plt.plot(self.output_ha_secondary_mature_regrowth.T, label='mature regrowth')
+        # plt.legend()
+        # plt.show()
+        # exit()
 
         ### For plantation scenario, calculate plantation area
         self.calculate_plantation_area()
@@ -55,13 +67,10 @@ class LandCalculator:
         self.area_harvested_new_secondary_conversion, self.wood_harvest_accumulate_secondary_conversion = self.calculate_new_area_secondary_conversion(self.output_ha_secondary_conversion)
         ### Area required in secondary regrowth scenario
         self.area_harvested_new_secondary_regrowth, self.wood_harvest_accumulate_secondary_regrowth = self.calculate_new_area_secondary_regrowth(self.output_ha_secondary_regrowth)
-
-        # plt.plot(self.output_ha_plantation, label='plantation')
-        # plt.plot(self.output_ha_secondary_conversion, label='conversion')
-        # plt.plot(self.output_ha_secondary_regrowth, label='regrowth')
-        # plt.legend();
-        # plt.show();
-        # exit()
+        ### Area required in secondary mature regrowth scenario
+        self.area_harvested_new_secondary_mature_regrowth, self.wood_harvest_accumulate_secondary_mature_regrowth = self.calculate_new_area_secondary_mature_regrowth(self.output_ha_secondary_mature_regrowth)
+        # Add secondary regrowth and secondary mature regrowth together
+        self.area_harvested_new_secondary_regrowth_combined = self.area_harvested_new_secondary_regrowth + self.area_harvested_new_secondary_mature_regrowth
 
         # land area check
         # print(self.output_ha_secondary_conversion[0])
@@ -74,6 +83,7 @@ class LandCalculator:
         ### total PDV
         self.calculate_total_present_discounted_value()
 
+    ####################################################### OUTPUT per ha ###########################################################
 
     def calculate_output_ha(self, modelrun_scenario, product_share_slash):
         """
@@ -85,13 +95,32 @@ class LandCalculator:
         aboveground_biomass_diff = np.diff(aboveground_biomass) * (-1)
         # Only keep the positives = harvest/thinning records
         aboveground_biomass_diff[aboveground_biomass_diff < 0] = 0
-        # Get the output = production by removing the slash share (depending whether it is a harvest/thinning)
-        output_ha = aboveground_biomass_diff * (1 - product_share_slash[1:])
-        output_ha = pd.DataFrame(output_ha)
-        # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
-        output_ha = output_ha.replace(to_replace=0, method='ffill').values.reshape(self.Global.nyears)
 
-        return output_ha
+        def exclude_slash_staircase():
+            # This is copied from the Global meta file
+            # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
+            if len(product_share_slash.shape) == 1:
+                # Get the output = production by removing the slash share (depending whether it is a harvest/thinning)
+                output_ha = aboveground_biomass_diff * (1 - product_share_slash[1:])
+                df = pd.DataFrame(output_ha)
+                output_ha_outarray = df.replace(to_replace=0, method='ffill').values.reshape(output_ha.shape)
+            else: # array.shape = 2
+                # FIXME change the slash rate to a 42x41 matrix to store different start year 40 year cycle
+                output_ha = aboveground_biomass_diff[None, :] * (1 - product_share_slash[:, 1:])  # [None:, ] means a new axis
+                output_ha_outarray = np.zeros(output_ha.shape)
+                for row in range(output_ha.shape[0]):
+                    df = pd.DataFrame(output_ha[row, :])
+                    output_ha_outarray[row, :] = df.replace(to_replace=0, value=None, method='ffill').values.reshape(output_ha.shape[1])
+            return output_ha_outarray
+
+        output_ha_staircase = exclude_slash_staircase()
+        # fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
+        # ax1.plot(aboveground_biomass_diff)
+        # ax2.plot(product_share_slash.T)
+        # ax3.plot(output_ha_staircase.T)
+        # plt.show()
+
+        return output_ha_staircase
 
 
     def calculate_output_ha_thinning(self, modelrun_scenario, product_share_slash):
@@ -122,6 +151,8 @@ class LandCalculator:
 
         return output_ha_thinning
 
+
+    ####################################################### Land area ###########################################################
 
     def calculate_plantation_area(self):
         """
@@ -232,6 +263,7 @@ class LandCalculator:
             # calculating the area harvested between year zero and the first thinning, the secondary area harvested (assuming all supply is not met by plantation) is simply:
             # area_harvested_secondary_new = output_need_secondary / output_ha_secondary_first_harvest
             for year in range(st_cycle, ed_cycle):
+                print(year)
                 # calculating the area harvested AFTER a thinning, account for the wood that you are getting from the secondary thinning and plantation harvest/thinning.
                 # Because, in a perfectly managed forest, the thinnings and harvests would be able to supply all the wood required, thus eliminating the need to harvest any ADDITIONAL hectares.
                 # Then for each subsequent harvest/thinning, you subtract another (output from thinning * area harvested in year (x-rotation))
@@ -245,11 +277,11 @@ class LandCalculator:
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
                     # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
-                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] + area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]
+                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] + area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year, year - Nyears_Ncycles_ahead]   # 2D array output_ha_secondary[year - Nyears_Ncycles_ahead]
                 if (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
                     # !!!! divide by output from first harvest !!!!
                     # This is to track the secondary area that is first harvested (not the wood reharvesting from the same ha)
-                    area_harvested_new_secondary[year] = (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[0]
+                    area_harvested_new_secondary[year] = (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[year, 0]    # output_ha_secondary[0]
                 else:
                     area_harvested_new_secondary[year] = 0
 
@@ -261,6 +293,57 @@ class LandCalculator:
         Calculate the total new area being harvested from the secondary forest regrowth
         use year index both for regrowth, ncycles_regrowth
         """
+        # Add a parameter to mix the percentage of wood from secondary middle aged and secondary mature forest
+        secondary_wood_share = 1 - self.Global.secondary_mature_wood_share
+
+        # Initialize two variables
+        area_harvested_new_secondary = np.zeros((self.Global.nyears))
+        wood_harvest_accumulate_secondary = np.zeros((self.Global.nyears))
+
+        year_index_harvest_thinning = self.Global.year_index_both_regrowth.copy()
+        # Add the last year to calculate the duration
+        year_index_harvest_thinning.insert(self.Global.ncycles_regrowth, self.Global.nyears)
+        # Get the period lengths for all cycles
+        cycle_lengths = np.diff(year_index_harvest_thinning)
+        # print(year_index_harvest_thinning, cycle_lengths)
+
+
+        for current_cycle in range(0, self.Global.ncycles_regrowth):
+            ### st year and end year of each period, shift -1 to remove the first initial condition
+            st_cycle = self.Global.year_index_both_regrowth[current_cycle] - 1
+            if current_cycle < self.Global.ncycles_regrowth - 1:
+                ed_cycle = self.Global.year_index_both_regrowth[current_cycle + 1] - 1
+            else:
+                ed_cycle = self.Global.nyears
+            for year in range(st_cycle, ed_cycle):
+                for previous_cycle in range(0, current_cycle):
+                    Nyears_Ncycles_before = 0
+                    Nyears_Ncycles_ahead = 0
+                    for i in range(previous_cycle, current_cycle):
+                        Nyears_Ncycles_before = Nyears_Ncycles_before + cycle_lengths[i]
+                    for j in range(0, previous_cycle):
+                        Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
+                    # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
+                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year, year - Nyears_Ncycles_ahead]     # 2D array output_ha_secondary[year - Nyears_Ncycles_ahead]
+
+
+                if (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
+                    # !!!! divide by output from first harvest !!!!
+                    area_harvested_new_secondary[year] = (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[year, 0]    # output_ha_secondary[0]
+                else:
+                    area_harvested_new_secondary[year] = 0
+
+        return area_harvested_new_secondary, wood_harvest_accumulate_secondary
+
+
+    def calculate_new_area_secondary_mature_regrowth(self, output_ha_secondary):
+        """
+        Calculate the total new area being harvested from the secondary forest mature regrowth
+        use year index both for regrowth, ncycles_regrowth
+        """
+        # Add a parameter to mix the percentage of wood from secondary middle aged and secondary mature forest
+        secondary_wood_share = self.Global.secondary_mature_wood_share
+
         # Initialize two variables
         area_harvested_new_secondary = np.zeros((self.Global.nyears))
         wood_harvest_accumulate_secondary = np.zeros((self.Global.nyears))
@@ -288,12 +371,12 @@ class LandCalculator:
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
                     # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
-                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]
+                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]   # output_ha_secondary[year - Nyears_Ncycles_ahead]
 
 
-                if (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
+                if (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
                     # !!!! divide by output from first harvest !!!!
-                    area_harvested_new_secondary[year] = (self.output_need_secondary[year] - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[0]
+                    area_harvested_new_secondary[year] = (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) / output_ha_secondary[year, 0]   # output_ha_secondary[0]
                 else:
                     area_harvested_new_secondary[year] = 0
 
@@ -408,24 +491,27 @@ class LandCalculator:
 
             # Initialize
             # 41+40 years rows, 41 columns
-            annual_discounted_value_nyears_plantation, annual_discounted_value_nyears_secondary_conversion, annual_discounted_value_nyears_secondary_regrowth = [
-                np.zeros((self.Global.nyears+self.Global.nyears-1, self.Global.nyears)) for _ in range(3)]
+            annual_discounted_value_nyears_plantation, annual_discounted_value_nyears_secondary_conversion, annual_discounted_value_nyears_secondary_regrowth, annual_discounted_value_nyears_secondary_mature_regrowth = [
+                np.zeros((self.Global.nyears+self.Global.nyears-1, self.Global.nyears)) for _ in range(4)]
             # Get PDV values for the large matrix nyears+40 x nyears
             for year in range(self.Global.nyears):
                 # Update the PDV per ha
                 annual_discounted_value_nyears_plantation[year:year+self.Global.nyears, year] = self.plantation_counterfactual_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
                 annual_discounted_value_nyears_secondary_conversion[year:year+self.Global.nyears, year] = Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
                 annual_discounted_value_nyears_secondary_regrowth[year:year+self.Global.nyears, year] = Secondary_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
+                annual_discounted_value_nyears_secondary_mature_regrowth[year:year+self.Global.nyears, year] = Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year).annual_discounted_value[:]
 
             # Sum up the yearly values
             self.pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
             self.pdv_yearly_secondary_conversion = np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0)
             self.pdv_yearly_secondary_regrowth = np.sum(annual_discounted_value_nyears_secondary_regrowth, axis=0)
+            self.pdv_yearly_secondary_mature_regrowth = np.sum(annual_discounted_value_nyears_secondary_mature_regrowth, axis=0)
 
             # First, let’s do the secondary PDV (regrowth; conversion) since that’s easier.
             # The total secondary PDV is simply equal to the number of secondary hectares harvested in year x multiplied by the PDV of harvesting one hectare in year x. We have to do this separately for the conversion and regrowth scenarios.
             self.total_pdv_secondary_conversion = self.area_harvested_new_secondary_conversion * self.pdv_yearly_secondary_conversion
             self.total_pdv_secondary_regrowth = self.area_harvested_new_secondary_regrowth * self.pdv_yearly_secondary_regrowth
+            self.total_pdv_secondary_mature_regrowth = self.area_harvested_new_secondary_mature_regrowth * self.pdv_yearly_secondary_mature_regrowth
 
             self.total_pdv_plantation = np.zeros((self.Global.nyears))
             self.area_harvested_new_plantation = np.zeros((self.Global.nyears))
@@ -460,5 +546,8 @@ class LandCalculator:
                 return total_pdv_plantation_secondary_sum
 
             # Unit: megat tonnes C
+            # For secondary conversion
             self.total_pdv_plantation_secondary_conversion = total_PDV_scenario(self.total_pdv_secondary_conversion)
-            self.total_pdv_plantation_secondary_regrowth = total_PDV_scenario(self.total_pdv_secondary_regrowth)
+            # For secondary regrowth (full middle-aged to 0 middle-aged)
+            self.total_pdv_secondary_regrowth_combined = self.total_pdv_secondary_regrowth + self.total_pdv_secondary_mature_regrowth
+            self.total_pdv_plantation_secondary_regrowth = total_PDV_scenario(self.total_pdv_secondary_regrowth_combined)
