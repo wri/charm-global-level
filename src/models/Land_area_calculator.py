@@ -12,6 +12,9 @@ Produce the area required from plantation, secondary forest by year
 # SLP initial and final
 # LLP initial and final
 # Area of plantation
+
+2021/07/01:
+Major update: change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
 """
 
 import numpy as np
@@ -263,7 +266,6 @@ class LandCalculator:
             # calculating the area harvested between year zero and the first thinning, the secondary area harvested (assuming all supply is not met by plantation) is simply:
             # area_harvested_secondary_new = output_need_secondary / output_ha_secondary_first_harvest
             for year in range(st_cycle, ed_cycle):
-                print(year)
                 # calculating the area harvested AFTER a thinning, account for the wood that you are getting from the secondary thinning and plantation harvest/thinning.
                 # Because, in a perfectly managed forest, the thinnings and harvests would be able to supply all the wood required, thus eliminating the need to harvest any ADDITIONAL hectares.
                 # Then for each subsequent harvest/thinning, you subtract another (output from thinning * area harvested in year (x-rotation))
@@ -371,7 +373,7 @@ class LandCalculator:
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
                     # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
-                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year - Nyears_Ncycles_ahead]   # output_ha_secondary[year - Nyears_Ncycles_ahead]
+                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year, year - Nyears_Ncycles_ahead]   # 2D array output_ha_secondary[year - Nyears_Ncycles_ahead]
 
 
                 if (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
