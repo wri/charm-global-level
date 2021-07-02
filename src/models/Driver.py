@@ -7,7 +7,7 @@ __email__ = "liqing.peng@wri.org"
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import Global_by_country, Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Land_area_calculator
+import Global_by_country, Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Land_area_calculator
 # import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
@@ -20,15 +20,16 @@ def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
     iso = 'BRA'
-    # datafile = '{}/data/processed/CHARM regional - BAU - Jan 22.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - May 12.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU - SF_1.2 - DR_4p - Jun 3.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
 
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
-    # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Plantation_counterfactual_unharvested_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Secondary_mature_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
     return
 
@@ -67,18 +68,19 @@ def test_PDV_module():
 
 def test_land_area_calculator():
     "TEST land area calculator"
-    iso = 'USA'
+    iso = 'BRA'
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU - SF_1.2 - DR_4p - Jun 3.xlsx'.format(root)
 
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
-    # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
     # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
+    # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
+    # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth)+sum(LAC.area_harvested_new_secondary_mature_regrowth))
     # print("Area conversion", sum(LAC.area_harvested_new_secondary_conversion))
-    # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth))
 
     return
 # test_land_area_calculator()
@@ -166,7 +168,7 @@ def run_model_new_plantation_scenarios():
     # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - May 12.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - May 12.xlsx'.format(root)
 
-    datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_0p - May 12.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - BAU - SF_1.2 - DR_4p - Jun 3.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - DR_0p - May 12.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - constant demand SF_1.2 - DR_0p - May 12.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - constant demand SF_0 - DR_0p - May 12.xlsx'.format(root)
@@ -226,7 +228,7 @@ def run_model_new_plantation_scenarios():
             pdv_regrowth_legacy.append(LAC_legacy.total_pdv_plantation_secondary_regrowth)
 
             area_conversion_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_conversion))
-            area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth))
+            area_regrowth_legacy.append(sum(LAC_legacy.area_harvested_new_secondary_regrowth_combined))
             area_plantation.append(sum(LAC_legacy.area_harvested_new_plantation))
 
             secondary_wood.append(sum(LAC_secondary_plantation_age.output_need_secondary / 1000000))
@@ -293,8 +295,8 @@ def run_model_new_plantation_scenarios():
     return
 
 
-# run_model_new_plantation_scenarios()
-
+run_model_new_plantation_scenarios()
+exit()
 
 def get_global_annual_carbon_impact():
     demand_levels = ['BAU SF_1.2', 'BAU SF_0', 'constant demand SF_1.2', 'constant demand SF_0']
