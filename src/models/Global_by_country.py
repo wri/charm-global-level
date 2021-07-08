@@ -30,12 +30,15 @@ import matplotlib.pyplot as plt
 
 class Parameters:
 
-    def __init__(self, datafile, country_iso='BRA'):
+    def __init__(self, datafile, country_iso='BRA', vslp_input_control='total', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0):
         """Read in inputs"""
 
         input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
         self.input_country = input_data.loc[input_data['ISO']==country_iso] # Country ISO code
         self.country_name = self.input_country['Country'].values[0]
+        self.vslp_input_control = vslp_input_control   # for VSLP product pool selection
+        self.secondary_mature_wood_share = secondary_mature_wood_share  # for secondary wood supply distribution among the secondary forest
+        self.plantation_growth_increase_ratio = plantation_growth_increase_ratio  # for productivity increase ratio
         del input_data
 
         ### Run the functions
@@ -62,8 +65,8 @@ class Parameters:
 
     def setup_biophysical_parameters(self):
         # Growth rates, C density
-        self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0]
-        self.GR_old_plantation = self.input_country['Old Plantation GR (MgC/ha/year) (Harris)'].values[0]
+        self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
+        self.GR_old_plantation = self.input_country['Old Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
         self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]     # Stand age 0-20
         self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year) (Harris)'].values[0]   # Stand age 20-80
         # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-80), use this relationship to estimate GR mature
@@ -71,13 +74,16 @@ class Parameters:
         self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
         self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
         self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
-        self.secondary_mature_wood_share = self.input_country['% of secondary supply from mature secondary forest'].values[0]
+        # self.secondary_mature_wood_share = self.input_country['% of secondary supply from mature secondary forest'].values[0] -> Read as global settings input
 
         # This constant approach is depreciated, used only in the Plantation scenario as a reference
         # Mokany 2006
         self.root_shoot_coef = 0.489
         self.root_shoot_power = 0.89
         self.carbon_wood_ratio = 0.5
+
+        # Set up the under bark to over bark conversion factor: M. O'Brien 2018: FAO, 2010. Global Forest Resources Assessment 2010. FAO Forestry Paper 163, Rome, Italy
+        self.overbark_underbark_ratio = 1.15
 
         # Decay parameters
         self.half_life_LLP = self.input_country['LLP half life'].values[0]
@@ -106,12 +112,26 @@ class Parameters:
         self.product_share_slash_thinning = self.input_country['% in slash thinning'].values[0]
 
         # Dry matter, across 40 years
-        VSLP_2010 = self.input_country['VSLP 10'].values[0]
-        VSLP_2050 = self.input_country['VSLP 50'].values[0]
-        SLP_2010 = self.input_country['SLP 10'].values[0]
-        SLP_2050 = self.input_country['SLP 50'].values[0]
-        LLP_2010 = self.input_country['LLP 10'].values[0]
-        LLP_2050 = self.input_country['LLP 50'].values[0]
+        SLP_2010 = self.input_country['SLP 10'].values[0] * self.overbark_underbark_ratio
+        SLP_2050 = self.input_country['SLP 50'].values[0] * self.overbark_underbark_ratio
+        LLP_2010 = self.input_country['LLP 10'].values[0] * self.overbark_underbark_ratio
+        LLP_2050 = self.input_country['LLP 50'].values[0] * self.overbark_underbark_ratio
+        # For different VSLP input scenario
+        if self.vslp_input_control == 'total':
+            VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+            VSLP_2050 = self.input_country['VSLP 50'].values[0] * self.overbark_underbark_ratio
+        elif self.vslp_input_control == 'ind':
+            VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
+            VSLP_2050 = self.input_country['VSLP-IND 50'].values[0] * self.overbark_underbark_ratio
+        elif self.vslp_input_control == 'wfl':
+            VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+            VSLP_2050 = self.input_country['VSLP-WFL 50'].values[0] * self.overbark_underbark_ratio
+        elif self.vslp_input_control == 'wfl50less':
+            VSLP_2010 = (self.input_country['VSLP-IND 10'].values[0] + self.input_country['VSLP-WFL 10'].values[0] * 0.5) * self.overbark_underbark_ratio
+            VSLP_2050 = (self.input_country['VSLP-IND 50'].values[0] + self.input_country['VSLP-WFL 50'].values[0] * 0.5) * self.overbark_underbark_ratio
+        else:  # default
+            VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+            VSLP_2050 = self.input_country['VSLP 50'].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
         product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears)) for _ in range(3)]
