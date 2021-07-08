@@ -4,7 +4,7 @@ __copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Projec
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 """
-Land area calculator for plantation
+Land area calculator
 Scale up one-hectare carbon calculation to national level
 Produce the area required from plantation, secondary forest by year
 # Parameters:
@@ -12,6 +12,12 @@ Produce the area required from plantation, secondary forest by year
 # SLP initial and final
 # LLP initial and final
 # Area of plantation
+
+# Scenarios:
+1. secondary forest harvest and regrowth from the middle aged forest
+2. secondary forest harvest and conversion to plantation
+3. secondary forest harvest and regrowth from 50% of the middle aged forest and mature forest
+4. 125% of the plantation growth rates
 
 2021/07/01:
 Major update: change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
