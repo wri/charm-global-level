@@ -226,7 +226,6 @@ class CarbonTracker:
                 ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
 
                 for year in range(st_cycle, ed_cycle):
-                    print(year, st_cycle, ed_cycle, year-st_cycle+1)
                     discounted_year[year] = year - st_cycle + 1
 
         else:
