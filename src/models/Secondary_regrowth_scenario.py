@@ -11,6 +11,7 @@ Secondary forest regrowth scenario
 """
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -23,10 +24,18 @@ class CarbonTracker:
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
         self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [np.zeros((self.Global.nyears)) for _ in range(3)]
-
+        # FIXME The product share after years beyond 2050 is unknown
         self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
         self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
         self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
+
+        def lastyear_padding(product_share_array):
+            "This function is to extend the year beyond 2050 using 2050's product share"
+            df = pd.DataFrame(product_share_array)
+            outarray = df.replace(to_replace=0, method='ffill').values.reshape(product_share_array.shape)
+            return outarray
+
+        self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [lastyear_padding(product_share) for product_share in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
@@ -217,6 +226,7 @@ class CarbonTracker:
                 ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (cycle == len(self.Global.year_index_harvest_plantation) - 1)
 
                 for year in range(st_cycle, ed_cycle):
+                    print(year, st_cycle, ed_cycle, year-st_cycle+1)
                     discounted_year[year] = year - st_cycle + 1
 
         else:
@@ -250,10 +260,10 @@ class CarbonTracker:
         plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
-        plt.plot(self.totalC_slash_pool[1:], label='slash')
         plt.plot(self.totalC_methane_emission[1:], label='methane emission')
         plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
         plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        plt.plot(self.annual_discounted_value, label='annual_discounted_value')
         # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
         plt.legend(fontsize=16); plt.show(); exit()
 
