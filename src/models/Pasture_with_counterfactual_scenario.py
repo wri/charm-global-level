@@ -13,6 +13,7 @@ Pasture with counterfactual scenario
 """
 
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 
 
@@ -30,6 +31,13 @@ class CarbonTracker:
         self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
 
+        def lastyear_padding(product_share_array):
+            "This function is to extend the year beyond 2050 using 2050's product share"
+            df = pd.DataFrame(product_share_array)
+            outarray = df.replace(to_replace=0, method='ffill').values.reshape(product_share_array.shape)
+            return outarray
+
+        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [lastyear_padding(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
 
         ##### Initialize carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
