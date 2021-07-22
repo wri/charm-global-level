@@ -30,13 +30,18 @@ import matplotlib.pyplot as plt
 
 class Parameters:
 
-    def __init__(self, datafile, country_iso='BRA', vslp_input_control='total', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0):
+    def __init__(self, datafile, country_iso='BRA', discount_rate_input=None, future_demand_level='BAU', substitution_mode='SUB', vslp_input_control='ALL', vslp_future_demand='default', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0):
         """Read in inputs"""
 
         input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
         self.input_country = input_data.loc[input_data['ISO']==country_iso] # Country ISO code
         self.country_name = self.input_country['Country'].values[0]
+        # Meta Parameters for scenarios
+        self.discount_rate_input = discount_rate_input
+        self.future_demand_level = future_demand_level
+        self.substitution_mode = substitution_mode
         self.vslp_input_control = vslp_input_control   # for VSLP product pool selection
+        self.vslp_future_demand = vslp_future_demand
         self.secondary_mature_wood_share = secondary_mature_wood_share  # for secondary wood supply distribution among the secondary forest
         self.plantation_growth_increase_ratio = plantation_growth_increase_ratio  # for productivity increase ratio
         del input_data
@@ -112,26 +117,45 @@ class Parameters:
         self.product_share_slash_thinning = self.input_country['% in slash thinning'].values[0]
 
         # Dry matter, across 40 years
+        # This is to control whether the 2050 uses BAU demand level or 2010 level
+        if self.future_demand_level == 'BAU':
+            product_year = '50'
+        else:  # CST constant demand, 2010 level remain
+            product_year = '10'
         SLP_2010 = self.input_country['SLP 10'].values[0] * self.overbark_underbark_ratio
-        SLP_2050 = self.input_country['SLP 50'].values[0] * self.overbark_underbark_ratio
+        SLP_2050 = self.input_country['SLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
         LLP_2010 = self.input_country['LLP 10'].values[0] * self.overbark_underbark_ratio
-        LLP_2050 = self.input_country['LLP 50'].values[0] * self.overbark_underbark_ratio
-        # For different VSLP input scenario
-        if self.vslp_input_control == 'total':
-            VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
-            VSLP_2050 = self.input_country['VSLP 50'].values[0] * self.overbark_underbark_ratio
-        elif self.vslp_input_control == 'ind':
-            VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
-            VSLP_2050 = self.input_country['VSLP-IND 50'].values[0] * self.overbark_underbark_ratio
-        elif self.vslp_input_control == 'wfl':
-            VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
-            VSLP_2050 = self.input_country['VSLP-WFL 50'].values[0] * self.overbark_underbark_ratio
-        elif self.vslp_input_control == 'wfl50less':
-            VSLP_2010 = (self.input_country['VSLP-IND 10'].values[0] + self.input_country['VSLP-WFL 10'].values[0] * 0.5) * self.overbark_underbark_ratio
-            VSLP_2050 = (self.input_country['VSLP-IND 50'].values[0] + self.input_country['VSLP-WFL 50'].values[0] * 0.5) * self.overbark_underbark_ratio
-        else:  # default
-            VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
-            VSLP_2050 = self.input_country['VSLP 50'].values[0] * self.overbark_underbark_ratio
+        LLP_2050 = self.input_country['LLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+
+        ### Fifth scenario: "vslp_future_demand" is to control whether the 2050 uses 50% less WFL VSLP input scenario.
+        # For fifth scenario, when fifth scenario is active.
+        if self.vslp_future_demand == 'WFL50less':
+            # BAU and including WFL. The 2010 uses current level, but 2050 has 50% reduction of the WFL compared to the BAU.
+            if (self.vslp_input_control == 'ALL') & (self.future_demand_level == 'BAU'):
+                # This is a default mode that only works with BAU and ALL wood: VSLP includes WFL. AND WFL is included as well
+                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = (self.input_country['VSLP-IND {}'.format(product_year)].values[0] + self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5) * self.overbark_underbark_ratio
+            # CST and including WFL. The 2010 and 2050 uses current level.
+            elif (self.vslp_input_control == 'ALL') & (self.future_demand_level == 'CST'):
+                # CST. The 2010 uses current level, and 2050 uses the same 2010 level. nothing changed. 50% less will not work.
+                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            # Excluding WFL. When VSLP does not include WFL, then the 50% reduction does not work on the WFL at all
+            else: #self.vslp_input_control == 'IND':  #
+                VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+        # self.vslp_future_demand == 'default':  # For 1-4th scenario, not active.
+        else:
+            ## This is to control whether the VSLP includes WFL or not
+            if self.vslp_input_control == 'ALL':  # This is a default mode: VSLP includes WFL.
+                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            elif self.vslp_input_control == 'IND':  # This is industrial roundwood only for comparison purpose: VSLP excludes WFL. ALL-IND is WFL's contribution.
+                VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            else:
+                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
         product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears)) for _ in range(3)]
@@ -206,7 +230,14 @@ class Parameters:
 
     def setup_misc(self):
         # Others
-        self.discount_rate = self.input_country['Discount rate'].values[0]
+        # If user input exists, the highest level input. Set a physical limit
+        if self.discount_rate_input is None:
+            self.discount_rate = self.input_country['Discount rate'].values[0]
+        elif self.discount_rate_input (self.discount_rate_input>=0) & (self.discount_rate_input<=0.1):
+            self.discount_rate = self.discount_rate_input
+        # If it is out of physical limits:
+        else:
+            self.discount_rate = self.input_country['Discount rate'].values[0]
         self.landfill_methane_ratio = self.input_country['% of carbon in landfill converted to methane'].values[0]
 
     # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
