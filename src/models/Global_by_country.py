@@ -41,7 +41,7 @@ class Parameters:
         self.future_demand_level = future_demand_level
         self.substitution_mode = substitution_mode
         self.vslp_input_control = vslp_input_control   # for VSLP product pool selection
-        self.vslp_future_demand = vslp_future_demand
+        self.vslp_future_demand = vslp_future_demand    # for VSLP future demand control (5th scenario)
         self.secondary_mature_wood_share = secondary_mature_wood_share  # for secondary wood supply distribution among the secondary forest
         self.plantation_growth_increase_ratio = plantation_growth_increase_ratio  # for productivity increase ratio
         del input_data
@@ -75,7 +75,6 @@ class Parameters:
         self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]     # Stand age 0-20
         self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year) (Harris)'].values[0]   # Stand age 20-80
         # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-80), use this relationship to estimate GR mature
-        # FIXME
         self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
         self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
         self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
@@ -192,12 +191,12 @@ class Parameters:
         # Production emission substitution factor for LLP
         # net tC fossil energy saved per t carbon in wood use
         # Flag to determine calculated SUB factor or default, need to be consistent with the input excel file (w substitution)
-        FLAG_CALC_SUB = 1
-
-        if FLAG_CALC_SUB == 0: # Original, set up to the default 1.2 value
+        if self.substitution_mode == 'NOSUB':
+            self.coef_construt_substitution = 0
+        elif self.substitution_mode == 'constant': # Original, set up to the default 1.2 value
             # For example, 1.2 tC/tC means the 1.2 tC being saved if 1 tC is used.
             self.coef_construt_substitution = self.input_country['Emissions substitution factor for LLP (tC saved/tons C in LLP)'].values[0]
-        else:
+        else: # calculate SF from the excel file
             # Churkina 2020
             # First, replacement ratio.
             # Qconcrete_saved_by_wood (kg concrete/kg wood) = Qconcrete (kg/m2) / Qwood (kg/m2)
@@ -222,11 +221,12 @@ class Parameters:
             # = (avoided carbon emission from concrete/steel - emission from wood)/(wood quantity in carbon)
             # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
             self.coef_construt_substitution = (saved_concrete_by_wooduse * EF_concrete + saved_steel_by_wooduse * EF_steel - 1 * EF_timber) / CF_CO2_C / CF_wood_C
-            # Fourth, % reduction of timber system relative to steel/concrete or composite systems.
-            self.carbon_reduction_timber_to_cs = 1 * EF_timber / (saved_concrete_by_wooduse * EF_concrete + saved_steel_by_wooduse * EF_steel) - 1
 
     def setup_VSLP_substitution(self):
-        self.coef_bioenergy_substitution = self.input_country['Emissions substitution factor for VSLP (tC saved/tons C in VSLP)'].values[0]
+        if self.substitution_mode == 'NOSUB':
+            self.coef_bioenergy_substitution = 0
+        else:
+            self.coef_bioenergy_substitution = self.input_country['Emissions substitution factor for VSLP (tC saved/tons C in VSLP)'].values[0]
 
     def setup_misc(self):
         # Others
