@@ -26,7 +26,7 @@ Major update: change the slash rate array into a 41x41 year-to-year array, so th
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario
+import Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
 
@@ -59,10 +59,14 @@ class LandCalculator:
         self.output_ha_secondary_mature_regrowth = self.calculate_output_ha(Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
             self.Global.slash_percentage_secondary_regrowth)
 
+        # Add new scenario for tropical agricultural land converted to plantation
+        self.output_ha_agriland = self.calculate_output_ha(Agricultural_land_tropical_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
+            self.Global.slash_percentage_plantation)
+
         # plt.plot(self.output_ha_plantation.T, label='plantation')
-        # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
+        # # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
         # plt.plot(self.output_ha_secondary_regrowth.T, label='regrowth')
-        # plt.plot(self.output_ha_secondary_mature_regrowth.T, label='mature regrowth')
+        # # plt.plot(self.output_ha_secondary_mature_regrowth.T, label='mature regrowth')
         # plt.legend()
         # plt.show()
         # exit()
@@ -543,19 +547,21 @@ class LandCalculator:
                     self.area_harvested_new_plantation[year] = self.area_harvested_plantation[year]
 
 
-            def total_PDV_scenario(total_pdv_secondary):
-
-                # Secondary conversion
-                total_pdv_plantation_secondary = self.total_pdv_plantation + total_pdv_secondary
+            def get_total_PDV(total_pdv):
                 # Convert to megatonnes.
-                total_pdv_plantation_secondary_sum = np.sum(total_pdv_plantation_secondary) / 1000000
+                total_pdv_sum = np.sum(total_pdv) / 1000000
                 ### 2021 May 12 Remove the second discounting
-
-                return total_pdv_plantation_secondary_sum
+                return total_pdv_sum
 
             # Unit: megat tonnes C
-            # For secondary conversion
-            self.total_pdv_plantation_secondary_conversion = total_PDV_scenario(self.total_pdv_secondary_conversion)
+            self.total_pdv_plantation_sum = get_total_PDV(self.total_pdv_plantation)
             # For secondary regrowth (full middle-aged to 0 middle-aged)
             self.total_pdv_secondary_regrowth_combined = self.total_pdv_secondary_regrowth + self.total_pdv_secondary_mature_regrowth
-            self.total_pdv_plantation_secondary_regrowth = total_PDV_scenario(self.total_pdv_secondary_regrowth_combined)
+            self.total_pdv_secondary_regrowth_sum = get_total_PDV(self.total_pdv_secondary_regrowth_combined)
+            # For secondary conversion
+            self.total_pdv_secondary_conversion_sum = get_total_PDV(self.total_pdv_secondary_conversion)
+
+            # For scenario add up
+            self.total_pdv_plantation_secondary_regrowth = self.total_pdv_plantation_sum + self.total_pdv_secondary_regrowth_sum
+            self.total_pdv_plantation_secondary_conversion = self.total_pdv_plantation_sum + self.total_pdv_secondary_conversion_sum
+
