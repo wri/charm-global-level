@@ -201,7 +201,7 @@ class CarbonTracker:
             if year < 22:
                 self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_young_secondary
             else:
-                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_old_secondary
+                self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
         self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
         # self.counterfactual_biomass[self.counterfactual_biomass >= self.stand_biomass_secondary_maximum] = self.stand_biomass_secondary_maximum
 
