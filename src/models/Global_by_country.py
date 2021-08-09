@@ -55,7 +55,6 @@ class Parameters:
         self.setup_misc()
         self.setup_harvest_slash_percentage()
 
-
     def setup_time(self):
         """Time settings"""
         ### Years/Periods
@@ -121,10 +120,16 @@ class Parameters:
             product_year = '50'
         else:  # CST constant demand, 2010 level remain
             product_year = '10'
-        SLP_2010 = self.input_country['SLP 10'].values[0] * self.overbark_underbark_ratio
-        SLP_2050 = self.input_country['SLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
-        LLP_2010 = self.input_country['LLP 10'].values[0] * self.overbark_underbark_ratio
-        LLP_2050 = self.input_country['LLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+        if self.vslp_input_control == 'WFL':
+            SLP_2010 = 0
+            SLP_2050 = 0
+            LLP_2010 = 0
+            LLP_2050 = 0
+        else:
+            SLP_2010 = self.input_country['SLP 10'].values[0] * self.overbark_underbark_ratio
+            SLP_2050 = self.input_country['SLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            LLP_2010 = self.input_country['LLP 10'].values[0] * self.overbark_underbark_ratio
+            LLP_2050 = self.input_country['LLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         ### Fifth scenario: "vslp_future_demand" is to control whether the 2050 uses 50% less WFL VSLP input scenario.
         # For fifth scenario, when fifth scenario is active.
@@ -140,18 +145,31 @@ class Parameters:
                 VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             # Excluding WFL. When VSLP does not include WFL, then the 50% reduction does not work on the WFL at all
-            else: #self.vslp_input_control == 'IND':  #
+            elif self.vslp_input_control == 'IND':
                 VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            elif (self.vslp_input_control == 'WFL') & (self.future_demand_level == 'BAU'):
+                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5 * self.overbark_underbark_ratio
+            elif (self.vslp_input_control == 'WFL') & (self.future_demand_level == 'CST'):
+                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            else:
+                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = (self.input_country['VSLP-IND {}'.format(product_year)].values[0] + self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5) * self.overbark_underbark_ratio
+
         # self.vslp_future_demand == 'default':  # For 1-4th scenario, not active.
         else:
             ## This is to control whether the VSLP includes WFL or not
             if self.vslp_input_control == 'ALL':  # This is a default mode: VSLP includes WFL.
                 VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
-            elif self.vslp_input_control == 'IND':  # This is industrial roundwood only for comparison purpose: VSLP excludes WFL. ALL-IND is WFL's contribution.
+            elif self.vslp_input_control == 'IND':  # This is industrial roundwood only for comparison purpose: VSLP excludes WFL.
                 VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
+            elif self.vslp_input_control == 'WFL':  # This is wood fuel only for comparison purpose: VSLP excludes WFL.
+                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             else:
                 VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
