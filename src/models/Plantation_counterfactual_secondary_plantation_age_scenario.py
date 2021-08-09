@@ -277,6 +277,7 @@ class CarbonTracker:
         for tstep in range(80, tstep_max):
             counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_mature_secondary
 
+        counterfactual_biomass_start_zero = counterfactual_biomass_start_zero + self.calculate_belowground_biomass(counterfactual_biomass_start_zero)
         # Update: year 0 = 0, year 1 onwards are cropped from the counterfactual_biomass_start_zero
         self.counterfactual_biomass[1:] = counterfactual_biomass_start_zero[self.Global.rotation_length_harvest:self.Global.rotation_length_harvest+self.Global.nyears]
 
