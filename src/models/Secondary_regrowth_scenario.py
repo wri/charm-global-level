@@ -23,19 +23,15 @@ class CarbonTracker:
         # This will be used to select the product share ratio, as well. For example, if it is year 2020 year = 10, then the product share will be obtained from 10 years from the 2010.
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
+
         self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [np.zeros((self.Global.nyears)) for _ in range(3)]
-        # FIXME The product share after years beyond 2050 is unknown
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
         self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
         self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
         self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
 
-        def lastyear_padding(product_share_array):
-            "This function is to extend the year beyond 2050 using 2050's product share"
-            df = pd.DataFrame(product_share_array)
-            outarray = df.replace(to_replace=0, method='ffill').values.reshape(product_share_array.shape)
-            return outarray
-
-        self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [lastyear_padding(product_share) for product_share in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
+        # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
+        self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [self.staircase(product_share) for product_share in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
@@ -70,9 +66,22 @@ class CarbonTracker:
         self.counterfactual()
         self.calculate_PDV()
 
+    def staircase(self, array):
+        # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
+        outarray = np.zeros(array.shape)
+        if len(array.shape) == 1:
+            df = pd.DataFrame(array)
+            outarray = df.replace(to_replace=0, method='ffill').values.reshape(array.shape)
+        else:  # array.shape = 2
+            for row in range(array.shape[0]):
+                df = pd.DataFrame(array[row, :])
+                outarray[row, :] = df.replace(to_replace=0, value=None, method='ffill').values.reshape(array.shape[1])
+        return outarray
+
     def calculate_belowground_biomass(self, aboveground_biomass):
         belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
         return belowground_biomass
+
 
     def initialization(self):
         # # Secondary regrowth scenario, initial aboveground biomass is the C density from secondary
@@ -176,8 +185,14 @@ class CarbonTracker:
 
         self.totalC_product_LLP_pool = np.sum(self.product_LLP_pool_secondary, axis=0)
         self.totalC_product_SLP_pool = np.sum(self.product_SLP_pool_secondary, axis=0)
-        self.totalC_product_LLP_harvest = np.sum(self.product_LLP_harvest_secondary, axis=0)
-        self.totalC_product_VSLP_harvest = np.sum(self.product_VSLP_harvest_secondary, axis=0)
+        # Change totalC_product_LLP_harvest to totalC_product_LLP_harvest_stock to show the accumulate harvest stock for LLP substitution benefit
+        # For purposes of showing the cumulative impact on carbon, the substitution value represents a permanent increased quantity of carbon that stays in the ground – a permanent increase in fossil fuels.
+        # We can think of it as transferring some carbon from the original tree permanently into the ground. This is a one time “stock” gain, but it persists. It just does not grow.
+        self.product_LLP_harvest_stock_secondary = self.staircase(self.product_LLP_harvest_secondary)
+        self.totalC_product_LLP_harvest_stock = np.sum(self.product_LLP_harvest_stock_secondary, axis=0)
+
+        self.product_VSLP_harvest_stock_secondary = self.staircase(self.product_VSLP_harvest_secondary)
+        self.totalC_product_VSLP_harvest_stock = np.sum(self.product_VSLP_harvest_stock_secondary, axis=0)
         # Exclude VSLP product pool from total product pool
         self.totalC_product_pool = self.totalC_product_LLP_pool + self.totalC_product_SLP_pool   # + self.totalC_product_VSLP_pool
 
@@ -189,8 +204,8 @@ class CarbonTracker:
         self.totalC_methane_emission = np.sum(self.landfill_methane_emission_secondary, axis=0)
 
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
-        self.LLP_substitution_benefit = self.totalC_product_LLP_harvest * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
-        self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest * self.Global.coef_bioenergy_substitution
+        self.LLP_substitution_benefit = self.totalC_product_LLP_harvest_stock * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
+        self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest_stock * self.Global.coef_bioenergy_substitution
         self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit + self.VSLP_substitution_benefit
 
     def counterfactual(self):
