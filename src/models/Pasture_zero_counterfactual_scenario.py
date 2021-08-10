@@ -23,21 +23,16 @@ class CarbonTracker:
         # This will be used to select the product share ratio, as well. For example, if it is year 2020 year = 10, then the product share will be obtained from 10 years from the 2010.
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
-        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
 
+        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
         self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
+        # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
+        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
 
-        def lastyear_padding(product_share_array):
-            "This function is to extend the year beyond 2050 using 2050's product share"
-            df = pd.DataFrame(product_share_array)
-            outarray = df.replace(to_replace=0, method='ffill').values.reshape(product_share_array.shape)
-            return outarray
-
-        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [lastyear_padding(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
-
-        ##### Initialize carbon flow variables
+        ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
         # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
@@ -66,9 +61,22 @@ class CarbonTracker:
         self.total_carbon_benefit()
         self.calculate_PDV()
 
+    def staircase(self, array):
+        # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
+        outarray = np.zeros(array.shape)
+        if len(array.shape) == 1:
+            df = pd.DataFrame(array)
+            outarray = df.replace(to_replace=0, method='ffill').values.reshape(array.shape)
+        else:  # array.shape = 2
+            for row in range(array.shape[0]):
+                df = pd.DataFrame(array[row, :])
+                outarray[row, :] = df.replace(to_replace=0, value=None, method='ffill').values.reshape(array.shape[1])
+        return outarray
+
     def calculate_belowground_biomass(self, aboveground_biomass):
         belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
         return belowground_biomass
+
 
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = 0
@@ -129,7 +137,6 @@ class CarbonTracker:
                 # FIXME grows at young growth rate for 20 years after the harvest
                 year_after_all_harvests = year - self.Global.year_index_harvest_plantation
                 year_after_current_harvest = np.min(year_after_all_harvests[year_after_all_harvests > 0])
-                # if year < 22:
                 if year_after_current_harvest <= 20:
                     self.aboveground_biomass_plantation[cycle, year] = self.aboveground_biomass_plantation[cycle, year - 1] + self.Global.GR_young_plantation
                 else:
@@ -169,9 +176,16 @@ class CarbonTracker:
 
         self.totalC_product_LLP_pool = np.sum(self.product_LLP_pool_plantation, axis=0)
         self.totalC_product_SLP_pool = np.sum(self.product_SLP_pool_plantation, axis=0)
-        self.totalC_product_LLP_harvest = np.sum(self.product_LLP_harvest_plantation, axis=0)
-        self.totalC_product_VSLP_harvest = np.sum(self.product_VSLP_harvest_plantation, axis=0)
-        self.totalC_product_pool = self.totalC_product_LLP_pool + self.totalC_product_SLP_pool #+ self.totalC_product_VSLP_pool
+        # Change totalC_product_LLP_harvest to totalC_product_LLP_harvest_stock to show the accumulate harvest stock for LLP substitution benefit
+        # For purposes of showing the cumulative impact on carbon, the substitution value represents a permanent increased quantity of carbon that stays in the ground – a permanent increase in fossil fuels.
+        # We can think of it as transferring some carbon from the original tree permanently into the ground. This is a one time “stock” gain, but it persists. It just does not grow.
+        self.product_LLP_harvest_stock_plantation = self.staircase(self.product_LLP_harvest_plantation)
+        self.totalC_product_LLP_harvest_stock = np.sum(self.product_LLP_harvest_stock_plantation, axis=0)
+
+        self.product_VSLP_harvest_stock_plantation = self.staircase(self.product_VSLP_harvest_plantation)
+        self.totalC_product_VSLP_harvest_stock = np.sum(self.product_VSLP_harvest_stock_plantation, axis=0)
+        # Exclude VSLP product pool from total product pool
+        self.totalC_product_pool = self.totalC_product_LLP_pool + self.totalC_product_SLP_pool  # + self.totalC_product_VSLP_pool
 
         self.totalC_root_decay_pool = np.sum(self.belowground_biomass_decay_plantation, axis=0)
         self.totalC_slash_pool = np.sum(self.slash_pool_plantation, axis=0)
@@ -181,8 +195,8 @@ class CarbonTracker:
         self.totalC_methane_emission = np.sum(self.landfill_methane_emission_plantation, axis=0)
 
         # Account for timber product substitution effect = avoided concrete/steel usage's GHG emission
-        self.LLP_substitution_benefit = self.totalC_product_LLP_harvest * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
-        self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest * self.Global.coef_bioenergy_substitution
+        self.LLP_substitution_benefit = self.totalC_product_LLP_harvest_stock * self.Global.llp_construct_ratio * self.Global.llp_displaced_CS_ratio * self.Global.coef_construt_substitution
+        self.VSLP_substitution_benefit = self.totalC_product_VSLP_harvest_stock * self.Global.coef_bioenergy_substitution
         self.total_carbon_benefit = self.totalC_stand_pool + self.totalC_product_pool + self.totalC_root_decay_pool + self.totalC_landfill_pool + self.totalC_slash_pool + self.totalC_methane_emission + self.LLP_substitution_benefit + self.VSLP_substitution_benefit
 
     def counterfactual(self):
@@ -235,10 +249,10 @@ class CarbonTracker:
         plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
         plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
         plt.plot(self.totalC_landfill_pool[1:], label='landfill')
-        plt.plot(self.totalC_slash_pool[1:], label='slash')
         plt.plot(self.totalC_methane_emission[1:], label='methane emission')
         plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
         plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
+        plt.plot(self.annual_discounted_value, label='annual_discounted_value')
         # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
         plt.legend(fontsize=16); plt.show(); exit()
 
