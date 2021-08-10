@@ -27,18 +27,13 @@ class CarbonTracker:
         # This will be used to select the product share ratio, as well. For example, if it is year 2020 year = 10, then the product share will be obtained from 10 years from the 2010.
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
+
         self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
-        # FIXME The product share after years beyond 2050 is unknown
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
         self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-
-        def lastyear_padding(product_share_array):
-            "This function is to extend the year beyond 2050 using 2050's product share"
-            df = pd.DataFrame(product_share_array)
-            outarray = df.replace(to_replace=0, method='ffill').values.reshape(product_share_array.shape)
-            return outarray
-
+        # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
         self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
 
         ##### Set up carbon flow variables
@@ -139,7 +134,6 @@ class CarbonTracker:
         return totalC_aboveground_biomass_pool_pilot[year_index_harvest_plantation_hypothetical[1]-1]
 
     def staircase(self, array):
-        "This function is to extend the year beyond 2050 using 2050's product share"
         # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
         outarray = np.zeros(array.shape)
         if len(array.shape) == 1:
