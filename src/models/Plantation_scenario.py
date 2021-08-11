@@ -22,12 +22,12 @@ class CarbonTracker:
         # This will be used to select the product share ratio, as well. For example, if it is year 2020 year = 10, then the product share will be obtained from 10 years from the 2010.
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
-        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
 
+        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
         self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
         self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-
 
         ##### Initialize carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
@@ -123,6 +123,7 @@ class CarbonTracker:
     def calculate_belowground_biomass(self, aboveground_biomass):
         belowground_biomass = self.Global.root_shoot_coef * aboveground_biomass ** self.Global.root_shoot_power
         return belowground_biomass
+
 
     def initialization(self):
         self.aboveground_biomass_plantation[0, 0] = self.calculate_aboveground_biomass_initial_plantation()
