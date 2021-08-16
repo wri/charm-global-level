@@ -161,6 +161,8 @@ def run_new_tropical_plantations_scenario(results):
 
     # TEST print
     # print('pdv_average_secondary_regrowth', pdv_average_secondary_regrowth)
+    # print('total_wood_secondary', total_wood_secondary)
+    # print('area_harvested_new_secondary_sum', area_harvested_new_secondary_sum)
     # print('yield_average_secondary', yield_average_secondary)
     # print('output_ha_tropical_average', output_ha_tropical_average)
     # print('wood_supply_agriland', wood_supply_agriland)
@@ -174,7 +176,6 @@ def run_new_tropical_plantations_scenario(results):
     # print('updated_secondary_area', updated_secondary_area)
 
     return carbon_cost_annual, updated_secondary_area, new_plantation_area, total_wood_secondary_after_replace, total_wood_plantation_after_replace
-
 
 def export_results_to_excel():
     carbon_costs = np.zeros((12, 6))
@@ -278,7 +279,7 @@ def barplot_all_scenarios():
         ax.spines['left'].set_visible(False)
         ax.spines['top'].set_visible(False)
         # ax.spines['bottom'].set_visible(False)
-        plt.axhline(y=0, color='k', lw=1, linestyle='-')
+        plt.axhline(y=0, color='k', lw=1, linestyle='-', label='_nolegend_') # skip legend
         # grid
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
@@ -321,11 +322,11 @@ def barplot_all_scenarios():
         result_df_secondary.loc['New plantations', 'S4 New tropical plantations'] = result_df.loc['BAU_SUBON_ALL', 'New plantations']
 
         fig, ax = plt.subplots(1, figsize=(14, 8))
-        plt.bar(result_df_secondary.columns, result_df_secondary.loc['Existing plantations'], color='#3776ab', edgecolor='k', width=0.5)
-        plt.bar(result_df_secondary.columns, result_df_secondary.loc['CST_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations'], color='#3758ab', width=0.5)
-        plt.bar(result_df_secondary.columns, result_df_secondary.loc['NewDemand_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL'], color='#6b37ab', width=0.5)
-        plt.bar(result_df_secondary.columns, result_df_secondary.loc['New plantations'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL']+result_df_secondary.loc['NewDemand_NOSUB_ALL'], edgecolor='k', color='#a537ab', width=0.5)
-        plt.bar(result_df_secondary.columns, result_df_secondary.loc['BAU_SUBON_ALL'], bottom=result_df_secondary.loc['Existing plantations'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
+        plt.bar(result_df_secondary.columns, result_df_secondary.loc['Existing plantations'], color='#7cc096', edgecolor='w', width=0.5, hatch='//')
+        plt.bar(result_df_secondary.columns, result_df_secondary.loc['CST_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations'], color='#408107', width=0.5)
+        plt.bar(result_df_secondary.columns, result_df_secondary.loc['NewDemand_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL'], color='#76aa08', width=0.5)
+        plt.bar(result_df_secondary.columns, result_df_secondary.loc['New plantations'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL']+result_df_secondary.loc['NewDemand_NOSUB_ALL'], edgecolor='w', color='#48f2a8', width=0.5, hatch='//')
+        plt.bar(result_df_secondary.columns, result_df_secondary.loc['BAU_SUBON_ALL'], bottom=result_df_secondary.loc['Existing plantations'], facecolor="None", edgecolor='k', width=0.5)
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
@@ -383,7 +384,7 @@ def barplot_all_scenarios():
         # Calculate the area for IND and the area for WFL
         plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL']*result_df.loc['BAU_SUBON_IND']/(result_df.loc['BAU_SUBON_IND']+result_df.loc['BAU_SUBON_WFL']), color='#ab5b1a', width=0.5)
         plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL']*result_df.loc['BAU_SUBON_WFL']/(result_df.loc['BAU_SUBON_IND']+result_df.loc['BAU_SUBON_WFL']), bottom=result_df.loc['BAU_SUBON_ALL']*result_df.loc['BAU_SUBON_IND']/(result_df.loc['BAU_SUBON_IND']+result_df.loc['BAU_SUBON_WFL']), color='#d48f57', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
+        # plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
@@ -408,20 +409,18 @@ def barplot_all_scenarios():
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height / 2,
                     "{:.0f}%".format(height/base[bar_scenario_group]*100),
                       ha='center', va='bottom')
-
-        for number, rec in enumerate(ax.patches[12:]):
-            height = rec.get_height()
+        # Add the final absolute numbers at the top
+        for number, rec in enumerate(ax.patches[:6]):
             # This is to make sure the turn of the group of scenario
-            ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height,
-                    "{:.1f}".format(height),
-                      ha='center', va='bottom', fontweight='bold')
-
+            ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + base[number],
+                    "{:.1f}".format(base[number]),
+                    ha='center', va='bottom', fontweight='bold')
         # title and legend
         legend_label = ['Industrial roundwood', 'Wood fuel', 'Total carbon impact']
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
-        # plt.show()
-        plt.savefig('{}/carbon_cost_annual_IND_WFL_6scenarios.png'.format(figdir))
+        plt.show()
+        # plt.savefig('{}/carbon_cost_annual_IND_WFL_6scenarios.png'.format(figdir))
 
         return
 
@@ -445,7 +444,7 @@ def barplot_all_scenarios():
         # plt.bar(result_df_secondary.columns, result_df_secondary.loc['Existing plantations'], color='#7c3d16', edgecolor='k', width=0.5)
         plt.bar(result_df_secondary.columns, area_ALL*area_IND/(area_IND+area_WFL), color='#ab5b1a', width=0.5)
         plt.bar(result_df_secondary.columns, area_ALL*area_WFL/(area_IND+area_WFL), bottom=area_ALL*area_IND/(area_IND+area_WFL), color='#d48f57', width=0.5)
-        plt.bar(result_df_secondary.columns, area_ALL, ls='dashed', facecolor="None", edgecolor='k', width=0.5)
+        # plt.bar(result_df_secondary.columns, area_ALL, facecolor="None", edgecolor='k', width=0.5)
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
@@ -489,13 +488,13 @@ def barplot_all_scenarios():
         return
 
 
-    # carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
+    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
     # stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
 
-    land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
+    # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
     # stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
-    stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
+    # stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
