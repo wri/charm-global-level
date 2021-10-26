@@ -16,10 +16,10 @@ import matplotlib.pyplot as plt
 
 
 ### Datafile
-root = '../../'
+root = '../..'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Aug 10.xlsx'.format(root, discount_filename)
-# datafile = '{}/data/processed/CHARM regional - BAU - SF_1.2 - DR_4p - VSLP-IND - Jul 1.xlsx'.format(root)
+# datafile = '{}/data/processed/CHARM regional - DR_{} - Aug 10.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Oct 25.xlsx'.format(root, discount_filename)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
 
@@ -419,8 +419,8 @@ def barplot_all_scenarios_percentage():
         legend_label = ['Industrial roundwood', 'Wood fuel', 'Total carbon impact']
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
-        plt.show()
-        # plt.savefig('{}/carbon_cost_annual_IND_WFL_6scenarios.png'.format(figdir))
+        # plt.show()
+        plt.savefig('{}/carbon_cost_annual_IND_WFL_6scenarios.png'.format(figdir))
 
         return
 
@@ -482,26 +482,24 @@ def barplot_all_scenarios_percentage():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.83)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        # plt.savefig('{}/land_requirement_IND_WFL_6scenarios.png'.format(figdir))
-        plt.show()
+        plt.savefig('{}/land_requirement_IND_WFL_6scenarios.png'.format(figdir))
+        # plt.show()
 
         return
 
 
     carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
-    # stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
 
-    # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
-    # stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
+    land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
+    stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
 # barplot_all_scenarios_percentage()
 
 def barplot_all_scenarios_quantity():
-
+    "Use quantity in the report"
     def read_dataframe(tabname):
         infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
         # Read in the excel file using the first column as the index
@@ -556,8 +554,8 @@ def barplot_all_scenarios_quantity():
         legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit', 'Net carbon impact']
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
-        plt.show()
-        # plt.savefig('{}/carbon_cost_annual_quantity_6scenarios.png'.format(figdir))
+        # plt.show()
+        plt.savefig('{}/annual_carbon_cost_6scenarios.png'.format(figdir))
 
         return
 
@@ -618,8 +616,8 @@ def barplot_all_scenarios_quantity():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.83)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        # plt.savefig('{}/land_requirement_quantity_6scenarios.png'.format(figdir))
-        plt.show()
+        plt.savefig('{}/land_requirement_6scenarios.png'.format(figdir))
+        # plt.show()
 
         return
 
@@ -666,7 +664,7 @@ def barplot_all_scenarios_quantity():
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
         plt.show()
-        # plt.savefig('{}/carbon_cost_annual_quantity_IND_WFL_6scenarios.png'.format(figdir))
+        # plt.savefig('{}/annual_carbon_cost_IND_WFL_6scenarios.png'.format(figdir))
 
         return
 
@@ -728,20 +726,17 @@ def barplot_all_scenarios_quantity():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.83)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        # plt.savefig('{}/land_requirement_quantity_IND_WFL_6scenarios.png'.format(figdir))
+        # plt.savefig('{}/land_requirement_IND_WFL_6scenarios.png'.format(figdir))
         plt.show()
 
         return
 
 
-    # carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
-    # stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
-
-    # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
-    # stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
+    carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
+    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
+    stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
-barplot_all_scenarios_quantity()
+# barplot_all_scenarios_quantity()
