@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../../'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Aug 10.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Oct 25.xlsx'.format(root, discount_filename)
 sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
@@ -220,9 +220,10 @@ def barplot_all_scenarios():
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
         plt.savefig('{}/land_requirement_Churkina_6scenarios.png'.format(figdir))
         # plt.show()
+        return
 
     def stacked_barplot_attribute_demand_substitution_land_IND_quantity(result_df, title, ylabel):
-        "Plot five scenarios, ignore the last scenario"
+        "Plot five scenarios, ignore the last scenario, and only use INDustrial roundwood"
         # Land area requirement from additional demand is the secondary area added upon the CST.
         fig, ax = plt.subplots(1, figsize=(14, 8))
         result_df = result_df.iloc[:,:5]
@@ -303,13 +304,14 @@ def barplot_all_scenarios():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.78, bottom=0.07)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.2)
-        plt.savefig('{}/land_requirement_IND_quantity_Churkina_6scenarios.png'.format(figdir))
+        plt.savefig('{}/land_requirement_IND_quantity_Churkina_5scenarios.png'.format(figdir))
         # plt.show()
 
         return
 
-    land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
+    # land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
+    # stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
+    # stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
