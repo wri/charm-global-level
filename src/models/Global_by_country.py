@@ -251,7 +251,7 @@ class Parameters:
         # If user input exists, the highest level input. Set a physical limit
         if self.discount_rate_input is None:
             self.discount_rate = self.input_country['Discount rate'].values[0]
-        elif self.discount_rate_input (self.discount_rate_input>=0) & (self.discount_rate_input<=0.1):
+        elif (self.discount_rate_input>=0) & (self.discount_rate_input<=0.1):
             self.discount_rate = self.discount_rate_input
         # If it is out of physical limits:
         else:
