@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../../'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Oct 25.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
 sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
@@ -102,7 +102,7 @@ def calculate_additional_secondary_area_for_construction(percentage_order):
     # Step 3. Scale the area with the carbon ratio
     # Read in the output from the results summary file for land area
     additional_secondary_area = carbon_for_wood_construction[percentage_order] / np.array(additional_secondary_carbon_scenario) * np.array(additional_secondary_land_scenario) #land_df.loc['BAU_SUBON_{}'.format(vslp_input_control_input)].values
-
+    # print(carbon_for_wood_construction[percentage_order], additional_secondary_carbon_scenario, additional_secondary_land_scenario, additional_secondary_area)
     return additional_secondary_area
 
 def export_results_to_excel():
@@ -116,7 +116,6 @@ def export_results_to_excel():
     select_df = result_df.loc[['BAU_SUBON_ALL', 'CST_SUBON_ALL', 'BAU_SUBON_IND', 'CST_SUBON_IND', 'Existing plantations', 'New plantations']]
     wood_percentages = ['10% construction using wood', '50% construction using wood', '90% construction using wood']
     for ipercentage, name in enumerate(wood_percentages):
-
         select_df.loc[name] = calculate_additional_secondary_area_for_construction(ipercentage)
 
     def write_excel(filename, sheetname, dataframe):
@@ -309,13 +308,13 @@ def barplot_all_scenarios():
 
         return
 
-    # land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
-    # stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
+    land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
+    stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
+    stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
-barplot_all_scenarios()
+# barplot_all_scenarios()
 
 
 
