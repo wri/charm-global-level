@@ -17,9 +17,9 @@ import matplotlib.pyplot as plt
 
 ### Datafile
 root = '../..'
-discount_filename = '4p'
+discount_filename = '6p'
 # datafile = '{}/data/processed/CHARM regional - DR_{} - Aug 10.xlsx'.format(root, discount_filename)
-datafile = '{}/data/processed/CHARM regional - DR_{} - Oct 25.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
 
@@ -250,6 +250,19 @@ def export_results_to_excel():
 # export_results_to_excel()
 # exit()
 
+def collect_all_discount_rates_results():
+    "For Appendix 3"
+    infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
+    df_list = []
+    for dr in ('0p', '2p', '4p', '6p'):
+        carbon = pd.read_excel(infile, sheet_name='CO2 (Gt per yr) DR_{}'.format(dr), index_col=0)
+        carbon_sel = carbon.loc[['BAU_NOSUB_ALL', 'BAU_SUBON_ALL']]
+        df_list.append(carbon_sel.rename(index={'BAU_NOSUB_ALL': 'Gross emissions', 'BAU_SUBON_ALL':'Net emissions including substitution savings'}))
+    big_table = pd.concat(df_list)
+    big_table.to_csv('{}/data/processed/derivative/carbon_results_all_discountrate.csv'.format(root))
+
+# collect_all_discount_rates_results()
+# exit()
 
 def barplot_all_scenarios_percentage():
 
@@ -308,8 +321,8 @@ def barplot_all_scenarios_percentage():
         legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit', 'Net carbon impact']
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
-        plt.show()
-        # plt.savefig('{}/carbon_cost_annual_6scenarios.png'.format(figdir))
+        # plt.show()
+        plt.savefig('{}/carbon_cost_annual_percentage_6scenarios.png'.format(figdir))
 
         return
 
@@ -488,15 +501,16 @@ def barplot_all_scenarios_percentage():
         return
 
 
-    carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    # carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
+    # stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    # stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
 
-    land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
+    # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
+    # stacked_barplot_attribute_IND_WFL_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
-# barplot_all_scenarios_percentage()
+barplot_all_scenarios_percentage()
 
 def barplot_all_scenarios_quantity():
     "Use quantity in the report"
