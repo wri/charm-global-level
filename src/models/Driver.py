@@ -19,16 +19,15 @@ root = '../../'
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'BRA'
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - May 12.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jul 22.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
+    iso = 'SWE'
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Oct 25.xlsx'.format(root)
 
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='CST')
+    Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_unharvested_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_mature_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Agricultural_land_tropical_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
@@ -73,7 +72,7 @@ def test_land_area_calculator():
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Aug 10.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Oct 25.xlsx'.format(root)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso,  secondary_mature_wood_share=0.5)
@@ -95,7 +94,7 @@ def test_land_area_calculator():
 #############################################RUNNING MODEL###########################################
 
 def run_model_legacy():
-
+    "Old function"
     datafile = '{}/data/processed/CHARM input v3 - old plantation scenario.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -167,6 +166,7 @@ def run_model_legacy():
 
 
 def run_model_new_plantation_scenarios():
+    "2021/05-07"
     # Read excel, if the cell has formula, it will be read as NaN
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - May 12.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_0 - May 12.xlsx'.format(root)
@@ -306,11 +306,11 @@ def run_model_new_plantation_scenarios():
 
 
 def run_model_five_scenarios_input_permutations():
-    """This is for academic paper"""
+    """2021/08-10"""
     # Read excel, if the cell has formula, it will be read as NaN
     # datafile = '{}/data/processed/CHARM regional - DR_4p - Aug 10.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_0p - Aug 10.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU - SF_1.2 - DR_4p - VSLP-IND - Jul 1.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_6p - Nov 1.xlsx'.format(root)
 
     scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
@@ -665,4 +665,4 @@ def get_global_annual_carbon_flow():
 
     return
 
-get_global_annual_carbon_flow()
+# get_global_annual_carbon_flow()
