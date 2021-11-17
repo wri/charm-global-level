@@ -1,14 +1,20 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Project"
+"""
+
+"""
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import Global_by_country, Plantation_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator
-# import Pasture_zero_counterfactual_scenario, Pasture_with_counterfactual_scenario
 import Plantation_counterfactual_secondary_historic_scenario, Plantation_counterfactual_secondary_plantation_age_scenario, Plantation_counterfactual_unharvested_scenario
 
 
@@ -19,15 +25,15 @@ root = '../../'
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'SWE'
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Oct 25.xlsx'.format(root)
+    iso = 'BRA'
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
 
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='CST')
-    Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_unharvested_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
+    Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Secondary_mature_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Agricultural_land_tropical_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
 
@@ -305,19 +311,29 @@ def run_model_new_plantation_scenarios():
 # exit()
 
 
-def run_model_five_scenarios_input_permutations():
-    """2021/08-10"""
-    # Read excel, if the cell has formula, it will be read as NaN
-    # datafile = '{}/data/processed/CHARM regional - DR_4p - Aug 10.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
+def run_model_five_scenarios():
+    """
+    Created and Edited: 2021/08-10
+    This is a driver for running global analysis for forestry land and carbon consequences.
+    """
+    # Read input/output data excel file.
     datafile = '{}/data/processed/CHARM regional - DR_6p - Nov 1.xlsx'.format(root)
-
-    scenarios = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+    # Read in countries
+    countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+    # Read in input data
     input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+    # If the cell has formula, it will be read as NaN
 
     def single_run_with_combination_input(future_demand_level_input='BAU', substitution_mode_input='SUBON', vslp_input_control_input='ALL'):
-        scenarionames, codes = [], []
-        # It doesn't matter which conversion or regrowth scenario, the wood supply from the secondary forest is the same
+        """
+        This function generates the 30 countries results for each scenario, depending on the combination of below parameters.
+        :param future_demand_level_input: select future demand level from "BAU" business-as-usual or "CST": constant demand
+        :param substitution_mode_input: select substitution mode from "SUBON" with substitution or "NOSUB" gross carbon impacts
+        :param vslp_input_control_input: select VSLP option from "ALL" total roundwood (VSLP_WFL+VSLP_IND) or "IND" industrial roundwood (VSLP_IND)
+        :return:
+        """
+        # Initiate the output variables.
+        countrynames, codes = [], []
         secondary_wood_default, plantation_wood_default, secondary_wood_highGR, plantation_wood_highGR, secondary_wood_WFL50less, plantation_wood_WFL50less = [], [], [], [], [], []
         pdv_per_ha_plantation_default, pdv_per_ha_regrowth, pdv_per_ha_conversion = [], [], []
         pdv_per_ha_mature_regrowth, pdv_per_ha_plantation_highGR, pdv_per_ha_agriland = [], [], []
@@ -329,14 +345,16 @@ def run_model_five_scenarios_input_permutations():
         area_regrowth_WFL50less, carbon_regrowth_WFL50less = [], []
         output_ha_agriland = []
 
-        for scenario, code in zip(scenarios['Country'], scenarios['ISO']):
-            # Test if the parameters are set up for this scenario, if there is one missing, will not do any calculation
-            input_scenario = input_data.loc[input_data['Country'] == scenario]
-            input_scenario = input_scenario.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
-            if input_scenario.isnull().values.any():
-                print("Please fill in the abbreviation and all the missing parameters for scenario '{}'!".format(scenario))
+        # For each country, calculate the results for all scenarios. Each variable collects a list of the countries' results.
+        for country, code in zip(countries['Country'], countries['ISO']):
+            # Test if the parameters are set up for this country, if there is one parameter missing, no calculation will be done for this country.
+            input_country = input_data.loc[input_data['Country'] == country]
+            input_country = input_country.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
+            if input_country.isnull().values.any():
+                print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
             else:
-                ### default plantation scenarios, secondary harvest regrowth and conversion
+                ################################### Execute model runs ##################################
+                ### Default plantation scenarios, (1) secondary harvest regrowth and (2) conversion
                 ### Read in global parameters ###
                 global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input)
                 # run different policy scenarios
@@ -352,7 +370,7 @@ def run_model_five_scenarios_input_permutations():
                 else:
                     output_ha_agriland_default = 0
 
-                ### scenario 3 secondary harvest regrowth: 50% middle aged and 50% mature secondary forest
+                ### scenario (3) secondary harvest regrowth: 50% middle aged and 50% mature secondary forest
                 ### Read in global parameters ###
                 global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input, secondary_mature_wood_share=0.5)
                 # run different policy scenarios
@@ -363,7 +381,7 @@ def run_model_five_scenarios_input_permutations():
                 # run the land area calculator
                 LAC_mixture = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
 
-                ### scenario 4 secondary harvest regrowth: 125% productivity increase in plantation
+                ### scenario (4) secondary harvest regrowth: 125% productivity increase in plantation
                 ### Read in global parameters ###
                 global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input, plantation_growth_increase_ratio=1.25)
                 # run different policy scenarios
@@ -373,14 +391,14 @@ def run_model_five_scenarios_input_permutations():
                 # run the land area calculator
                 LAC_highGR = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
 
-                ### scenario 5 secondary harvest regrowth: 50% reduction in VSLP-WFL production
+                ### scenario (5) secondary harvest regrowth: 50% reduction in VSLP-WFL production
                 # read in global parameters
                 global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input, vslp_future_demand='WFL50less')
                 # run the land area calculator
                 LAC_WFL50less = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
 
-                # Prepare output
-                scenarionames.append(scenario)
+                ################################### Prepare output ##################################
+                countrynames.append(country)
                 codes.append(code)
 
                 # Carbon tracker
@@ -429,27 +447,28 @@ def run_model_five_scenarios_input_permutations():
                 carbon_regrowth_WFL50less.append(LAC_WFL50less.total_pdv_plantation_secondary_regrowth)
 
 
-        # Save to the output
-        dataframe = pd.DataFrame({'Country': scenarionames,
+        # Save to the excel file
+        dataframe = pd.DataFrame({'Country': countrynames,
                                   'ISO': codes,
-
+                                  # Save PDV
                                   'PDV per ha Secondary middle regrowth (tC/ha)': pdv_per_ha_regrowth,
                                   'PDV per ha Secondary mature regrowth (tC/ha)': pdv_per_ha_mature_regrowth,
                                   'PDV per ha Secondary conversion (tC/ha)': pdv_per_ha_conversion,
                                   'PDV per ha Plantation (tC/ha)': pdv_per_ha_plantation_default,
                                   'PDV per ha Plantation 125% GR (tC/ha)': pdv_per_ha_plantation_highGR,
                                   'PDV per ha Agricultural land conversion (tC/ha)': pdv_per_ha_agriland,
-
+                                  # Save output
                                   'Output per ha Agricultural land conversion (tC/ha)': output_ha_agriland,
-
+                                  # Save wood supply
                                   'Default: Plantation supply wood (mega tC)': plantation_wood_default,
                                   'Default: Secondary forest supply wood (mega tC)': secondary_wood_default,
                                   '125% GR: Plantation supply wood (mega tC)': plantation_wood_highGR,
                                   '125% GR: Secondary forest supply wood (mega tC)': secondary_wood_highGR,
                                   'WFL50less: Plantation supply wood (mega tC)': plantation_wood_WFL50less,
                                   'WFL50less: Secondary forest supply wood (mega tC)': secondary_wood_WFL50less,
-
+                                  # Save plantation area
                                   'Plantation area (ha)': area_plantation,
+
                                   # S1
                                   'S1 regrowth: Secondary area (ha)': area_regrowth,
                                   'S1 regrowth: total PDV (mega tC)': carbon_regrowth,
@@ -489,20 +508,34 @@ def run_model_five_scenarios_input_permutations():
                     dataframe.to_excel(writer, sheet_name=sheetname, index=False)
                     writer.save()
 
+        # Prepare output tab name
         output_tabname = '{}_{}_{}'.format(future_demand_level_input, substitution_mode_input, vslp_input_control_input)
         write_excel(datafile, output_tabname, dataframe)
 
-    # Run all permutations for the three parameters
-    for vslp_input_control in ['ALL', 'IND', 'WFL']:
-        for substitution_mode in ['NOSUB', 'SUBON']:
-            for future_demand_level in ['BAU', 'CST']:
-                single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
+
+    ################## Run the experiments ###################
+    def run_single_input(future_demand_level, substitution_mode, vslp_input_control):
+        "Run model with a set of parameters"
+        single_run_with_combination_input(future_demand_level_input=future_demand_level,
+                                          substitution_mode_input=substitution_mode,
+                                          vslp_input_control_input=vslp_input_control)
+        return
+
+    def run_all_input_permutations():
+        "Run model based on the different combination of the three parameters"
+        for vslp_input_control in ['ALL', 'IND', 'WFL']:
+            for substitution_mode in ['NOSUB', 'SUBON']:
+                for future_demand_level in ['BAU', 'CST']:
+                    single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
+        return
+
+    run_all_input_permutations()
 
     return
 
-
-run_model_five_scenarios_input_permutations()
-exit()
+if __name__ == "__main__":
+    run_model_five_scenarios()
+    exit()
 
 
 def get_global_annual_carbon_impact():
