@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Project"
-__maintainer__ = "Liqing Peng"
-__email__ = "liqing.peng@wri.org"
 """
 Global parameters required for carbon tracker for different scenarios
 1. INPUT
@@ -23,10 +19,18 @@ Global parameters required for carbon tracker for different scenarios
 5. Other parameters
 - LLP parameters
 """
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
+__maintainer__ = "Liqing Peng"
+__email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
+
 
 class Parameters:
 

@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2021 WRI, The Carbon Harvest Model (CHarM) Project"
-__maintainer__ = "Liqing Peng"
-__email__ = "liqing.peng@wri.org"
-
 """
 1. Grab the national results
 2. Calculate the global results 
 3. Calculate the new tropical plantation scneario based on global results
 """
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
+__maintainer__ = "Liqing Peng"
+__email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
+
 import numpy as np
 import pandas as pd
 import Global_by_country, Agricultural_land_tropical_scenario
@@ -18,7 +22,6 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../..'
 discount_filename = '6p'
-# datafile = '{}/data/processed/CHARM regional - DR_{} - Aug 10.xlsx'.format(root, discount_filename)
 datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 

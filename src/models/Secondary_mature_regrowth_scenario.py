@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Project"
-__maintainer__ = "Liqing Peng"
-__email__ = "liqing.peng@wri.org"
 """
 Secondary mature forest regrowth scenario
 1. Aboveground biomass before the first harvest is 80 years old mature forest = (20*young secondary GR)+(60*old secondary GR)
 2. Counterfactual starting from (20*young secondary GR)+(60*old secondary GR) and growing at the mature secondary growth rate
 3. Only has the first harvest 
 """
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
+__maintainer__ = "Liqing Peng"
+__email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
 
 import numpy as np
 import pandas as pd

@@ -1,14 +1,18 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Project"
-__maintainer__ = "Liqing Peng"
-__email__ = "liqing.peng@wri.org"
 """
 Plantation counterfactual unharvested scenario
 1. Aboveground biomass before the first harvest is C density right before the second harvest
 2. Counterfactual starts at the plantation biomass at the time by the harvest (also at the plantation age, but using plantation growth rate), and it continues growing at the plantation growth rate
 3. Harvest with potential thinnings
 """
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
+__maintainer__ = "Liqing Peng"
+__email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
 
 import numpy as np
 import pandas as pd

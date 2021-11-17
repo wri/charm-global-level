@@ -1,8 +1,4 @@
 #!/usr/bin/env python
-__author__ = "Liqing Peng, Jessica Zionts, Tim Searchinger"
-__copyright__ = "Copyright (C) 2020 WRI, The Carbon Harvest Model (CHarM) Project"
-__maintainer__ = "Liqing Peng"
-__email__ = "liqing.peng@wri.org"
 """
 Main calculation original excel file: Churkina_Calculation_Synthesis.xlsx
 Timber demand scenarios from Churkina 2020:
@@ -12,6 +8,14 @@ Timber demand scenarios from Churkina 2020:
 The global new urban timber demand is calculated from the Analysis_Phase4/urban_builtup_timber_demand.py
 
 """
+__author__ = "Liqing Peng"
+__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__license__ = 1
+__version__ = "2021.11.1"
+__maintainer__ = "Liqing Peng"
+__email__ = "liqing.peng@wri.org"
+__status__ = "Dev"
 
 import pandas as pd
 import numpy as np
