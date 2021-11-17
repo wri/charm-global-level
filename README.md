@@ -18,7 +18,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 - Land_area_calculator.py
 
 ./data/processed/
-- CHARM.xlsx
+- CHARM_global.xlsx
 
 
 ## Installation
@@ -64,11 +64,15 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 ## Usage
 
-1. Review or edit the input parameters
+1. Check the data file
 
-    Open the **CHARM.xlsx** and click on *Inputs* tab. We provide the country name and ISO in columns A and B and input associated parameters in the same row (columns C:AQ).
+    Make sure the current data file **CHARM_global.xlsx** is under the ./data/processed/ directory. You can save the previous model results by changing their names, for example, **CHARM_global_11012021.xlsx**, to avoid overwriting.
 
-2. Run the model
+2. Review or edit the input parameters
+
+    Open the **CHARM_global.xlsx** and click on *Inputs* tab. We provide the country name and ISO in columns A and B and input associated parameters in the same row (columns C:AY).
+
+3. Run the model
 
     Make sure you have changed the location to the model folder, then type the following:
 
@@ -78,7 +82,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 3. Check the results
 
-    The results are updated in CHARM.xlsx *Outputs*:
+    The results are updated in CHARM_global.xlsx *Outputs*:
     - Secondary area conversion (ha)
     - Secondary area regrowth (ha)
     - Plantation area (ha)
@@ -95,8 +99,8 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 ## License
 
-Copyright (C) 2020 [WRI](https://www.wri.org/), The Carbon Harvest Model (CHarM) Project
+Copyright (C) 2020-2021 [WRI](https://www.wri.org/), The Carbon Harvest Model (CHarM) Project
+
+Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
 
 Contributor: WRI Food Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
-
-Maintainer: Liqing Peng (liqing.peng@wri.org)
