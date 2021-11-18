@@ -12,9 +12,9 @@ Download and prepare the scripts and data files in your computer. Create a new m
 ./src/models/
 - Driver.py
 - Global_by_country.py
-- Plantation_counterfactual_secondary_plantation_age_scenario.py
-- Secondary_conversion_scenario.py
 - Secondary_regrowth_scnenario.py
+- Secondary_conversion_scenario.py
+- Plantation_counterfactual_secondary_plantation_age_scenario.py
 - Land_area_calculator.py
 
 ./data/processed/
@@ -80,9 +80,23 @@ Download and prepare the scripts and data files in your computer. Create a new m
     C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver.py
     ```
 
-3. Check the results
+3.  Check the results
 
-    The results are updated in CHARM_global.xlsx *Outputs*:
+    The results are updated in CHARM_global.xlsx. The tab name is based on there experiment input parameters. 
+    
+    1. future wood demand level
+        - BAU (Bussiness-as-usual)
+        - CST (Constant demand level as 2010)
+    2. substitution benefit mode
+        - SUBON (including substitution)
+        - NOSUB (excluding substitution)
+    3. VSLP input control
+        - ALL (total roundwood)
+        - IND (industrial roundwood)
+        - WFL (wood fuel)
+    
+    The output variables are:
+    # FIXME
     - Secondary area conversion (ha)
     - Secondary area regrowth (ha)
     - Plantation area (ha)
