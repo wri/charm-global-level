@@ -5,9 +5,9 @@
 3. Calculate the new tropical plantation scneario based on global results
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2020-2021 WRI, The Carbon Harvest Model (CHARM) Project"
+__copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
-__license__ = 1
+__license__ = "Polyform Strict License 1.0.0"
 __version__ = "2021.11.1"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"

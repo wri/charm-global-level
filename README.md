@@ -2,6 +2,21 @@
 
 CHarM (Carbon Harvest Model) is a timber carbon tracker model developed by the World Resources Institute Food and Forest Program. It analyzes future changes in timber demand and their effects on land use and carbon stocks under various policy decision scenarios.
 
+## Copyright and License
+
+Copyright (c) 2020-2021 [World Resources Institute](https://www.wri.org/), The Carbon Harvest Model (CHarM) Project
+
+Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
+
+Contributors: WRI Food Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
+
+This software is made available under the [Polyform Strict License 1.0.0](https://polyformproject.org/licenses/strict/1.0.0/) and under no other licenses.
+A copy of the license is available in the `LICENSE` file at the root of this repository.
+
+In the future, it is possible the software will be made available under different terms at the author's discretion.
+World Resources Institute believes in the open and transparent exchange of information and strives to embody this value in our analyses and knowledge products.
+
+
 ## Download
 
 Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-regional-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
@@ -111,10 +126,3 @@ Download and prepare the scripts and data files in your computer. Create a new m
     - Total PDV regrowth plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest regrowth after a harvest
 
 
-## License
-
-Copyright (C) 2020-2021 [WRI](https://www.wri.org/), The Carbon Harvest Model (CHarM) Project
-
-Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
-
-Contributor: WRI Food Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
