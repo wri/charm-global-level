@@ -135,22 +135,12 @@ def run_model():
 
 
     ################## Run the experiments ###################
-    def run_single_input(future_demand_level, substitution_mode, vslp_input_control):
-        "Run model with a set of parameters"
-        single_run_with_combination_input(future_demand_level_input=future_demand_level,
-                                          substitution_mode_input=substitution_mode,
-                                          vslp_input_control_input=vslp_input_control)
-        return
-
-    def run_all_input_permutations():
-        "Run model based on the different combination of the three parameters"
-        for vslp_input_control in ['ALL', 'IND', 'WFL']:
-            for substitution_mode in ['NOSUB', 'SUBON']:
-                for future_demand_level in ['BAU', 'CST']:
-                    single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
-        return
-
-    run_all_input_permutations()
+    # vslp_input_control options ['ALL', 'IND', 'WFL']
+    # substitution_mode options ['NOSUB', 'SUBON']
+    # future_demand_level options ['BAU', 'CST']
+    single_run_with_combination_input(future_demand_level_input='BAU',
+                                      substitution_mode_input='SUBON',
+                                      vslp_input_control_input='ALL')
 
     return
 

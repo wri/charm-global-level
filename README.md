@@ -25,7 +25,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 - README.md
 
 ./src/models/
-- Driver.py
+- Driver_regional.py
 - Global_by_country.py
 - Secondary_regrowth_scnenario.py
 - Secondary_conversion_scenario.py
@@ -92,7 +92,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
     Make sure you have changed the location to the model folder, then type the following:
 
     ```powershell
-    C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver.py
+    C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver_regional.py
     ```
 
 3.  Check the results
@@ -120,22 +120,20 @@ Download and prepare the scripts and data files in your computer. Create a new m
     | PDV per ha Secondary conversion (tC/ha) | Secondary forest conversion to plantation|
     | PDV per ha Plantation secondary plantation age (tC/ha) | Plantation|
     
-    >Total present discounted values of carbon
+    >Meta statistics 
     
-    | Variable | Decison|
+    | Variable | Description |
     |-----------|-----------|
+    | Default: Plantation supply wood (mega tC) | wood supply from plantation |
+    | Default: Secondary forest supply wood (mega tC) | wood supply from secondary forest |
+    | Plantation area (ha) | land area required for plantation |
     
-    # FIXME
+    >Scenarios
 
-    - Total PDV conversion plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest converted to plantations
-    - Total PDV regrowth plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest regrowth after a harvest
-    
-    - Secondary area conversion (ha)
-    - Secondary area regrowth (ha)
-    - Plantation area (ha)
-    - Plantation supply wood (mega tC)
-    - Secondary supply wood (mega tC)
-    	
-
-Default: Plantation supply wood (mega tC)	Default: Secondary forest supply wood (mega tC)	125% GR: Plantation supply wood (mega tC)	125% GR: Secondary forest supply wood (mega tC)	WFL50less: Plantation supply wood (mega tC)	WFL50less: Secondary forest supply wood (mega tC)	Plantation area (ha)	S1 regrowth: Secondary area (ha)	S1 regrowth: total PDV (mega tC)	S1 regrowth: PDV plantation (mega tC)	S1 regrowth: PDV secondary (mega tC)	S2 conversion: Secondary area (ha)	S2 conversion: total PDV (mega tC)	S3 mixture: Secondary area (ha)	S3 mixture: total PDV (mega tC)	S3 mixture: Secondary middle aged area (ha)	S3 mixture: Secondary mature area (ha)	S4 125% GR: Secondary area (ha)	S4 125% GR: total PDV (mega tC)	S5 WFL 50% less: Secondary area (ha)	S5 WFL 50% less: total PDV (mega tC)
+    | Variable | Description |
+    |-----------|-----------|
+    |S1 regrowth: total PDV (mega tC)|Total carbon consequences of the plantation harvested plus some secondary forest regrowth after a harvest|
+    |S1 regrowth: Secondary area (ha)|Secondary forest area required for S1|
+    |S2 conversion: total PDV (mega tC)|Total carbon consequences of the plantation harvested plus some secondary forest converted to plantations|
+    |S2 conversion: Secondary area (ha)|Secondary forest area required for S2|
 
