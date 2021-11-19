@@ -110,19 +110,32 @@ Download and prepare the scripts and data files in your computer. Create a new m
         - IND (industrial roundwood)
         - WFL (wood fuel)
     
-    The output variables are:
+    A non-exhaustive list of output variables.
+    
+    >The present discounted values of carbon benefit per hectare for different policy decisions
+   
+    | Variable | Decison|
+    |-----------|-----------|
+    | PDV per ha Secondary regrowth (tC/ha) | Secondary forest regrowth|
+    | PDV per ha Secondary conversion (tC/ha) | Secondary forest conversion to plantation|
+    | PDV per ha Plantation secondary plantation age (tC/ha) | Plantation|
+    
+    >Total present discounted values of carbon
+    
+    | Variable | Decison|
+    |-----------|-----------|
+    
     # FIXME
+
+    - Total PDV conversion plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest converted to plantations
+    - Total PDV regrowth plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest regrowth after a harvest
+    
     - Secondary area conversion (ha)
     - Secondary area regrowth (ha)
     - Plantation area (ha)
     - Plantation supply wood (mega tC)
     - Secondary supply wood (mega tC)
-    The present discounted values of carbon benefit per hectare for three policy decisions:
-    - PDV per ha Plantation secondary plantation age (tC/ha) for decision: Plantation
-    - PDV per ha Secondary conversion (tC/ha) for decision: Secondary forest conversion to plantation
-    - PDV per ha Secondary regrowth (tC/ha) for decision: Secondary forest regrowth
-    The total PDV:
-    - Total PDV conversion plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest converted to plantations
-    - Total PDV regrowth plantation secondary plantation age (mega tC): the plantation harvested plus some secondary forest regrowth after a harvest
+    	
 
+Default: Plantation supply wood (mega tC)	Default: Secondary forest supply wood (mega tC)	125% GR: Plantation supply wood (mega tC)	125% GR: Secondary forest supply wood (mega tC)	WFL50less: Plantation supply wood (mega tC)	WFL50less: Secondary forest supply wood (mega tC)	Plantation area (ha)	S1 regrowth: Secondary area (ha)	S1 regrowth: total PDV (mega tC)	S1 regrowth: PDV plantation (mega tC)	S1 regrowth: PDV secondary (mega tC)	S2 conversion: Secondary area (ha)	S2 conversion: total PDV (mega tC)	S3 mixture: Secondary area (ha)	S3 mixture: total PDV (mega tC)	S3 mixture: Secondary middle aged area (ha)	S3 mixture: Secondary mature area (ha)	S4 125% GR: Secondary area (ha)	S4 125% GR: total PDV (mega tC)	S5 WFL 50% less: Secondary area (ha)	S5 WFL 50% less: total PDV (mega tC)
 
