@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-
+This is the main file for model execution.
 """
 __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
