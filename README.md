@@ -19,7 +19,7 @@ World Resources Institute believes in the open and transparent exchange of infor
 
 ## Download
 
-Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-regional-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
+Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-regional-level-clean**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
 
 - requirements.txt
 - README.md
@@ -74,8 +74,8 @@ Download and prepare the scripts and data files in your computer. Create a new m
     In the command prompt/Powershell (Windows) or Terminal (OSX/Linux), use **cd** to change directory to the model folder location. Use **pip** to install required python packages.
 
     ```powershell
-    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\charm-regional-level\
-    C:\Users\USERNAME\Documents\charm-regional-level>pip install -r requirements.txt
+    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\charm-regional-level-clean\
+    C:\Users\USERNAME\Documents\charm-regional-level-clean>pip install -r requirements.txt
     ```
 
 ## Usage
@@ -93,7 +93,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
     Make sure you have changed the location to the model folder, then type the following:
 
     ```powershell
-    C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver_regional.py
+    C:\Users\USERNAME\Documents\charm-regional-level-clean\src\models>python Driver_regional.py
     ```
 
 3.  Check the results
