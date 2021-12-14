@@ -95,6 +95,9 @@ class LandCalculator:
         # print("secondary area regrowth", sum(self.area_harvested_new_secondary_regrowth))
         # plt.plot(self.area_harvested_new_secondary_conversion, label='conversion')
         # plt.plot(self.area_harvested_new_secondary_regrowth, label='regrowth')
+        # print(len(self.area_harvested_new_secondary_regrowth))
+        # print(np.sum(self.area_harvested_new_secondary_regrowth_combined) / 1000000)
+        #
         # plt.legend();plt.show();exit()
 
         ### total PDV
