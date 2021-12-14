@@ -78,15 +78,14 @@ def test_land_area_calculator():
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Oct 25.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso,  secondary_mature_wood_share=0.5)
+    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='CST', secondary_mature_wood_share=0)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso, vslp_future_demand='WFL50less')
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings, plantation_counterfactual_code='secondary_plantation_age')
-    print(np.sum(LAC.output_need_secondary)/ 1000000)
     # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
     # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
     # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth)+sum(LAC.area_harvested_new_secondary_mature_regrowth))
