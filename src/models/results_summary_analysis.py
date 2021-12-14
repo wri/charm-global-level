@@ -19,7 +19,7 @@ import Global_by_country, Agricultural_land_tropical_scenario
 
 ### Datafile
 root = '../..'
-discount_filename = '6p'
+discount_filename = '4p'
 datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
@@ -42,7 +42,8 @@ def extract_global_outputs_summary(results):
     ###The major scenarios
     cf_MtC_GtCO2 = 1/1000 * 44 / 12
     cf_ha_mha = 1/1000000
-    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / 40
+    # Fixme change 40 to 41
+    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / 41
     area_total = results[['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 WFL 50% less: Secondary area (ha)']].sum() / 0.8 * cf_ha_mha
 
     return carbon_costs_annual, area_total
@@ -150,8 +151,8 @@ def run_new_tropical_plantations_scenario(results):
     ### 8. Calculate global PDV as Total PDV for existing plantation + Total PDV for new plantation + New total PDV for secondary
     global_pdv = total_pdv_plantation + total_pdv_secondary_after_replace + total_pdv_tropical_weighted_average
 
-    # Convert tC to GtCO2 per year
-    carbon_cost_annual = global_pdv / 1000000000 * 44 / 12 / 40
+    # Convert tC to GtCO2 per year. FIXME. change the 40 to 41.
+    carbon_cost_annual = global_pdv / 1000000000 * 44 / 12 / 41
     # Convert ha to Mha
     updated_secondary_area = (area_harvested_new_secondary_sum - area_reduced_secondary) / 1000000
     new_plantation_area = sum(area_harvested_new_agriland) / 1000000
@@ -177,6 +178,45 @@ def run_new_tropical_plantations_scenario(results):
     # print('updated_secondary_area', updated_secondary_area)
 
     return carbon_cost_annual, updated_secondary_area, new_plantation_area, total_wood_secondary_after_replace, total_wood_plantation_after_replace
+
+
+def calculate_existing_tropical_plantations_numbers():
+    """
+    Tropical Plantation Equivalent
+    require the input from the CST model outputs
+    In 2010, pull out the total quantity of wood harvested from NON-plantation forests. Then calculate an average yield for tropical forests in 2010 (tC/ha). Then simply divide the non-plantation quantity by the tropical yield to get the total number of tropical plantation hectares that could replace one year’s worth of global secondary forest harvest.
+    """
+    # Read in CST demand 2010 existing level
+    results = pd.read_excel(datafile, sheet_name='CST_NOSUB_IND')
+
+    ### Read in the country sum parameters
+    carbon_global, area_global = prepare_global_outputs_for_new_tropical_scenario(results)
+    total_wood_secondary = carbon_global['Default: Secondary forest supply wood (mega tC)']     # Total wood from secondary, tC
+    total_wood_plantation = carbon_global['Default: Plantation supply wood (mega tC)']     # Total wood from secondary, tC
+
+    ### Calculate average tropical plantation wood harvest
+    # only tropical countries that are 10 years rotation period: Brazil, Congo, Indonesia, Vietnam
+    # weighted average of the output per ha for each harvest
+    tropical_countries_iso = ['BRA', 'COD', 'IDN', 'VNM']
+    # Get the plantation area
+    area_plantation_tropical = [results.loc[results['ISO']==iso]['Plantation area (ha)'].values[0] for iso in tropical_countries_iso]
+    # Get the output per ha at the 2020 year
+    output_ha_tropical = [results.loc[results['ISO']==iso]['Output per ha Agricultural land conversion (tC/ha)'].values[0] for iso in tropical_countries_iso]
+    weighted_sum = sum([area_plantation_tropical[i] * output_ha_tropical[i] for i in range(len(output_ha_tropical))])
+    # Get the weighted average output per ha for the four countries
+    output_ha_tropical_average = weighted_sum / sum(area_plantation_tropical)
+
+    # For cst demand 2010 level
+    wood_secondary_2010 = total_wood_secondary / 41
+    area_plantation_tropical_equivalent = wood_secondary_2010 / output_ha_tropical_average
+    wood_secondary_share = total_wood_secondary / (total_wood_plantation + total_wood_secondary)
+
+    return total_wood_secondary, wood_secondary_2010, wood_secondary_share, output_ha_tropical_average, area_plantation_tropical_equivalent
+
+# result = calculate_existing_tropical_plantations_numbers()
+# print(result)
+# exit()
+
 
 def export_results_to_excel():
     carbon_costs = np.zeros((12, 6))
