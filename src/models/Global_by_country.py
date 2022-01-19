@@ -72,16 +72,37 @@ class Parameters:
         # self.rotation_length_thinning = 5
 
     def setup_biophysical_parameters(self):
-        # Growth rates, C density
+        """Growth rates, C density"""
+        ### Plantation
         self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
-        self.GR_old_plantation = self.input_country['Old Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
-        self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year) (Harris)'].values[0]     # Stand age 0-20
-        self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year) (Harris)'].values[0]   # Stand age 20-80
-        # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-80), use this relationship to estimate GR mature
-        self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
-        self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
+        self.GR_old_plantation = self.input_country['Middle Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
         self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
-        # self.secondary_mature_wood_share = self.input_country['% of secondary supply from mature secondary forest'].values[0] -> Read as global settings input
+
+        ### Secondary forest
+        # Growth rates GR1 and GR2 inputs
+        self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year)'].values[0]     # Stand age 0-20
+        self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year)'].values[0]   # Stand age 20-100
+        # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-100)
+        self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
+
+        # Growth rate curve
+        # Monod function: C = agb_max * AGE / (AGE + age_50perc)
+        age_first = 20      # This is relatively established
+        age_second = 100    # This is relatively not established
+        C_first = age_first * self.GR_young_secondary  # This is the carbon density at the age_first
+        C_second = C_first + (age_second - age_first) * self.GR_middle_secondary  # This is the carbon density at the age_second
+        self.age_50perc = age_first * age_second * (C_second - C_first) / (age_second * C_first - age_first * C_second)
+        self.agb_max = C_first / age_first * (age_first + self.age_50perc)
+
+        # C density
+        self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
+        # Calculate the equivalent age of the C density based on the Monod function
+        age_eq_C_secondary = self.age_50perc * self.C_harvest_density_secondary / (self.agb_max - self.C_harvest_density_secondary)
+        # The harvesting year is 20 years after the equivalent age, but at least to be 40 years (lower bound in case some C density too low)
+        if age_eq_C_secondary + 20 > 40:
+            self.age_for_harvest = age_eq_C_secondary + 20
+        else:
+            self.age_for_harvest = 40
 
         # This constant approach is depreciated, used only in the Plantation scenario as a reference
         # Mokany 2006
