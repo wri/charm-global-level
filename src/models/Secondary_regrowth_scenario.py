@@ -91,15 +91,20 @@ class CarbonTracker:
         # # Secondary regrowth scenario, initial aboveground biomass is the C density from secondary
         # self.aboveground_biomass_secondary[0, 0] = self.Global.C_harvest_density_secondary
         # 2021/01/28 change the decision initial to the (20*young secondary GR)+(20*old secondary GR)
-        self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # 2022/01/19 change the decision initial to the higher carbon density at the 40 years or the existing + 20 years
+        self.aboveground_biomass_secondary[0, 0] = self.Global.agb_max * (self.Global.age_for_harvest) / (self.Global.age_for_harvest + self.Global.age_50perc)
         self.belowground_biomass_live_secondary[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[0, 0])
+
         # original counterfactual set to the Nancy's average carbon density
         # 2021/01/26 change the initial also to (20*young secondary GR)+(20*old secondary GR)
-        self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # self.counterfactual_biomass[1] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 20
+        # 2022/01/19 change the counterfactual initial to the higher carbon density at the 40 years or the existing + 20 years
+        self.counterfactual_biomass[1] = self.Global.agb_max * (self.Global.age_for_harvest) / (self.Global.age_for_harvest + self.Global.age_50perc)
+
         # Set up the threshold where the aboveground biomass will shift to second growth rate for secondary forest.
         # 20 years is the IPCC threshold for young forest growth period
-        self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_young_secondary * 20
-
+        # self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_young_secondary * 20
 
     def carbon_pool_simulator_per_cycle(self):
         ######################## STEP 2: Carbon tracker ##############################
@@ -150,10 +155,15 @@ class CarbonTracker:
 
             # ### Stand pool grows back within the rotation cycle
             for year in range(st_cycle, ed_cycle):
-                if self.aboveground_biomass_secondary[cycle, year - 1] < self.aboveground_biomass_middlegrowth_threshold:
-                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_secondary
-                else:
-                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_middle_secondary
+                # FIXME remove - Linear growth function.
+                # if self.aboveground_biomass_secondary[cycle, year - 1] < self.aboveground_biomass_middlegrowth_threshold:
+                #     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_secondary
+                # else:
+                #     self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_middle_secondary
+
+                # 2022/01/19 Monod function growth curve.
+                # Shifting back 1 year is necessary because in year 1 it is zero carbon, instead of year 0 (initial condition)
+                self.aboveground_biomass_secondary[cycle, year] = self.Global.agb_max * (year - 1) / (year - 1 + self.Global.age_50perc)
                 self.belowground_biomass_live_secondary[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[cycle, year])
 
             ### For each product pool, slash pool, roots leftover, landfill, the carbon decay for the entire self.Global.arraylength
@@ -220,7 +230,7 @@ class CarbonTracker:
         # start zero, grow at growth rate
         # If there is no harvest, the forest restoration becomes secondary forest
         for year in range(2, self.Global.arraylength):
-            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_middle_secondary
+            self.counterfactual_biomass[year] = self.counterfactual_biomass[year - 1] + self.Global.GR_mature_secondary #GR_middle_secondary
         self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
         # 2021/06/10: remove the maximum cap
         # self.stand_biomass_secondary_maximum = self.aboveground_biomass_secondary_maximum + self.calculate_belowground_biomass(self.aboveground_biomass_secondary_maximum)
