@@ -13,7 +13,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "Polyform Strict License 1.0.0"
-__version__ = "2021.11.1"
+__version__ = "2022.1.20"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -284,20 +284,27 @@ class CarbonTracker:
         """
         ### Steady growth no-harvest
         ## Remove the old capping system. Old version: before 06/09 2021 Depending on rotation length
+        ## Version 2021/06/09
         # The time series must have a length longer than 120 to store the full three growing stage, but it can have longer optional > 120 years.
-        tstep_max = max(self.Global.rotation_length_harvest + self.Global.nyears, 120+1)
-        counterfactual_biomass_start_zero = np.zeros((tstep_max))
-        # For three period
-        for tstep in range(1, 20):
-            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_young_secondary
-        for tstep in range(20, 80):
-            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_middle_secondary
-        for tstep in range(80, tstep_max):
-            counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_mature_secondary
+        # tstep_max = max(self.Global.rotation_length_harvest + self.Global.nyears, 120+1)
+        # counterfactual_biomass_start_zero = np.zeros((tstep_max))
+        # # For three period
+        # for tstep in range(1, 20):
+        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_young_secondary
+        # for tstep in range(20, 80):
+        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_middle_secondary
+        # for tstep in range(80, tstep_max):
+        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_mature_secondary
+        #
+        # counterfactual_biomass_start_zero = counterfactual_biomass_start_zero + self.calculate_belowground_biomass(counterfactual_biomass_start_zero)
+        # # Update: year 0 = 0, year 1 onwards are cropped from the counterfactual_biomass_start_zero
+        # self.counterfactual_biomass[1:] = counterfactual_biomass_start_zero[self.Global.rotation_length_harvest:self.Global.rotation_length_harvest+self.Global.nyears]
 
-        counterfactual_biomass_start_zero = counterfactual_biomass_start_zero + self.calculate_belowground_biomass(counterfactual_biomass_start_zero)
-        # Update: year 0 = 0, year 1 onwards are cropped from the counterfactual_biomass_start_zero
-        self.counterfactual_biomass[1:] = counterfactual_biomass_start_zero[self.Global.rotation_length_harvest:self.Global.rotation_length_harvest+self.Global.nyears]
+        # Version 2022/01/20
+        # The counterfactual initial is starting from one rotation length
+        for year in range(1, self.Global.arraylength):
+            self.counterfactual_biomass[year] = self.Global.agb_max * (self.Global.rotation_length_harvest + year - 1) / (self.Global.rotation_length_harvest + year - 1 + self.Global.age_50perc)
+        self.counterfactual_biomass = self.counterfactual_biomass + self.calculate_belowground_biomass(self.counterfactual_biomass)
 
 
 ######################## STEP 5: Present discounted value ##############################
@@ -339,7 +346,7 @@ class CarbonTracker:
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
 
-    def plot_C_pools_counterfactual_print_PDV(self):
+    def plot_C_pools_counterfactual_print_PDV_original(self):
 
         present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
         print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
@@ -363,4 +370,53 @@ class CarbonTracker:
         return
 
 
+    def plot_C_pools_counterfactual_print_PDV(self):
+        present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
+        print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
 
+        nyears = self.Global.nyears
+        df_stack = pd.DataFrame({'Displaced VSLP emissions': self.VSLP_substitution_benefit[1:],
+                                 'Displaced concrete & steel emissions': self.LLP_substitution_benefit[1:],
+                                 'Live tree stand & root storage': self.totalC_stand_pool[1:],
+                                 'Slash & decaying root storage': self.totalC_slash_root[1:],
+                                 'Wood products storage': self.totalC_product_pool[1:],
+                                 'Landfill storage': self.totalC_landfill_pool[1:],
+                                 'Methane emission': self.totalC_methane_emission[1:]
+                                 }, index=np.arange(2010, 2010 + nyears))
+        df_line = pd.DataFrame({'Non-harvest scenario': self.counterfactual_biomass[1:],
+                                'Harvest scenario - total carbon (all pools)': self.total_carbon_benefit[1:]},
+                               index=np.arange(2010, 2010 + nyears))
+
+        colornames = ['Brown', 'Darkgrey', 'DarkGreen', 'Sienna', 'Goldenrod', 'Darkorange', 'Steelblue']
+
+        # Positive carbon flux
+        fig, ax = plt.subplots(figsize=(11, 5))
+        plt.stackplot(df_stack.index, df_stack['Displaced VSLP emissions'],df_stack['Displaced concrete & steel emissions'],
+                      df_stack['Live tree stand & root storage'], df_stack['Slash & decaying root storage'],
+                      df_stack['Wood products storage'], df_stack['Landfill storage'], labels=df_stack.columns,
+                      colors=colornames[:-1])
+        # Negative carbon flux
+        # plt.stackplot(df_stack.index, df_stack['Methane emission'], labels=['Methane emission'], color=colornames[-1])
+        plt.stackplot(df_stack.index, df_stack['Methane emission'], labels=[''], color=colornames[-1])
+
+        # Two lines
+        df_line.plot(ax=ax, style=['--', '-'], color=["limegreen", "k"], lw=2.5, legend=False)
+        ax.set_ylabel('Carbon storage (tCeq/ha)', fontsize=18)
+        ax.set_xlabel('Year', fontsize=18)
+        ax.tick_params(axis='both', which='major', labelsize=16)
+        ax.annotate('PDV including substitution: {:.1f} tCeq/ha'.format(present_discounted_carbon_fullperiod), xy=(0.05, 0.84),
+                    xycoords='axes fraction', fontsize=11, fontweight='bold')
+
+        ax.set_title(self.Global.country_name, fontsize=16)
+
+        handles, labels = ax.get_legend_handles_labels()
+        # fig.legend(handles, labels, loc=(0.68, 0.04), fontsize=12)
+        fig.legend(handles[:2], labels[:2], loc=(0.62, 0.6), fontsize=11, frameon=False)
+        fig.legend(handles[2:], labels[2:], loc=(0.62, 0.2), fontsize=11, title='Subpools in harvest scenario',
+                   title_fontsize=11, frameon=False)
+
+        fig.tight_layout()
+        fig.subplots_adjust(top=0.82, right=0.6, left=0.1)
+        plt.show(); exit()
+
+        return
