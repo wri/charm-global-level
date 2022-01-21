@@ -104,6 +104,7 @@ class Parameters:
         else:
             self.age_for_harvest = 40
 
+        ### Underground - aboveground biomass relationship
         # This constant approach is depreciated, used only in the Plantation scenario as a reference
         # Mokany 2006
         self.root_shoot_coef = 0.489
@@ -113,7 +114,7 @@ class Parameters:
         # Set up the under bark to over bark conversion factor: M. O'Brien 2018: FAO, 2010. Global Forest Resources Assessment 2010. FAO Forestry Paper 163, Rome, Italy
         self.overbark_underbark_ratio = 1.15
 
-        # Decay parameters
+        ### Decay parameters
         self.half_life_LLP = self.input_country['LLP half life'].values[0]
         self.half_life_SLP = self.input_country['SLP half life'].values[0]
         self.half_life_VSLP = self.input_country['VSLP half life'].values[0]
@@ -121,7 +122,7 @@ class Parameters:
         self.half_life_root = self.input_country['Roots half life'].values[0]
         self.half_life_landfill = self.input_country['Landfill half life'].values[0]
 
-        # Slash parameters
+        ### Slash parameters
         self.slash_burn = self.input_country['% of slash burned in the field'].values[0]
         self.slash_left = self.input_country['% of slash left to decay'].values[0]
 
