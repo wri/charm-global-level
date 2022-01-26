@@ -134,14 +134,14 @@ def test_land_area_calculator():
     datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='CST', secondary_mature_wood_share=0)
+    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso, vslp_future_demand='WFL50less')
     # run the land area calculator
     LAC = Land_area_calculator.LandCalculator(global_settings)
     # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
     # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
-    print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth)+sum(LAC.area_harvested_new_secondary_mature_regrowth))
+    # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth)+sum(LAC.area_harvested_new_secondary_mature_regrowth))
     # print("Area conversion", sum(LAC.area_harvested_new_secondary_conversion))
 
     return
@@ -541,6 +541,104 @@ def run_model_baseline_scenarios():
     return
 
 
+def run_model_yearly_carbon_stock():
+    """
+    Created and Edited: 2022/1/25
+    This is a driver for running global analysis for the getting the accumulate carbon time series
+    """
+    # Read input/output data excel file.
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
+    # Read in countries
+    countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
+    # Read in input data
+    input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+    # If the cell has formula, it will be read as NaN
+
+    def single_run_with_combination_input(future_demand_level_input='BAU', substitution_mode_input='SUBON', vslp_input_control_input='ALL'):
+        """
+        This function generates the 30 countries results for each scenario, depending on the combination of below parameters.
+        :param future_demand_level_input: select future demand level from "BAU" business-as-usual or "CST": constant demand
+        :param substitution_mode_input: select substitution mode from "SUBON" with substitution or "NOSUB" gross carbon impacts
+        :param vslp_input_control_input: select VSLP option from "ALL" total roundwood (VSLP_WFL+VSLP_IND) or "IND" industrial roundwood (VSLP_IND)
+        :return:
+        """
+        # Initiate the output variables.
+        countrynames, codes = [], []
+        secondary_wood, plantation_wood, standing_carbon = [], [], []
+
+        # For each country, calculate the results for all scenarios. Each variable collects a list of the countries' results.
+        for country, code in zip(countries['Country'], countries['ISO']):
+            # Test if the parameters are set up for this country, if there is one parameter missing, no calculation will be done for this country.
+            input_country = input_data.loc[input_data['Country'] == country]
+            input_country = input_country.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
+            if input_country.isnull().values.any():
+                print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
+            else:
+                ################################### Execute model runs ##################################
+                ### Default plantation scenarios, (1) secondary harvest regrowth and (2) conversion
+                ### Read in global parameters ###
+                global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input)
+
+                # run the land area calculator
+                LAC_default = Land_area_calculator.LandCalculator(global_settings)
+
+
+                ################################### Prepare output ##################################
+                countrynames.append(country)
+                codes.append(code)
+
+                # Default situation
+                secondary_wood.append(LAC_default.output_need_secondary / 1000000)
+                plantation_wood.append(LAC_default.product_total_carbon / 1000000 - LAC_default.output_need_secondary / 1000000)
+                standing_carbon.append(LAC_default.total_C_stand_pool_cum_secondary_regrowth_combined / 1000000)
+
+
+        def make_dataframe(list):
+
+            df = pd.DataFrame(list, columns=range(2010, 2051, 1), index=codes)
+            df['Country Name'] = countrynames
+            # shift column 'Name' to first position
+            first_column = df.pop('Country Name')
+            # insert column using insert(position,column_name, first_column) function
+            df.insert(0, 'Country Name', first_column)
+
+            return df
+
+        # # Save to the excel file
+        def write_excel(filename, sheetname, dataframe):
+            "This function will overwrite the Outputs sheet"
+            with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
+                workbook = writer.book
+                try:
+                    workbook.remove(workbook[sheetname])
+                    print("Updating Outputs sheet...")
+                except:
+                    print("Creating Outputs sheet...")
+                finally:
+                    dataframe.to_excel(writer, sheet_name=sheetname, index=False)
+                    writer.save()
+
+        # Prepare output tab name
+        output_tabname = '{}-{}'.format('Standing carbon', future_demand_level_input)
+        write_excel(datafile, output_tabname, make_dataframe(standing_carbon))
+        output_tabname = '{}-{}'.format('Secondary wood', future_demand_level_input)
+        write_excel(datafile, output_tabname, make_dataframe(secondary_wood))
+        output_tabname = '{}-{}'.format('Plantation wood', future_demand_level_input)
+        write_excel(datafile, output_tabname, make_dataframe(plantation_wood))
+
+    ################## Run the experiments ###################
+    def run_single_input(future_demand_level, substitution_mode, vslp_input_control):
+        "Run model with a set of parameters"
+        single_run_with_combination_input(future_demand_level_input=future_demand_level,
+                                          substitution_mode_input=substitution_mode,
+                                          vslp_input_control_input=vslp_input_control)
+        return
+
+    run_single_input('BAU', 'SUBON', 'ALL')
+    run_single_input('CST', 'SUBON', 'ALL')
+
+    return
+
 def run_model_mitigation_scenarios():
     """
     Created and Edited: 2022/01
@@ -826,12 +924,14 @@ def run_model_mitigation_scenarios():
 if __name__ == "__main__":
     # run_model_five_scenarios()
     # run_model_baseline_scenarios()
-    run_model_mitigation_scenarios()
+    run_model_yearly_carbon_stock()
+    # run_model_mitigation_scenarios()
 
 
     exit()
 
 
+################################### TRIAL ZONE ########################################
 def get_global_annual_carbon_impact():
     demand_levels = ['BAU SF_1.2', 'BAU SF_0', 'constant demand SF_1.2', 'constant demand SF_0']
     demand_names = ['BAU 1.2', 'BAU 0', 'CON 1.2', 'CON 0']
