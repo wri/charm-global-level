@@ -34,7 +34,7 @@ import pandas as pd
 
 class Parameters:
 
-    def __init__(self, datafile, country_iso='BRA', discount_rate_input=None, future_demand_level='BAU', substitution_mode='SUB', vslp_input_control='ALL', vslp_future_demand='default', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0):
+    def __init__(self, datafile, country_iso='BRA', discount_rate_input=None, future_demand_level='BAU', substitution_mode='SUB', vslp_input_control='ALL', vslp_future_demand='default', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0, slash_rate_mode='natural'):
         """Read in inputs"""
 
         input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
@@ -48,6 +48,7 @@ class Parameters:
         self.vslp_future_demand = vslp_future_demand    # for VSLP future demand control (5th scenario)
         self.secondary_mature_wood_share = secondary_mature_wood_share  # for secondary wood supply distribution among the secondary forest
         self.plantation_growth_increase_ratio = plantation_growth_increase_ratio  # for productivity increase ratio
+        self.slash_rate_mode = slash_rate_mode
         del input_data
 
         ### Run the functions
@@ -83,7 +84,8 @@ class Parameters:
         self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year)'].values[0]     # Stand age 0-20
         self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year)'].values[0]   # Stand age 20-100
         # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-100)
-        self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
+        # 2022/1/20: turn off the ratio
+        # self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
 
         # Growth rate curve
         # Monod function: C = agb_max * AGE / (AGE + age_50perc)
@@ -132,9 +134,16 @@ class Parameters:
         # Product share ratio, depending on country input data
         self.product_share_slash_plantation = self.input_country['% slash plantation'].values[0]
         # Update 06/17/2021: split the slash rate into LLP, SLP, and VSLP.
-        self.product_share_slash_secondary_llp = self.input_country['% slash natural for LLP'].values[0]
-        self.product_share_slash_secondary_slp = self.input_country['% slash natural for SLP'].values[0]
-        self.product_share_slash_secondary_vslp = self.input_country['% slash natural for VSLP'].values[0]
+        # Update 01/24/2022: determine which slash rate to use by using input parameter
+        if self.slash_rate_mode == 'optimal':
+            self.product_share_slash_secondary_llp = self.input_country['% slash optimal for LLP'].values[0]
+            self.product_share_slash_secondary_slp = self.input_country['% slash optimal for SLP'].values[0]
+            self.product_share_slash_secondary_vslp = self.input_country['% slash optimal for VSLP'].values[0]
+        else: # natural
+            self.product_share_slash_secondary_llp = self.input_country['% slash natural for LLP'].values[0]
+            self.product_share_slash_secondary_slp = self.input_country['% slash natural for SLP'].values[0]
+            self.product_share_slash_secondary_vslp = self.input_country['% slash natural for VSLP'].values[0]
+
         self.product_share_VSLP_thinning = self.input_country['% in VSLP thinning'].values[0]
         self.product_share_SLP_thinning = self.input_country['% in SLP thinning'].values[0]
         self.product_share_LLP_thinning = self.input_country['% in LLP thinning'].values[0]
