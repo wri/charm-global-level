@@ -93,6 +93,8 @@ class CarbonTracker:
         # 2021/06/09 change the decision initial to the (20*young secondary GR)+(60*old secondary GR)
         # self.aboveground_biomass_secondary[0, 0] = self.Global.GR_young_secondary * 20 + self.Global.GR_middle_secondary * 60
         # 2022/01/19 change the decision initial to the higher carbon density at the 80 years or the existing + 60 years
+        # As the age for harvest (at least 40) + 40, it will be at least 80.
+        # FIXME currently, adding 40 years manually, may want to build this in the parameters.
         self.aboveground_biomass_secondary[0, 0] = self.Global.agb_max * (self.Global.age_for_harvest + 40) / (self.Global.age_for_harvest + 40 + self.Global.age_50perc)
         self.belowground_biomass_live_secondary[0, 0] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[0, 0])
 
