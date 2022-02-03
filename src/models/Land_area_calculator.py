@@ -481,12 +481,13 @@ class LandCalculator:
 
 
             # 2022/01/25 FIXME For stand carbon stock accumulation
+            # 2022/02/02 wrong formula turn off
             # FIXME add the accumulate carbon, the end of 40 years of growth 2050 tC/ha for 40-years
-            self.total_C_stand_pool_cum_secondary_conversion = self.area_harvested_new_secondary_conversion * Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=0).totalC_stand_pool[-1]
-            self.total_C_stand_pool_cum_secondary_regrowth = self.area_harvested_new_secondary_regrowth * Secondary_regrowth_scenario.CarbonTracker(self.Global,year_start_for_PDV=0).totalC_stand_pool[-1]
-            self.total_C_stand_pool_cum_secondary_mature_regrowth = self.area_harvested_new_secondary_mature_regrowth * Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0).totalC_stand_pool[-1]
-            # add up regrowth and mature regrowth = tC yearly 2010-2050, each year the total accumulate carbon after 40 years of regrowth
-            self.total_C_stand_pool_cum_secondary_regrowth_combined = self.total_C_stand_pool_cum_secondary_regrowth + self.total_C_stand_pool_cum_secondary_mature_regrowth
+            # self.total_C_stand_pool_cum_secondary_conversion = self.area_harvested_new_secondary_conversion * Secondary_conversion_scenario.CarbonTracker(self.Global, year_start_for_PDV=0).totalC_stand_pool[-1]
+            # self.total_C_stand_pool_cum_secondary_regrowth = self.area_harvested_new_secondary_regrowth * Secondary_regrowth_scenario.CarbonTracker(self.Global,year_start_for_PDV=0).totalC_stand_pool[-1]
+            # self.total_C_stand_pool_cum_secondary_mature_regrowth = self.area_harvested_new_secondary_mature_regrowth * Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0).totalC_stand_pool[-1]
+            # # add up regrowth and mature regrowth = tC yearly 2010-2050, each year the total accumulate carbon after 40 years of regrowth
+            # self.total_C_stand_pool_cum_secondary_regrowth_combined = self.total_C_stand_pool_cum_secondary_regrowth + self.total_C_stand_pool_cum_secondary_mature_regrowth
 
             # # convert to MtC
             # plt.plot(range(2010, 2051, 1), self.total_C_stand_pool_cum_secondary_regrowth_combined / 1000000)
