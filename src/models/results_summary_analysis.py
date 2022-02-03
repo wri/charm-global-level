@@ -20,8 +20,10 @@ import Global_by_country, Agricultural_land_tropical_scenario
 ### Datafile
 root = '../..'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
-figdir = '{}/../Paper/Publication/Figure'.format(root)
+# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022 - GR adj.xlsx'.format(root, discount_filename)
+
+# figdir = '{}/../Paper/Publication/Figure'.format(root)
 
 
 #############################################Read in model inputs###########################################
@@ -32,10 +34,12 @@ rotation_length = Global.rotation_length_harvest # this must be ten years
 
 
 ##############################################Read in model outputs##########################################
-# Lists
-carbon_lists = ['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)', 'S1 regrowth: total PDV (mega tC)', 'S1 regrowth: PDV plantation (mega tC)', 'S1 regrowth: PDV secondary (mega tC)', 'S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 WFL 50% less: total PDV (mega tC)']
-area_lists = ['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S3 mixture: Secondary middle aged area (ha)', 'S3 mixture: Secondary mature area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 WFL 50% less: Secondary area (ha)']
-
+# 2021 Nov Lists
+# carbon_lists = ['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)', 'S1 regrowth: total PDV (mega tC)', 'S1 regrowth: PDV plantation (mega tC)', 'S1 regrowth: PDV secondary (mega tC)', 'S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 WFL 50% less: total PDV (mega tC)']
+# area_lists = ['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S3 mixture: Secondary middle aged area (ha)', 'S3 mixture: Secondary mature area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 WFL 50% less: Secondary area (ha)']
+# 2022 Jan Lists
+carbon_lists = ['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)', 'S1 regrowth: total PDV (mega tC)', 'S1 regrowth: PDV plantation (mega tC)', 'S1 regrowth: PDV secondary (mega tC)', 'S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 62% SL: total PDV (mega tC)', 'S6 WFL 50% less: total PDV (mega tC)']
+area_lists = ['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S3 mixture: Secondary middle aged area (ha)', 'S3 mixture: Secondary mature area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 62% SL: Secondary area (ha)', 'S6 WFL 50% less: Secondary area (ha)']
 
 def extract_global_outputs_summary(results):
     """Extract the 1-5th scenarios output"""
@@ -43,15 +47,15 @@ def extract_global_outputs_summary(results):
     cf_MtC_GtCO2 = 1/1000 * 44 / 12
     cf_ha_mha = 1/1000000
     # Fixme change 40 to 41
-    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / 41
-    area_total = results[['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 WFL 50% less: Secondary area (ha)']].sum() / 0.8 * cf_ha_mha
+    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 62% SL: total PDV (mega tC)', 'S6 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / 41
+    area_total = results[['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 62% SL: Secondary area (ha)', 'S6 WFL 50% less: Secondary area (ha)']].sum() / 0.8 * cf_ha_mha
 
     return carbon_costs_annual, area_total
 
 def extract_global_wood_supply(results):
     """Extract the 1-5th scenarios output"""
     ###The major scenarios
-    wood_supply = results[['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)','125% GR: Plantation supply wood (mega tC)', '125% GR: Secondary forest supply wood (mega tC)','WFL50less: Plantation supply wood (mega tC)', 'WFL50less: Secondary forest supply wood (mega tC)']].sum() / 0.8 * 1000000  # mega tC to tC
+    wood_supply = results[['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)','125% GR: Plantation supply wood (mega tC)', '125% GR: Secondary forest supply wood (mega tC)', '62% SL: Plantation supply wood (mega tC)', '62% SL: Secondary forest supply wood (mega tC)', 'WFL50less: Plantation supply wood (mega tC)', 'WFL50less: Secondary forest supply wood (mega tC)']].sum() / 0.8 * 1000000  # mega tC to tC
 
     return wood_supply
 
@@ -219,9 +223,12 @@ def calculate_existing_tropical_plantations_numbers():
 
 
 def export_results_to_excel():
-    carbon_costs = np.zeros((12, 6))
-    required_area = np.zeros((12, 8))
-    wood_supply = np.zeros((12, 8))
+    # 12 demand and sub levels x (6+1) scenarios
+    carbon_costs = np.zeros((12, 7))
+    # 12 demand and sub levels x (6+1) scenarios + 2 columns for plantation areas
+    required_area = np.zeros((12, 9))
+    # 12 demand and sub levels x (4+1) scenarios x 2
+    wood_supply = np.zeros((12, 10))
     row = 0
     row_index = []
     for vslp_input_control in ['ALL', 'IND', 'WFL']:
@@ -234,17 +241,17 @@ def export_results_to_excel():
                 wood_main = extract_global_wood_supply(results)
                 carbon_last, secondary_land_last, new_tropical_land_last, secondary_wood_last, plantation_wood_last = run_new_tropical_plantations_scenario(results)
                 carbon_costs[row, :3] = carbon_main.values[:3]
-                carbon_costs[row, 4:6] = carbon_main.values[3:]
+                carbon_costs[row, 4:7] = carbon_main.values[3:]
                 required_area[row, :3] = land_main.values[1:4]
-                required_area[row, 4:6] = land_main.values[4:]
+                required_area[row, 4:7] = land_main.values[4:]
                 wood_supply[row, :2] = wood_main.values[:2]
-                wood_supply[row, 4:8] = wood_main.values[2:]
+                wood_supply[row, 4:10] = wood_main.values[2:]
                 # The 4th scenario new tropical plantation
                 carbon_costs[row, 3] = carbon_last
                 required_area[row, 3] = secondary_land_last
 
-                required_area[row, 6] = land_main.values[0]  # The existing plantation
-                required_area[row, 7] = new_tropical_land_last  # The new plantation
+                required_area[row, 7] = land_main.values[0]  # The existing plantation
+                required_area[row, 8] = new_tropical_land_last  # The new plantation
 
                 wood_supply[row, 2] = plantation_wood_last
                 wood_supply[row, 3] = secondary_wood_last
@@ -267,7 +274,7 @@ def export_results_to_excel():
     outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
     # Convert to pandas dataframe
     scenarios = ['S1 Secondary forest harvest + regrowth', 'S2 Secondary forest harvest + conversion', 'S3 Secondary forest mixed harvest',
-     'S4 New tropical plantations', 'S5 Higher plantation productivity', 'S6 50% less 2050 wood fuel demand']
+     'S4 New tropical plantations', 'S5 Higher plantation productivity', 'S6 Higher harvest efficiency', 'S7 50% less 2050 wood fuel demand']
     carbon_df = pd.DataFrame(carbon_costs, index=row_index, columns=scenarios)
     write_excel(outfile, 'CO2 (Gt per yr) DR_{}'.format(discount_filename), carbon_df)
     # For land and wood supply, no matter what discount it is, the land area does not change
@@ -279,6 +286,8 @@ def export_results_to_excel():
                              'Agriland: Secondary forest supply wood (mega tC)',
                              '125% GR: Plantation supply wood (mega tC)',
                              '125% GR: Secondary forest supply wood (mega tC)',
+                             '62% SL: Plantation supply wood (mega tC)',
+                             '62% SL: Secondary forest supply wood (mega tC)',
                              'WFL50less: Plantation supply wood (mega tC)',
                              'WFL50less: Secondary forest supply wood (mega tC)']
         area_df = pd.DataFrame(required_area, index=row_index, columns=land_areas)
@@ -288,8 +297,8 @@ def export_results_to_excel():
 
     return
 
-# export_results_to_excel()
-# exit()
+export_results_to_excel()
+exit()
 
 def collect_all_discount_rates_results():
     "For Appendix 3"
