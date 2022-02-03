@@ -18,7 +18,9 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../..'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
+# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022.xlsx'.format(root, discount_filename)
+
 figdir = '{}/../Paper/Publication/Figure'.format(root)
 
 
@@ -305,18 +307,18 @@ def barplot_all_scenarios_quantity():
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
         xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion', 'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 50% less 2050\nWood fuel demand']
+                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 Higher\nharvest efficiency', 'S7 50% less 2050\nWood fuel demand']
         plt.xticks(result_df.columns, labels=xticks_labels)
         # bar labels
         # base = result_df.loc['BAU_NOSUB_ALL']
-        for number, rec in enumerate(ax.patches[:18]):
+        for number, rec in enumerate(ax.patches[:21]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height / 2,
                     "{:.1f}".format(height),
                       ha='center', va='bottom')
 
-        for number, rec in enumerate(ax.patches[18:]):
+        for number, rec in enumerate(ax.patches[21:]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height,
@@ -328,14 +330,14 @@ def barplot_all_scenarios_quantity():
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
         # plt.show()
-        plt.savefig('{}/annual_carbon_cost_6scenarios.png'.format(figdir))
+        plt.savefig('{}/annual_carbon_cost_7scenarios.png'.format(figdir))
 
         return
 
     def stacked_barplot_attribute_demand_substitution_land(result_df, title, ylabel):
         "Plot multiple scenarios"
         # Land area requirement from additional demand is the secondary area added upon the CST.
-        result_df_secondary = result_df.iloc[:, range(6)]
+        result_df_secondary = result_df.iloc[:, range(7)]
         result_df_secondary.loc['Existing plantations'] = result_df.loc['BAU_SUBON_ALL', 'Existing plantations']
         result_df_secondary.loc['New plantations'] = 0
         result_df_secondary.loc['New plantations', 'S4 New tropical plantations'] = result_df.loc['BAU_SUBON_ALL', 'New plantations']
@@ -360,23 +362,23 @@ def barplot_all_scenarios_quantity():
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
         xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion', 'S3 Secondary forest\nMixed harvest',
-     'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 50% less 2050\nWood fuel demand']
+     'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 Higher\nharvest efficiency', 'S7 50% less 2050\nWood fuel demand']
         plt.xticks(result_df_secondary.columns, labels=xticks_labels)
         # bar labels
         base = result_df_secondary.loc['BAU_NOSUB_ALL'] + result_df_secondary.loc['Existing plantations'] + result_df_secondary.loc['New plantations']
-        for number, rec in enumerate(ax.patches[:18]):
+        for number, rec in enumerate(ax.patches[:21]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height / 2,
                     "{:.0f}".format(height),
                       ha='center', va='bottom')
         # Add the fourth scenario's new tropical plantations percentage
-        ax.text(ax.patches[21].get_x() + ax.patches[21].get_width() / 2, ax.patches[21].get_y() + ax.patches[21].get_height()/2,
-                "{:.0f}".format(ax.patches[21].get_height()),
+        ax.text(ax.patches[24].get_x() + ax.patches[24].get_width() / 2, ax.patches[24].get_y() + ax.patches[24].get_height()/2,
+                "{:.0f}".format(ax.patches[24].get_height()),
                 ha='center', va='bottom')
         # Add the final absolute numbers at the top
         area_total = result_df_secondary.loc['Existing plantations'] + result_df_secondary.loc['CST_NOSUB_ALL'] + result_df_secondary.loc['NewDemand_NOSUB_ALL'] + result_df_secondary.loc['New plantations']
-        for number, rec in enumerate(ax.patches[:6]):
+        for number, rec in enumerate(ax.patches[:7]):
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + area_total[number],
                     "{:.0f}".format(area_total[number]),
@@ -389,7 +391,7 @@ def barplot_all_scenarios_quantity():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.83)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        plt.savefig('{}/land_requirement_6scenarios.png'.format(figdir))
+        plt.savefig('{}/land_requirement_7scenarios.png'.format(figdir))
         # plt.show()
 
         return
@@ -505,11 +507,11 @@ def barplot_all_scenarios_quantity():
         return
 
 
-    carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    # carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
+    # stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
     land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
     stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
-# barplot_all_scenarios_quantity()
+barplot_all_scenarios_quantity()
