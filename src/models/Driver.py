@@ -26,7 +26,7 @@ def test_carbon_tracker():
     # set up the country
     iso = 'JPN'
     # datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Feb 2 2022.xlsx'.format(root)
 
     global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='BAU', slash_rate_mode='natural')
     # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
@@ -639,6 +639,7 @@ def run_model_yearly_carbon_stock():
 
     return
 
+
 def run_model_mitigation_scenarios():
     """
     Created and Edited: 2022/01
@@ -646,7 +647,9 @@ def run_model_mitigation_scenarios():
     Adding several scenarios based on the run_model_five_scenarios
     """
     # Read input/output data excel file.
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
+    # datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - Feb 2 2022.xlsx'.format(root)
+
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
     # Read in input data
@@ -749,7 +752,6 @@ def run_model_mitigation_scenarios():
                                                                substitution_mode=substitution_mode_input,
                                                                vslp_input_control=vslp_input_control_input,
                                                                slash_rate_mode='optimal')
-                print(global_settings.slash_rate_mode)
                 # run different policy scenarios
                 result_regrowth_optimalSL = Secondary_regrowth_scenario.CarbonTracker(global_settings)
                 # run the land area calculator
@@ -776,9 +778,6 @@ def run_model_mitigation_scenarios():
                 pdv_per_ha_regrowth_mature.append(np.sum(result_regrowth_mature_mixture.annual_discounted_value))
                 pdv_per_ha_plantation_highGR.append(np.sum(result_plantation_highGR.annual_discounted_value))
                 pdv_per_ha_regrowth_optimalSL.append(np.sum(result_regrowth_optimalSL.annual_discounted_value))
-                print("optimal SL ", np.sum(result_regrowth_optimalSL.annual_discounted_value))
-                print("natural ", np.sum(result_regrowth_default.annual_discounted_value))
-                exit()
                 pdv_per_ha_agriland.append(np.sum(result_agriland_default.annual_discounted_value))
 
                 # Get output per ha for new plantation
@@ -924,8 +923,8 @@ def run_model_mitigation_scenarios():
 if __name__ == "__main__":
     # run_model_five_scenarios()
     # run_model_baseline_scenarios()
-    run_model_yearly_carbon_stock()
-    # run_model_mitigation_scenarios()
+    # run_model_yearly_carbon_stock()
+    run_model_mitigation_scenarios()
 
 
     exit()
