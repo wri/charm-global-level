@@ -30,6 +30,7 @@ __status__ = "Dev"
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class Parameters:
@@ -58,14 +59,18 @@ class Parameters:
         self.setup_LLP_substitution()
         self.setup_VSLP_substitution()
         self.setup_misc()
+        self.setup_harvest_thinning_events()
         self.setup_harvest_slash_percentage()
 
     def setup_time(self):
         """Time settings"""
         ### Years/Periods
-        years = int(self.input_country['Years'].values[0])           # Number of future years beyond 2010. e.g., 40 years means 2011-2050.
+        # Number of years of growing back after the first harvest
+        years = int(self.input_country['Years of growth'].values[0])
         self.nyears = years + 1   # Number of the total years, including the initial year 2010.
         self.arraylength = self.nyears + 1  # Length of array (The number of columns of the array) = number of future years + initial condition
+        # Number of future years beyond 2010. e.g., 40 years means 2011-2050.
+        self.nyears_product_demand = int(self.input_country['Years of demand'].values[0]) + 1
 
         self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
         self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
@@ -127,7 +132,6 @@ class Parameters:
         ### Slash parameters
         self.slash_burn = self.input_country['% of slash burned in the field'].values[0]
         self.slash_left = self.input_country['% of slash left to decay'].values[0]
-
 
     def setup_product_parameters(self):
         # Calculate annual wood demand/production and product pool breakdown
@@ -210,7 +214,7 @@ class Parameters:
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
-        product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears)) for _ in range(3)]
+        product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears_product_demand)) for _ in range(3)]
         product_LLP[0], product_LLP[40] = LLP_2010, LLP_2050
         product_SLP[0], product_SLP[40] = SLP_2010, SLP_2050
         product_VSLP[0], product_VSLP[40] = VSLP_2010, VSLP_2050
@@ -221,12 +225,18 @@ class Parameters:
             product_SLP[year] = product_SLP[0] + (product_SLP[40] - product_SLP[0]) / (2050 - 2010) * year
             product_VSLP[year] = product_VSLP[0] + (product_VSLP[40] - product_VSLP[0]) / (2050 - 2010) * year
 
+        # plt.plot(product_LLP, label='LLP')
+        # plt.plot(product_SLP, label='SLP')
+        # plt.plot(product_VSLP, label='VSLP')
+        # plt.legend()
+        # plt.show()
+        # exit()
+
         # Create an array of the TOTAL wood products for each year (sum of LLP,SLP,VSLP).
         self.product_total = product_LLP + product_SLP + product_VSLP
         # Product numbers before accounting for slash
         self.product_share_LLP, self.product_share_SLP, self.product_share_VSLP = [product / self.product_total for product in
                                                                     (product_LLP, product_SLP, product_VSLP)]
-
         ### 06/17/2021: calculate weighted average slash rate in time series, based on the product quantity
         slash_LLP = product_LLP * self.product_share_slash_secondary_llp / (1 - self.product_share_slash_secondary_llp)
         slash_SLP = product_SLP * self.product_share_slash_secondary_slp / (1 - self.product_share_slash_secondary_slp)
@@ -295,7 +305,7 @@ class Parameters:
 
     # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
 
-    def setup_harvest_slash_percentage(self):
+    def setup_harvest_thinning_events(self):
 
         ### Combine harvest and thinning together in the time index
         # Create index of years where harvest happened.
@@ -330,39 +340,47 @@ class Parameters:
             self.ncycles_harvest = len(self.year_index_harvest_plantation)
 
 
-        ### Harvest
+    def setup_harvest_slash_percentage(self):
+        ### Step.0 Read in the harvest and thinning parameters.
+        ## Harvest
         # Tree cover percentage, from 50% to 100% (100% will be zero tree cover area left in the stand pool)
         self.harvest_percentage_default = 1.0
-
-        ### Thinning
+        ## Thinning
         # For plantation or secondary conversion scenario
         self.thinning_percentage_default = self.input_country['% Removed in thinning plantation'].values[0]
         # For secondary regrowth scenario
         self.thinning_percentage_regrowth = self.input_country['% Removed in thinning regrowth'].values[0]
 
-        ### Harvest/slash percentage
+        ### Step.1 Harvest/slash percentage time series
+        ## Initialization of time series array.
+        # 1.1 Harvest percentage array. For plantation/conversion and regrowth, have the same length of year of growth.
         self.harvest_percentage_plantation = np.zeros((self.arraylength))
         self.harvest_percentage_regrowth = np.zeros((self.arraylength))
-        slash_percentage_plantation = np.zeros((self.arraylength))  # slash percentage when harvest or thinning
-        # 06/17/2021 New slash rate for secondary forest, due to the varying product share, the weighted average slash rate change depending on the first harvest year
-        slash_percentage_secondary_conversion = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
-        slash_percentage_secondary_regrowth = np.zeros((self.nyears, self.arraylength))  # slash percentage when harvest or thinning
 
-        ### For plantation/conversion scenario
+        # 1.2 Slash percentage when harvest or thinning
+        slash_percentage_plantation = np.zeros((self.arraylength))
+        # 06/17/2021 New slash rate for secondary forest, due to the varying product share from the annual product demand data inputs (different from stand level)
+        # There are 2010-2050 41 rows for different wood demand data, and then column: nyears for years of growth.
+        slash_percentage_secondary_conversion = np.zeros((self.nyears_product_demand, self.arraylength))
+        slash_percentage_secondary_regrowth = np.zeros((self.nyears_product_demand, self.arraylength))
+
+        ### Step.2 Assign the percentage to the event occurence year.
+        ## 2.1 For plantation/conversion scenarios. They all have multiple harvests across the period of growth.
         # If there is thinning
         if (np.isnan(self.thinning_percentage_default) == False) & (self.thinning_percentage_default != 0) & (np.isnan(self.rotation_length_thinning) == False) & (self.rotation_length_thinning > 0):
             self.harvest_percentage_plantation[self.year_index_thinning_plantation] = self.thinning_percentage_default
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
 
-            # All harvest is plantation slash: 1 row x 42 column array. No changes with years
+            # Plantation slash does not change over years. All harvest is plantation slash.
             slash_percentage_plantation[self.year_index_thinning_plantation] = self.product_share_slash_thinning
             slash_percentage_plantation[self.year_index_harvest_plantation] = self.product_share_slash_plantation
 
             # The first harvest is secondary slash, the others are plantation slash
+            # the weighted average slash rate change depending on the first harvest year
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_thinning_plantation] = self.product_share_slash_thinning
-            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_thinning_plantation] = self.product_share_slash_thinning
+            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
 
         else:  # Default: if there is no thinning
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
@@ -370,10 +388,10 @@ class Parameters:
             # The first harvest is secondary slash, the others are plantation slash.
             # 07/01/2021 BUG FIXED: conversion slash rate is plantation slash rate
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
 
-        ### For regrowth scenario
+        ## 2.2 For regrowth scenario, only one harvest at the beginning of the year start for PDV.
         self.year_index_harvest_regrowth = [1]
         # If there is a thinning
         if (np.isnan(self.thinning_percentage_regrowth) == False) & (self.thinning_percentage_regrowth != 0) & (np.isnan(self.rotation_length_thinning) == False) & (self.rotation_length_thinning > 0):
@@ -387,8 +405,8 @@ class Parameters:
 
             # The first harvest is secondary slash, remove following harvests
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_regrowth[np.arange(self.nyears)[:, None], self.year_index_thinning_regrowth] = self.product_share_slash_thinning
-            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand)[:, None], self.year_index_thinning_regrowth] = self.product_share_slash_thinning
+            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
 
         else:  # Default: if there is no thinning
             self.year_index_both_regrowth = self.year_index_harvest_regrowth
@@ -396,10 +414,9 @@ class Parameters:
             self.ncycles_regrowth = len(self.year_index_both_regrowth)
             # The first harvest is secondary slash, remove following harvests
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
 
-
-        ### To get the staggered array for slash percentage
+        ### Step.3 To get the staggered array for slash percentage
         def staircase(array):
             # Piecewise array for aboveground biomass actually harvested/thinned during rotation harvest/thinning
             outarray = np.zeros(array.shape)
