@@ -70,7 +70,7 @@ class Parameters:
         self.nyears = years + 1   # Number of the total years, including the initial year 2010.
         self.arraylength = self.nyears + 1  # Length of array (The number of columns of the array) = number of future years + initial condition
         # Number of future years beyond 2010. e.g., 40 years means 2011-2050.
-        self.nyears_product_demand = int(self.input_country['Years of demand'].values[0]) + 1
+        self.nyears_product_demand = int(self.input_country['Years of demand'].values[0])
 
         self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
         self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
@@ -153,7 +153,7 @@ class Parameters:
         self.product_share_LLP_thinning = self.input_country['% in LLP thinning'].values[0]
         self.product_share_slash_thinning = self.input_country['% in slash thinning'].values[0]
 
-        # Dry matter, across 40 years
+        # Dry matter
         # This is to control whether the 2050 uses BAU demand level or 2010 level
         if self.future_demand_level == 'BAU':
             product_year = '50'
@@ -214,16 +214,16 @@ class Parameters:
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
-        product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears_product_demand)) for _ in range(3)]
+        product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears)) for _ in range(3)]
         product_LLP[0], product_LLP[40] = LLP_2010, LLP_2050
         product_SLP[0], product_SLP[40] = SLP_2010, SLP_2050
         product_VSLP[0], product_VSLP[40] = VSLP_2010, VSLP_2050
 
         # Interpolate the production numbers: take the difference between the last and first year for each product pool, and divide by the number of years
         for year in range(1, len(product_VSLP)):
-            product_LLP[year] = product_LLP[0] + (product_LLP[40] - product_LLP[0]) / (2050 - 2010) * year
-            product_SLP[year] = product_SLP[0] + (product_SLP[40] - product_SLP[0]) / (2050 - 2010) * year
-            product_VSLP[year] = product_VSLP[0] + (product_VSLP[40] - product_VSLP[0]) / (2050 - 2010) * year
+            product_LLP[year] = product_LLP[0] + (product_LLP[self.nyears_product_demand] - product_LLP[0]) / self.nyears_product_demand * year
+            product_SLP[year] = product_SLP[0] + (product_SLP[self.nyears_product_demand] - product_SLP[0]) / self.nyears_product_demand * year
+            product_VSLP[year] = product_VSLP[0] + (product_VSLP[self.nyears_product_demand] - product_VSLP[0]) / self.nyears_product_demand * year
 
         # plt.plot(product_LLP, label='LLP')
         # plt.plot(product_SLP, label='SLP')
@@ -361,8 +361,8 @@ class Parameters:
         slash_percentage_plantation = np.zeros((self.arraylength))
         # 06/17/2021 New slash rate for secondary forest, due to the varying product share from the annual product demand data inputs (different from stand level)
         # There are 2010-2050 41 rows for different wood demand data, and then column: nyears for years of growth.
-        slash_percentage_secondary_conversion = np.zeros((self.nyears_product_demand, self.arraylength))
-        slash_percentage_secondary_regrowth = np.zeros((self.nyears_product_demand, self.arraylength))
+        slash_percentage_secondary_conversion = np.zeros((self.nyears, self.arraylength))
+        slash_percentage_secondary_regrowth = np.zeros((self.nyears, self.arraylength))
 
         ### Step.2 Assign the percentage to the event occurence year.
         ## 2.1 For plantation/conversion scenarios. They all have multiple harvests across the period of growth.
@@ -378,9 +378,9 @@ class Parameters:
             # The first harvest is secondary slash, the others are plantation slash
             # the weighted average slash rate change depending on the first harvest year
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_thinning_plantation] = self.product_share_slash_thinning
-            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_thinning_plantation] = self.product_share_slash_thinning
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         else:  # Default: if there is no thinning
             self.harvest_percentage_plantation[self.year_index_harvest_plantation] = self.harvest_percentage_default
@@ -388,8 +388,8 @@ class Parameters:
             # The first harvest is secondary slash, the others are plantation slash.
             # 07/01/2021 BUG FIXED: conversion slash rate is plantation slash rate
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
-            slash_percentage_secondary_conversion[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_conversion[np.arange(self.nyears)[:, None], self.year_index_harvest_plantation] = self.product_share_slash_plantation
+            slash_percentage_secondary_conversion[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         ## 2.2 For regrowth scenario, only one harvest at the beginning of the year start for PDV.
         self.year_index_harvest_regrowth = [1]
@@ -405,8 +405,8 @@ class Parameters:
 
             # The first harvest is secondary slash, remove following harvests
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand)[:, None], self.year_index_thinning_regrowth] = self.product_share_slash_thinning
-            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_regrowth[np.arange(self.nyears)[:, None], self.year_index_thinning_regrowth] = self.product_share_slash_thinning
+            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         else:  # Default: if there is no thinning
             self.year_index_both_regrowth = self.year_index_harvest_regrowth
@@ -414,7 +414,7 @@ class Parameters:
             self.ncycles_regrowth = len(self.year_index_both_regrowth)
             # The first harvest is secondary slash, remove following harvests
             # 07/01/2021 New array with different starting year of harvest: 41 row x 42 column. Use new axis to index two dimensions.
-            slash_percentage_secondary_regrowth[np.arange(self.nyears_product_demand), 1] = self.product_share_slash_secondary_yearly
+            slash_percentage_secondary_regrowth[np.arange(self.nyears), 1] = self.product_share_slash_secondary_yearly
 
         ### Step.3 To get the staggered array for slash percentage
         def staircase(array):
