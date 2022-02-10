@@ -58,9 +58,11 @@ class LandCalculator:
         self.output_ha_agriland = self.calculate_output_ha(Agricultural_land_tropical_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
             self.Global.slash_percentage_plantation)
 
-        # plt.plot(self.output_ha_plantation.T, label='plantation')
-        # # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
-        # plt.plot(self.output_ha_secondary_regrowth.T, label='regrowth')
+        # # plt.plot(self.output_ha_plantation.T, label='plantation')
+        # print(self.Global.slash_percentage_secondary_regrowth.shape)
+        # print(self.output_ha_secondary_regrowth.shape)
+        # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
+        # # plt.plot(self.output_ha_secondary_regrowth.T, label='regrowth')
         # # plt.plot(self.output_ha_secondary_mature_regrowth.T, label='mature regrowth')
         # plt.legend()
         # plt.show()
@@ -81,12 +83,10 @@ class LandCalculator:
         self.area_harvested_new_secondary_regrowth_combined = self.area_harvested_new_secondary_regrowth + self.area_harvested_new_secondary_mature_regrowth
 
         # land area check
-        # print(self.output_ha_secondary_conversion[0])
         # print("secondary area conversion", sum(self.area_harvested_new_secondary_conversion))
         # print("secondary area regrowth", sum(self.area_harvested_new_secondary_regrowth))
-        # plt.plot(self.area_harvested_new_secondary_conversion, label='conversion')
         # plt.plot(self.area_harvested_new_secondary_regrowth, label='regrowth')
-        # print(len(self.area_harvested_new_secondary_regrowth))
+        # plt.plot(self.area_harvested_new_secondary_conversion, label='conversion')
         # print(np.sum(self.area_harvested_new_secondary_regrowth_combined) / 1000000)
         #
         # plt.legend();plt.show();exit()
@@ -125,11 +125,6 @@ class LandCalculator:
             return output_ha_outarray
 
         output_ha_staircase = exclude_slash_staircase()
-        # fig, (ax1, ax2, ax3) = plt.subplots(1, 3)
-        # ax1.plot(aboveground_biomass_diff)
-        # ax2.plot(product_share_slash.T)
-        # ax3.plot(output_ha_staircase.T)
-        # plt.show()
 
         return output_ha_staircase
 
@@ -334,7 +329,7 @@ class LandCalculator:
                     for j in range(0, previous_cycle):
                         Nyears_Ncycles_ahead = Nyears_Ncycles_ahead + cycle_lengths[j]
                     # This is the wood from the second harvest. output_need_secondary - wood_harvest_accumulate_secondary is the first harvest quantity
-                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] +  area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year, year - Nyears_Ncycles_ahead]     # 2D array output_ha_secondary[year - Nyears_Ncycles_ahead]
+                    wood_harvest_accumulate_secondary[year] = wood_harvest_accumulate_secondary[year] + area_harvested_new_secondary[year - Nyears_Ncycles_before] * output_ha_secondary[year, year - Nyears_Ncycles_ahead]     # 2D array output_ha_secondary[year - Nyears_Ncycles_ahead]
 
 
                 if (self.output_need_secondary[year] * secondary_wood_share - wood_harvest_accumulate_secondary[year] - self.wood_thinning_accumulate_plantation[year]) > 0:
@@ -402,17 +397,13 @@ class LandCalculator:
             - PDV of harvesting a hectare of secondary (regrow AND conversion) in year x
                 - This is done in the same way- by running the regrow and conversion calculators over every year, changing the product shares each time, and only including the annual PDVs from 0 : duration-year
             """
-            # FIXME  extend the PDV to 40 years for each year, 2010, 2011, ... 2050, which means 2050, 2051, ... 2090
             ### 2021 05 12
-            # every year’s discounting should incorporate 40 years of change regardless of when that harvest occurs.
-            # That is true right now for harvests in 2010, but for 2011, it only incorporates the next 39 years.
-            # And for 2049, it only incorporates 2049 and 2050.
             # In a natural secondary forest that regrows as a secondary forest, for example, the PDV should be the same per hectare every year
 
             # Initialize
-            # 41+40 years rows, 41 columns
+            # nyears rows, nyears of columns
             annual_discounted_value_nyears_plantation, annual_discounted_value_nyears_secondary_conversion, annual_discounted_value_nyears_secondary_regrowth, annual_discounted_value_nyears_secondary_mature_regrowth = [
-                np.zeros((self.Global.nyears+self.Global.nyears-1, self.Global.nyears)) for _ in range(4)]
+                np.zeros((self.Global.nyears, self.Global.nyears)) for _ in range(4)]
 
             # Get PDV values for the large matrix nyears+40 x nyears
             for year in range(self.Global.nyears):
@@ -422,10 +413,15 @@ class LandCalculator:
                 stand_result_year_plantation = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(self.Global, year_start_for_PDV=year)
                 stand_result_year_secondary_mature_regrowth = Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=year)
                 # Update the PDV per ha
-                annual_discounted_value_nyears_secondary_regrowth[year:year+self.Global.nyears, year] = stand_result_year_secondary_regrowth.annual_discounted_value[:]
-                annual_discounted_value_nyears_secondary_conversion[year:year+self.Global.nyears, year] = stand_result_year_secondary_conversion.annual_discounted_value[:]
-                annual_discounted_value_nyears_plantation[year:year+self.Global.nyears, year] = stand_result_year_plantation.annual_discounted_value[:]
-                annual_discounted_value_nyears_secondary_mature_regrowth[year:year+self.Global.nyears, year] = stand_result_year_secondary_mature_regrowth.annual_discounted_value[:]
+                # Every year, the annual discounted value are saved for each column
+                annual_discounted_value_nyears_secondary_regrowth[:, year] = stand_result_year_secondary_regrowth.annual_discounted_value[:]
+                annual_discounted_value_nyears_secondary_conversion[:, year] = stand_result_year_secondary_conversion.annual_discounted_value[:]
+                annual_discounted_value_nyears_plantation[:, year] = stand_result_year_plantation.annual_discounted_value[:]
+                annual_discounted_value_nyears_secondary_mature_regrowth[:, year] = stand_result_year_secondary_mature_regrowth.annual_discounted_value[:]
+
+            # plt.plot(np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0))
+            # plt.show()
+            # exit()
 
             # Sum up the yearly values
             self.pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
@@ -488,11 +484,3 @@ class LandCalculator:
             # self.total_C_stand_pool_cum_secondary_mature_regrowth = self.area_harvested_new_secondary_mature_regrowth * Secondary_mature_regrowth_scenario.CarbonTracker(self.Global, year_start_for_PDV=0).totalC_stand_pool[-1]
             # # add up regrowth and mature regrowth = tC yearly 2010-2050, each year the total accumulate carbon after 40 years of regrowth
             # self.total_C_stand_pool_cum_secondary_regrowth_combined = self.total_C_stand_pool_cum_secondary_regrowth + self.total_C_stand_pool_cum_secondary_mature_regrowth
-
-            # # convert to MtC
-            # plt.plot(range(2010, 2051, 1), self.total_C_stand_pool_cum_secondary_regrowth_combined / 1000000)
-            # plt.title('Yearly accumulate carbon of standing forest (AGB+BGB)')
-            # plt.ylabel('MtC')
-            # plt.xlabel('Starting year of the 40-year growth')
-            # plt.show()
-            # exit()
