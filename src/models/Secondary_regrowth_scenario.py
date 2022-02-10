@@ -30,12 +30,22 @@ class CarbonTracker:
 
         self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [np.zeros((self.Global.nyears)) for _ in range(3)]
         # Get the product share by shifting the initial year, depending on the year_start_for_PDV
-        self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
-        self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
-        self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
+        # self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
+        # self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
+        # self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, (year_start_for_PDV + 1):])
+        #
+        # # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
+        # self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [self.staircase(product_share) for product_share in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
 
+        # Very important assumption: assume the years of product share over the years of growth will be the same as 2050
         # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
-        self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [self.staircase(product_share) for product_share in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
+        # 2022/02/08 Separate the nyears_product_demand from the years of growth
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
+        self.product_share_LLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:]
+        self.product_share_SLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:]
+        self.product_share_VSLP_secondary[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:]
+        self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [self.staircase(product_share) * (1 - self.Global.slash_percentage_secondary_regrowth[year_start_for_PDV, 1:]) for product_share
+            in (self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary)]
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
