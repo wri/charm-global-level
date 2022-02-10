@@ -32,14 +32,23 @@ class CarbonTracker:
         # This will be used to select the product share ratio, as well. For example, if it is year 2020 year = 10, then the product share will be obtained from 10 years from the 2010.
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
-
+        # Product share for one (stand-level) run has the length of years of growth.
         self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
-        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
-        self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-        self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-        self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
+
+        # self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
+        # self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
+        # self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
+        # self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
+
+        # Very important assumption: assume the years of product share over the years of growth will be the same as 2050
         # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
-        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
+        # 2022/02/08 Separate the nyears_product_demand from the years of growth
+        # Get the product share by shifting the initial year, depending on the year_start_for_PDV
+        self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:]
+        self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:]
+        self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:]
+        self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) * (1 - self.Global.slash_percentage_plantation[1:]) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
+
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
@@ -345,29 +354,6 @@ class CarbonTracker:
         self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (1 + self.Global.discount_rate) ** discounted_year
 
         print("year_start_for_PDV:", self.year_start_for_PDV)
-
-    def plot_C_pools_counterfactual_print_PDV_original(self):
-
-        present_discounted_carbon_fullperiod = np.sum(self.annual_discounted_value)
-        print('PDV (tC/ha): ', present_discounted_carbon_fullperiod)
-
-        plt.plot(self.totalC_stand_pool[1:], label='stand', color='yellowgreen')
-        plt.plot(self.totalC_product_pool[1:], label='product', color='b')
-        plt.plot(self.totalC_slash_pool[1:], label='slash', color='r')
-        plt.plot(self.total_carbon_benefit[1:], label='total carbon benefit', color='k', lw=2)
-        plt.plot(self.counterfactual_biomass[1:], label='Non-harvest', color='g', lw=2)
-        plt.plot(self.totalC_product_LLP_pool[1:], label='LLP')
-        plt.plot(self.totalC_product_SLP_pool[1:], label='SLP')
-        plt.plot(self.totalC_root_decay_pool[1:], label='decaying root')
-        plt.plot(self.totalC_landfill_pool[1:], label='landfill')
-        plt.plot(self.totalC_methane_emission[1:], label='methane emission')
-        plt.plot(self.LLP_substitution_benefit[1:], label='LLP substitution', marker='o')
-        plt.plot(self.VSLP_substitution_benefit[1:], label='VSLP substitution', marker='^')
-        plt.plot(self.annual_discounted_value, label='annual_discounted_value')
-        # plt.annotate('PDV: {:.0f} (tC/ha)'.format(present_discounted_carbon_fullperiod), xy=(0.8, 0.88), xycoords='axes fraction', fontsize=14)
-        plt.legend(fontsize=16); plt.show(); exit()
-
-        return
 
 
     def plot_C_pools_counterfactual_print_PDV(self):
