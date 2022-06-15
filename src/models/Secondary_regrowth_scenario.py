@@ -28,7 +28,6 @@ class CarbonTracker:
         self.Global = Global
         self.year_start_for_PDV = year_start_for_PDV  # the starting year of the carbon calculator
 
-        # There is a section to determine whether the PDV growth length.
         self.product_share_LLP_secondary, self.product_share_SLP_secondary, self.product_share_VSLP_secondary = [np.zeros((self.Global.nyears)) for _ in range(3)]
 
         # Very important assumption: assume the years of product share over the years of growth will be the same as 2050
@@ -214,7 +213,7 @@ class CarbonTracker:
 
     def counterfactual(self):
         """
-        Counterfactural scenario
+        Counterfactual scenario
         """
         ### Steady growth no-harvest
         # If there is no harvest, the forest restoration becomes secondary forest
