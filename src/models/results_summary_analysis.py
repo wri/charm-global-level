@@ -20,18 +20,27 @@ import Global_by_country, Agricultural_land_tropical_scenario
 ### Datafile
 root = '../..'
 discount_filename = '4p'
-# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
-datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022 - GR adj.xlsx'.format(root, discount_filename)
+years_filename = '40yr'
+# Sensitivity analysis
+experiments = ['GR 25U', 'GR 25D', 'GR2_GR1 25U', 'GR2_GR1 25D']
+exp_filename = experiments[2]
 
-# figdir = '{}/../Paper/Publication/Figure'.format(root)
+# datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022.xlsx'.format(root, discount_filename)
+# datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_filename, years_filename)
+datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - {}.xlsx'.format(root, discount_filename, years_filename, exp_filename)
+
+# outdir = '{}/data/processed/derivative'.format(root)
+outdir = '{}/data/processed/derivative/sensitivity_analysis'.format(root)
+
+# figdir = '{}/../Paper/Figure'.format(root)
 
 
 #############################################Read in model inputs###########################################
 ### Default parameters
-Global = Global_by_country.Parameters(datafile, country_iso='BRA')
+nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso='BRA', nyears_run_control='harvest')
+Global = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso='BRA')
 nyears = Global.nyears
 rotation_length = Global.rotation_length_harvest # this must be ten years
-
 
 ##############################################Read in model outputs##########################################
 # 2021 Nov Lists
@@ -47,7 +56,7 @@ def extract_global_outputs_summary(results):
     cf_MtC_GtCO2 = 1/1000 * 44 / 12
     cf_ha_mha = 1/1000000
     # Fixme change 40 to 41
-    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 62% SL: total PDV (mega tC)', 'S6 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / 41
+    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S2 conversion: total PDV (mega tC)', 'S3 mixture: total PDV (mega tC)', 'S4 125% GR: total PDV (mega tC)', 'S5 62% SL: total PDV (mega tC)', 'S6 WFL 50% less: total PDV (mega tC)']].sum() / 0.8 * cf_MtC_GtCO2 / nyears
     area_total = results[['Plantation area (ha)', 'S1 regrowth: Secondary area (ha)', 'S2 conversion: Secondary area (ha)', 'S3 mixture: Secondary area (ha)', 'S4 125% GR: Secondary area (ha)', 'S5 62% SL: Secondary area (ha)', 'S6 WFL 50% less: Secondary area (ha)']].sum() / 0.8 * cf_ha_mha
 
     return carbon_costs_annual, area_total
@@ -58,6 +67,15 @@ def extract_global_wood_supply(results):
     wood_supply = results[['Default: Plantation supply wood (mega tC)', 'Default: Secondary forest supply wood (mega tC)','125% GR: Plantation supply wood (mega tC)', '125% GR: Secondary forest supply wood (mega tC)', '62% SL: Plantation supply wood (mega tC)', '62% SL: Secondary forest supply wood (mega tC)', 'WFL50less: Plantation supply wood (mega tC)', 'WFL50less: Secondary forest supply wood (mega tC)']].sum() / 0.8 * 1000000  # mega tC to tC
 
     return wood_supply
+
+def extract_secondary_carbon_costs(results):
+    """Extract the 1-5th scenarios output"""
+    ###The major scenarios
+    cf_MtC_GtCO2 = 1/1000 * 44 / 12
+    # Fixme change 40 to 41
+    carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S1 regrowth: PDV plantation (mega tC)', 'S1 regrowth: PDV secondary (mega tC)',]].sum() / 0.8 * cf_MtC_GtCO2 / nyears
+
+    return carbon_costs_annual
 
 def prepare_global_outputs_for_new_tropical_scenario(results):
     """Extract outputs for the 6th scenario"""
@@ -135,15 +153,21 @@ def run_new_tropical_plantations_scenario(results):
     total_pdv_agriland_sum_country = []
     # weighted average from the several tropical countries
     for iso in tropical_countries_iso:
-        Global = Global_by_country.Parameters(datafile, country_iso=iso)
-        annual_discounted_value_nyears_agriland = np.zeros((nyears + nyears - 1, nyears))
-        for year in range(nyears):
+        # Global = Global_by_country.Parameters(datafile, country_iso=iso)
+        nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='harvest')
+        nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='growth')
+        ### Default plantation scenarios, (1) secondary harvest regrowth and (2) conversion
+        ### Read in global parameters ###
+        global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso=iso)
+        global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings, country_iso=iso)
+        annual_discounted_value_nyears_agriland = np.zeros((global_growth_settings.nyears, global_harvest_settings.nyears))
+        for year in range(global_harvest_settings.nyears):
             #### This is the only line that requires the CHARM model run ####
-            annual_discounted_value_nyears_agriland[year:year + nyears, year] = Agricultural_land_tropical_scenario.CarbonTracker(Global, year_start_for_PDV=year).annual_discounted_value[:]
+            annual_discounted_value_nyears_agriland[:, year] = Agricultural_land_tropical_scenario.CarbonTracker(global_growth_settings, year_start_for_PDV=year).annual_discounted_value[:]
         pdv_yearly_agriland = np.sum(annual_discounted_value_nyears_agriland, axis=0)
 
-        total_pdv_agriland = np.zeros((nyears))
-        for year in range(nyears):
+        total_pdv_agriland = np.zeros((global_harvest_settings.nyears))
+        for year in range(global_harvest_settings.nyears):
             total_pdv_agriland[year] = pdv_yearly_agriland[year] * area_harvested_new_agriland[year]
         total_pdv_agriland_sum_country.append(np.sum(total_pdv_agriland))
 
@@ -156,7 +180,7 @@ def run_new_tropical_plantations_scenario(results):
     global_pdv = total_pdv_plantation + total_pdv_secondary_after_replace + total_pdv_tropical_weighted_average
 
     # Convert tC to GtCO2 per year. FIXME. change the 40 to 41.
-    carbon_cost_annual = global_pdv / 1000000000 * 44 / 12 / 41
+    carbon_cost_annual = global_pdv / 1000000000 * 44 / 12 / nyears
     # Convert ha to Mha
     updated_secondary_area = (area_harvested_new_secondary_sum - area_reduced_secondary) / 1000000
     new_plantation_area = sum(area_harvested_new_agriland) / 1000000
@@ -211,7 +235,7 @@ def calculate_existing_tropical_plantations_numbers():
     output_ha_tropical_average = weighted_sum / sum(area_plantation_tropical)
 
     # For cst demand 2010 level
-    wood_secondary_2010 = total_wood_secondary / 41
+    wood_secondary_2010 = total_wood_secondary / nyears
     area_plantation_tropical_equivalent = wood_secondary_2010 / output_ha_tropical_average
     wood_secondary_share = total_wood_secondary / (total_wood_plantation + total_wood_secondary)
 
@@ -271,7 +295,10 @@ def export_results_to_excel():
                 dataframe.to_excel(writer, sheet_name=sheetname)
                 writer.save()
 
-    outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
+    # outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
+    # outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
+    outfile = '{}/CHARM_global_carbon_land_summary - {} - {}.xlsx'.format(outdir, years_filename, exp_filename)
+
     # Convert to pandas dataframe
     scenarios = ['S1 Secondary forest harvest + regrowth', 'S2 Secondary forest harvest + conversion', 'S3 Secondary forest mixed harvest',
      'S4 New tropical plantations', 'S5 Higher plantation productivity', 'S6 Higher harvest efficiency', 'S7 50% less 2050 wood fuel demand']
@@ -300,16 +327,65 @@ def export_results_to_excel():
 export_results_to_excel()
 exit()
 
+
 def collect_all_discount_rates_results():
     "For Appendix 3"
-    infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
+    # infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
+    infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
     df_list = []
     for dr in ('0p', '2p', '4p', '6p'):
         carbon = pd.read_excel(infile, sheet_name='CO2 (Gt per yr) DR_{}'.format(dr), index_col=0)
         carbon_sel = carbon.loc[['BAU_NOSUB_ALL', 'BAU_SUBON_ALL']]
         df_list.append(carbon_sel.rename(index={'BAU_NOSUB_ALL': 'Gross emissions', 'BAU_SUBON_ALL':'Net emissions including substitution savings'}))
     big_table = pd.concat(df_list)
-    big_table.to_csv('{}/data/processed/derivative/carbon_results_all_discountrate.csv'.format(root))
+    big_table.to_csv('{}/data/processed/derivative/carbon_results_all_discountrate - {}.csv'.format(root, years_filename))
 
 # collect_all_discount_rates_results()
+# exit()
+
+
+def export_secondary_carbon_costs_to_excel():
+    "This is to compare 100yr and 40yr on secondary carbon costs only, excluding plantation"
+    # 4 demand and 2x4 scenarios
+    carbon_costs = np.zeros((4, 8))
+    col_index = []
+    col = 0
+    vslp_input_control = 'ALL'
+    for years_filename in ['40yr', '100yr']:
+        for discount_filename in ['0p', '2p', '4p', '6p']:
+            datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_filename, years_filename)
+            col_index.append('{}-{}'.format(years_filename, discount_filename))
+            row_index = []
+            row = 0
+            for substitution_mode in ['NOSUB', 'SUBON']:
+                for future_demand_level in ['BAU', 'CST']:
+                    output_tabname = '{}_{}_{}'.format(future_demand_level, substitution_mode, vslp_input_control)
+                    row_index.append(output_tabname)
+                    results = pd.read_excel(datafile, sheet_name=output_tabname)
+                    carbon_main = extract_secondary_carbon_costs(results)
+                    carbon_costs[row, col] = carbon_main.values[2]  # S1 regrowth: PDV secondary (mega tC)
+
+                    row = row + 1
+            col = col + 1
+
+    def write_excel(filename, sheetname, dataframe):
+        "This function will overwrite the Outputs sheet"
+        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
+            workbook = writer.book
+            try:
+                workbook.remove(workbook[sheetname])
+                print("Updating Outputs sheet...")
+            except:
+                print("Creating Outputs sheet...")
+            finally:
+                dataframe.to_excel(writer, sheet_name=sheetname)
+                writer.save()
+
+    # Convert to pandas dataframe
+    carbon_df = pd.DataFrame(carbon_costs, index=row_index, columns=col_index)
+    carbon_df.to_csv('{}/data/processed/derivative/carbon_results_40vs100yr.csv'.format(root))
+
+    return
+
+# export_secondary_carbon_costs_to_excel()
 # exit()
