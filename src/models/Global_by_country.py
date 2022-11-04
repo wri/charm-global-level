@@ -23,7 +23,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "Polyform Strict License 1.0.0"
-__version__ = "2021.11.1"
+__version__ = "2022.02.1"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -33,14 +33,57 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
+class SetupTime:
+    """This reads the nyears first and then take input: nyears_run_control to run the individual scenarios"""
+    def __init__(self, datafile, country_iso='BRA', nyears_run_control='harvest'):
+        """Read in time inputs
+        Preparing output of the nyears for Class Parameters
+        """
+        input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
+        self.input_country = input_data.loc[input_data['ISO'] == country_iso]  # Country ISO code
+        self.country_name = self.input_country['Country'].values[0]
+        self.nyears_run_control = nyears_run_control
+
+        self.setup_nyears()
+
+    def setup_nyears(self):
+        """Time settings"""
+        ### Years
+        # Number of future years of harvesting forests beyond 2010. e.g., 40 years means 2011-2050.
+        self.nyears_harvest_meet_demand = int(self.input_country['Years of harvests'].values[0])
+        self.nyears_growth_PDV = int(self.input_country['Years of growth'].values[0])
+
+        # In case the number of years for PDV calculation input is smaller than the nyears of harvests
+        if self.nyears_growth_PDV < self.nyears_harvest_meet_demand:
+            self.nyears_growth_PDV = self.nyears_harvest_meet_demand
+
+        # Situation 1: if the scenarios are run using nyears of harvest. This is used in most cases, biomass output and land area calculation
+        if self.nyears_run_control is 'harvest':
+            self.nyears = self.nyears_harvest_meet_demand + 1  # Number of the total years, including the initial year 2010.
+        # Situation 2: if the scenarios are run using nyears of growth. This is used in PDV calculation. It only depends on how long you want to build in the PDv calculation
+        elif self.nyears_run_control is 'growth':
+            self.nyears = self.nyears_growth_PDV + 1  # Number of the total years, including the initial year 2010.
+        else: # default Situation 1.
+            self.nyears = self.nyears_harvest_meet_demand + 1  # Number of the total years, including the initial year 2010.
+
+        self.arraylength = self.nyears + 1
+
+        # # both are the same number of years
+        # # self.nyears = years + 1   # Number of the total years, including the initial year 2010.
+        # self.nyears = self.nyears_growth_PDV + 1  # Number of the total years, including the initial year 2010.
+        # self.arraylength = self.nyears + 1  # Length of array (The number of columns of the array) = number of future years + initial condition
+
+
 class Parameters:
 
-    def __init__(self, datafile, country_iso='BRA', discount_rate_input=None, future_demand_level='BAU', substitution_mode='SUB', vslp_input_control='ALL', vslp_future_demand='default', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0, slash_rate_mode='natural'):
+    def __init__(self, datafile, nyears_setup, country_iso='BRA', discount_rate_input=None, future_demand_level='BAU', substitution_mode='SUB', vslp_input_control='ALL', vslp_future_demand='default', secondary_mature_wood_share=0, plantation_growth_increase_ratio=1.0, slash_rate_mode='natural'):
         """Read in inputs"""
 
         input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
         self.input_country = input_data.loc[input_data['ISO']==country_iso] # Country ISO code
         self.country_name = self.input_country['Country'].values[0]
+        self.nyears = nyears_setup.nyears
+        self.arraylength = nyears_setup.arraylength
         # Meta Parameters for scenarios
         self.discount_rate_input = discount_rate_input
         self.future_demand_level = future_demand_level
@@ -53,7 +96,7 @@ class Parameters:
         del input_data
 
         ### Run the functions
-        self.setup_time()
+        self.setup_time_period()
         self.setup_biophysical_parameters()
         self.setup_product_parameters()
         self.setup_LLP_substitution()
@@ -62,20 +105,6 @@ class Parameters:
         self.setup_harvest_thinning_events()
         self.setup_harvest_slash_percentage()
 
-    def setup_time(self):
-        """Time settings"""
-        ### Years/Periods
-        # Number of years of growing back after the first harvest
-        years = int(self.input_country['Years of growth'].values[0])
-        self.nyears = years + 1   # Number of the total years, including the initial year 2010.
-        self.arraylength = self.nyears + 1  # Length of array (The number of columns of the array) = number of future years + initial condition
-        # Number of future years beyond 2010. e.g., 40 years means 2011-2050.
-        self.nyears_product_demand = int(self.input_country['Years of demand'].values[0])
-
-        self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
-        self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
-        # self.rotation_length_harvest = 10
-        # self.rotation_length_thinning = 5
 
     def setup_biophysical_parameters(self):
         """Growth rates, C density"""
@@ -115,6 +144,10 @@ class Parameters:
         # This constant approach is depreciated, used only in the Plantation scenario as a reference
         # Mokany 2006
         self.root_shoot_coef = 0.489
+        # FIXME Experiment 1: root_shoot_coef increases 25%, in the future, build the parameter into the parameter file
+        # self.root_shoot_coef = 0.489 * 1.25
+        # Experiment 2: root_shoot_coef decreases 25%
+        # self.root_shoot_coef = 0.489 * 0.75
         self.root_shoot_power = 0.89
         self.carbon_wood_ratio = 0.5
 
@@ -214,6 +247,7 @@ class Parameters:
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
+        # FIXME nyears how to define
         product_LLP, product_SLP, product_VSLP = [np.zeros((self.nyears)) for _ in range(3)]
         product_LLP[0], product_LLP[40] = LLP_2010, LLP_2050
         product_SLP[0], product_SLP[40] = SLP_2010, SLP_2050
@@ -221,9 +255,11 @@ class Parameters:
 
         # Interpolate the production numbers: take the difference between the last and first year for each product pool, and divide by the number of years
         for year in range(1, len(product_VSLP)):
-            product_LLP[year] = product_LLP[0] + (product_LLP[self.nyears_product_demand] - product_LLP[0]) / self.nyears_product_demand * year
-            product_SLP[year] = product_SLP[0] + (product_SLP[self.nyears_product_demand] - product_SLP[0]) / self.nyears_product_demand * year
-            product_VSLP[year] = product_VSLP[0] + (product_VSLP[self.nyears_product_demand] - product_VSLP[0]) / self.nyears_product_demand * year
+            # FIXME here this uses the nyears_product_demand = 40, which is quite obvious..., return to 40.
+            # FIXME if one want to extend the demand or keep the latest demand.
+            product_LLP[year] = product_LLP[0] + (product_LLP[40] - product_LLP[0]) / 40 * year
+            product_SLP[year] = product_SLP[0] + (product_SLP[40] - product_SLP[0]) / 40 * year
+            product_VSLP[year] = product_VSLP[0] + (product_VSLP[40] - product_VSLP[0]) / 40 * year
 
         # plt.plot(product_LLP, label='LLP')
         # plt.plot(product_SLP, label='SLP')
@@ -302,11 +338,17 @@ class Parameters:
         else:
             self.discount_rate = self.input_country['Discount rate'].values[0]
         self.landfill_methane_ratio = self.input_country['% of carbon in landfill converted to methane'].values[0]
+        # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
 
-    # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
+    def setup_time_period(self):
+        """Time settings"""
+        # Periods
+        self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
+        self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
+        # self.rotation_length_harvest = 10
+        # self.rotation_length_thinning = 5
 
     def setup_harvest_thinning_events(self):
-
         ### Combine harvest and thinning together in the time index
         # Create index of years where harvest happened.
         # The first harvest occurs in year 1, index=1. index=0 is the initial condition
