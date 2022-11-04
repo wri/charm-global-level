@@ -25,9 +25,10 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../../'
 discount_filename = '4p'
-datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
-sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
-figdir = '{}/../Paper/Publication/Figure'.format(root)
+years_filename = '40yr'
+# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
+sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
+figdir = '{}/../Paper/Figure'.format(root)
 
 
 def get_wood_demand_for_construction():
@@ -65,6 +66,7 @@ def get_additional_secondary_wood_CHARM(vslp_input_control_input):
     wood_lists = ['Default: Secondary forest supply wood (mega tC)',
                                 'Agriland: Secondary forest supply wood (mega tC)',
                                 '125% GR: Secondary forest supply wood (mega tC)',
+                                '62% SL: Secondary forest supply wood (mega tC)',
                                 'WFL50less: Secondary forest supply wood (mega tC)']
     wood_df = pd.read_excel(sumfile, sheet_name='Wood supply (mega tC) DR_{}'.format(discount_filename), index_col=0)[wood_lists]
     # Cumulative carbon required from secondary forest (BAU)
@@ -83,7 +85,7 @@ def get_additional_secondary_land_CHARM(vslp_input_control_input):
     "CHARM model output"
     # Step 2. Read in the output from the results summary file for secondary wood supply
 
-    land_df = pd.read_excel(sumfile, sheet_name='Land (Mha) DR_{}'.format(discount_filename), index_col=0).iloc[:, range(6)]
+    land_df = pd.read_excel(sumfile, sheet_name='Land (Mha) DR_{}'.format(discount_filename), index_col=0).iloc[:, range(7)]
     # Cumulative carbon required from secondary forest (BAU)
     land_BAU = land_df.loc['BAU_SUBON_{}'.format(vslp_input_control_input)]
     # Cumulative carbon required from secondary forest (constant demand)
@@ -112,7 +114,7 @@ def calculate_additional_secondary_area_for_construction(percentage_order):
 def export_results_to_excel():
     "Copy the land area tab and add in the two rows"
     land_df = pd.read_excel(sumfile, sheet_name='Land (Mha) DR_{}'.format(discount_filename), index_col=0)
-    result_df = land_df.iloc[:, range(6)]
+    result_df = land_df.iloc[:, range(7)]
     result_df.loc['Existing plantations'] = land_df.loc['BAU_SUBON_IND', 'Existing plantations']
     result_df.loc['New plantations'] = 0
     result_df.loc['New plantations', 'S4 New tropical plantations'] = land_df.loc[
@@ -135,8 +137,7 @@ def export_results_to_excel():
                 dataframe.to_excel(writer, sheet_name=sheetname)
                 writer.save()
 
-    outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
-    write_excel(outfile, 'Land construction (Mha) DR_{}'.format(discount_filename), select_df)
+    write_excel(sumfile, 'Land construction (Mha) DR_{}'.format(discount_filename), select_df)
 
     return
 
@@ -148,9 +149,8 @@ def export_results_to_excel():
 def barplot_all_scenarios():
 
     def read_dataframe(tabname):
-        infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
         # Read in the excel file using the first column as the index
-        df = pd.read_excel(infile, sheet_name=tabname, index_col=0)
+        df = pd.read_excel(sumfile, sheet_name=tabname, index_col=0)
         # Prepare data for the BAU vs CST plot
         df.loc['NewDemand_SUBON_ALL'] = df.loc['BAU_SUBON_ALL'] - df.loc['CST_SUBON_ALL']
         df.loc['NewDemand_SUBON_IND'] = df.loc['BAU_SUBON_IND'] - df.loc['CST_SUBON_IND']
@@ -183,32 +183,34 @@ def barplot_all_scenarios():
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion', 'S3 Secondary forest\nMixed harvest',
-     'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 50% less 2050\nWood fuel demand']
+        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion',
+                         'S3 Secondary forest\nMixed harvest',
+                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity',
+                         'S6 Higher\nharvest efficiency']
         plt.xticks(result_df.columns, labels=xticks_labels)
         # # bar labels
         area_total = result_df.loc['BAU_SUBON_ALL'] + result_df.loc['Existing plantations'] + result_df.loc['New plantations']+result_df.loc['50% construction using wood']
-        for number, rec in enumerate(ax.patches[:18]):
+        for number, rec in enumerate(ax.patches[:21]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
-            bar_scenario_group = number%6
+            bar_scenario_group = number%7
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.44,
                     "{:.0f}%".format(height/area_total[bar_scenario_group]*100),
                       ha='center', va='bottom')
         # Add the fourth scenario's new tropical plantations percentage
-        ax.text(ax.patches[21].get_x() + ax.patches[21].get_width() / 2, ax.patches[21].get_y() + ax.patches[21].get_height()*0.44,
-                "{:.0f}%".format(ax.patches[21].get_height() / area_total[3] * 100),
+        ax.text(ax.patches[24].get_x() + ax.patches[24].get_width() / 2, ax.patches[24].get_y() + ax.patches[24].get_height()*0.44,
+                "{:.0f}%".format(ax.patches[24].get_height() / area_total[3] * 100),
                 ha='center', va='bottom')
         # other two areas
-        for number, rec in enumerate(ax.patches[24:36]):
+        for number, rec in enumerate(ax.patches[28:42]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
-            bar_scenario_group = number%6
+            bar_scenario_group = number%7
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height *0.44,
                     "{:.0f}%".format(height/area_total[bar_scenario_group]*100),
                       ha='center', va='bottom')
         # Add the final absolute numbers at the top
-        for number, rec in enumerate(ax.patches[:6]):
+        for number, rec in enumerate(ax.patches[:7]):
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + area_total[number],
                     "{:.0f}".format(area_total[number]),
@@ -229,7 +231,7 @@ def barplot_all_scenarios():
         "Plot five scenarios, ignore the last scenario, and only use INDustrial roundwood"
         # Land area requirement from additional demand is the secondary area added upon the CST.
         fig, ax = plt.subplots(1, figsize=(14, 8))
-        result_df = result_df.iloc[:,:5]
+        result_df = result_df.iloc[:,:6]
         plt.bar(result_df.columns, result_df.loc['Existing plantations'], color='#7cc096', edgecolor='w', width=0.5,
                 hatch='//')
         plt.bar(result_df.columns, result_df.loc['CST_SUBON_IND'], bottom=result_df.loc['Existing plantations'],
@@ -254,7 +256,7 @@ def barplot_all_scenarios():
 
         # x and y limits
         # plt.xlim(-0.6, 10.5)
-        # plt.ylim(-1600, 2000)
+        plt.ylim(0, 1000)
         plt.ylabel(ylabel, fontsize=14)
         # remove spines
         ax.spines['right'].set_visible(False)
@@ -267,31 +269,32 @@ def barplot_all_scenarios():
         # x ticks
         xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion',
                          'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity']
+                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity',
+                         'S6 Higher\nharvest efficiency']
         plt.xticks(result_df.columns, labels=xticks_labels)
         # # bar labels
         area_total = result_df.loc['BAU_SUBON_IND'] + result_df.loc['Existing plantations'] + result_df.loc[
             'New plantations'] + result_df.loc['50% construction using wood']
-        for number, rec in enumerate(ax.patches[:15]):
+        for number, rec in enumerate(ax.patches[:18]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.44,
                     "{:.0f}".format(height),
                     ha='center', va='bottom')
         # Add the fourth scenario's new tropical plantations percentage
-        ax.text(ax.patches[18].get_x() + ax.patches[18].get_width() / 2,
-                ax.patches[18].get_y() + ax.patches[18].get_height() * 0.2,
-                "{:.0f}".format(ax.patches[18].get_height()),
+        ax.text(ax.patches[21].get_x() + ax.patches[21].get_width() / 2,
+                ax.patches[21].get_y() + ax.patches[21].get_height() * 0.2,
+                "{:.0f}".format(ax.patches[21].get_height()),
                 ha='center', va='bottom')
         # other two areas
-        for number, rec in enumerate(ax.patches[20:30]):
+        for number, rec in enumerate(ax.patches[24:36]):
             height = rec.get_height()
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.4,
                     "{:.0f}".format(height),
                     ha='center', va='bottom')
         # Add the final absolute numbers at the top
-        for number, rec in enumerate(ax.patches[:5]):
+        for number, rec in enumerate(ax.patches[:6]):
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + area_total[number],
                     "{:.0f}".format(area_total[number]),
@@ -307,18 +310,19 @@ def barplot_all_scenarios():
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.78, bottom=0.07)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.2)
-        plt.savefig('{}/land_requirement_IND_quantity_Churkina_5scenarios.png'.format(figdir))
+        # plt.savefig('{}/land_requirement_IND_quantity_Churkina_6scenarios.png'.format(figdir))
+        plt.savefig('{}/svg/land_requirement_IND_quantity_Churkina_6scenarios.svg'.format(figdir))
         # plt.show()
 
         return
 
     land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
+    # stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
     stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
 
     return
 
-# barplot_all_scenarios()
+barplot_all_scenarios()
 
 
 
