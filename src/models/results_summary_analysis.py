@@ -22,8 +22,8 @@ root = '../..'
 discount_filename = '4p'
 years_filename = '40yr'
 # Sensitivity analysis
-experiments = ['GR 25U', 'GR 25D', 'GR2_GR1 25U', 'GR2_GR1 25D', 'GR2_GR1 50D']
-exp_filename = experiments[4]
+experiments = ['GR 25U', 'GR 25D', 'GR2_GR1 25U', 'GR2_GR1 25D', 'GR2_GR1 50D', 'RSR 25U', 'RSR 25D', 'trade 50U', 'trade 50D']
+exp_filename = experiments[8]
 
 # datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022.xlsx'.format(root, discount_filename)
 # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_filename, years_filename)
