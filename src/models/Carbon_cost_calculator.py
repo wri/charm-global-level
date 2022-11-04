@@ -18,7 +18,7 @@ __status__ = "Dev"
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario
+import Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario
 import Plantation_counterfactual_secondary_plantation_age_scenario
 
 
@@ -48,7 +48,7 @@ class CarbonCalculator:
             # nyears rows, nyears of columns
             # array dimension nyears_growth. Only place with nyears_growth
             annual_discounted_value_nyears_plantation, annual_discounted_value_nyears_secondary_conversion, annual_discounted_value_nyears_secondary_regrowth, annual_discounted_value_nyears_secondary_mature_regrowth = [
-                    np.zeros((self.Global_growth.nyears, self.Global_growth.nyears)) for _ in range(4)]
+                    np.zeros((self.Global_growth.nyears, self.Global_harvest.nyears)) for _ in range(4)]
 
             # Get PDV values for the large matrix nyears+40 x nyears
             # This is number of years for product demand, only 2010-2050. As long as it is 100 years' PDV.
@@ -66,9 +66,6 @@ class CarbonCalculator:
                 annual_discounted_value_nyears_plantation[:, year] = stand_result_year_plantation.annual_discounted_value[:]
                 annual_discounted_value_nyears_secondary_mature_regrowth[:, year] = stand_result_year_secondary_mature_regrowth.annual_discounted_value[:]
 
-            # plt.plot(np.sum(annual_discounted_value_nyears_secondary_conversion, axis=0))
-            # plt.show()
-            # exit()
 
             # Sum up the yearly values
             self.pdv_yearly_plantation = np.sum(annual_discounted_value_nyears_plantation, axis=0)
