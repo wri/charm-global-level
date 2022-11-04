@@ -14,7 +14,7 @@ __status__ = "Dev"
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import Global_by_country, Plantation_counterfactual_secondary_plantation_age_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator
+import Global_by_country, Plantation_counterfactual_secondary_plantation_age_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator, Carbon_cost_calculator
 # import Pasture_with_counterfactual_scenario, Pasture_zero_counterfactual_scenario
 
 ################################################### TESTING ####################################################
@@ -24,11 +24,11 @@ root = '../../'
 def test_carbon_tracker():
     "TEST Carbon tracker"
     # set up the country
-    iso = 'JPN'
-    # datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Feb 2 2022.xlsx'.format(root)
-
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='BAU', slash_rate_mode='natural')
+    iso = 'DEU'
+    # datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Feb 10 2022.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Nov 1 2022 - RSR 25U.xlsx'.format(root)
+    nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='harvest')
+    global_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso=iso, future_demand_level='BAU', slash_rate_mode='natural')
     # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_counterfactual_unharvested_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
     # Plantation_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
@@ -51,8 +51,9 @@ def test_PDV_module():
     # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
     iso = 'BRA'
 
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, slash_rate_mode='natural')
+    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Nov 1 2022 - GR 25U.xlsx'.format(root)
+    nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='growth')
+    global_settings = Global_by_country.Parameters(datafile, nyears_growth_settings, country_iso=iso, slash_rate_mode='natural')
     obj = Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
 
     # obj = Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
@@ -61,7 +62,7 @@ def test_PDV_module():
                        'Counterfactual': obj.counterfactual_biomass[1:],
                        'Annual carbon impact': obj.annual_discounted_value,
                        'Harvest scenario - Counterfactual': obj.total_carbon_benefit[1:]-obj.counterfactual_biomass[1:]
-                       }, index=np.arange(2010, 2051))
+                       }, index=np.arange(2010, 2010+nyears_growth_settings.nyears))
     df.plot(color=["k", "limegreen", 'Red', 'Blue'], lw=2)
 
     plt.title('Brazil Secondary Regrowth Carbon impact (tC/ha)')
@@ -127,24 +128,26 @@ def output_C_pools_counterfactual_time_series_all():
 def test_land_area_calculator():
     "TEST land area calculator"
     iso = 'BRA'
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 14.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - Apr 21.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - BAU SF_1.2 - DR_2p - May 10.xlsx'.format(root)
-    # datafile = '{}/data/processed/CHARM regional - DR_4p - Nov 1.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
+    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Nov 1 2022 - GR 25U.xlsx'.format(root)
 
-    # global_settings = Global_by_country.Parameters(datafile, country_iso=iso)
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
+    nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='harvest')
+    nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='growth')
+
+    global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
+    global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
 
     # global_settings = Global_by_country.Parameters(datafile, country_iso=iso, vslp_future_demand='WFL50less')
     # run the land area calculator
-    LAC = Land_area_calculator.LandCalculator(global_settings)
+    LAC = Land_area_calculator.LandCalculator(global_harvest_settings)
+    CCC = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC)
+
     # print("T PDV regrowth", LAC.total_pdv_plantation_secondary_regrowth)
     # print("T PDV conversion", LAC.total_pdv_plantation_secondary_conversion)
     # print("Area regrowth", sum(LAC.area_harvested_new_secondary_regrowth)+sum(LAC.area_harvested_new_secondary_mature_regrowth))
     # print("Area conversion", sum(LAC.area_harvested_new_secondary_conversion))
 
     return
+
 # test_land_area_calculator()
 # exit()
 
@@ -541,114 +544,23 @@ def run_model_baseline_scenarios():
     return
 
 
-def run_model_yearly_carbon_stock():
-    """
-    Created and Edited: 2022/1/25
-    This is a driver for running global analysis for the getting the accumulate carbon time series
-    """
-    # Read input/output data excel file.
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
-    # Read in countries
-    countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
-    # Read in input data
-    input_data = pd.read_excel(datafile, sheet_name='Inputs', skiprows=1)
-    # If the cell has formula, it will be read as NaN
-
-    def single_run_with_combination_input(future_demand_level_input='BAU', substitution_mode_input='SUBON', vslp_input_control_input='ALL'):
-        """
-        This function generates the 30 countries results for each scenario, depending on the combination of below parameters.
-        :param future_demand_level_input: select future demand level from "BAU" business-as-usual or "CST": constant demand
-        :param substitution_mode_input: select substitution mode from "SUBON" with substitution or "NOSUB" gross carbon impacts
-        :param vslp_input_control_input: select VSLP option from "ALL" total roundwood (VSLP_WFL+VSLP_IND) or "IND" industrial roundwood (VSLP_IND)
-        :return:
-        """
-        # Initiate the output variables.
-        countrynames, codes = [], []
-        secondary_wood, plantation_wood, standing_carbon = [], [], []
-
-        # For each country, calculate the results for all scenarios. Each variable collects a list of the countries' results.
-        for country, code in zip(countries['Country'], countries['ISO']):
-            # Test if the parameters are set up for this country, if there is one parameter missing, no calculation will be done for this country.
-            input_country = input_data.loc[input_data['Country'] == country]
-            input_country = input_country.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
-            if input_country.isnull().values.any():
-                print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
-            else:
-                ################################### Execute model runs ##################################
-                ### Default plantation scenarios, (1) secondary harvest regrowth and (2) conversion
-                ### Read in global parameters ###
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code, future_demand_level=future_demand_level_input, substitution_mode=substitution_mode_input, vslp_input_control=vslp_input_control_input)
-
-                # run the land area calculator
-                LAC_default = Land_area_calculator.LandCalculator(global_settings)
-
-
-                ################################### Prepare output ##################################
-                countrynames.append(country)
-                codes.append(code)
-
-                # Default situation
-                secondary_wood.append(LAC_default.output_need_secondary / 1000000)
-                plantation_wood.append(LAC_default.product_total_carbon / 1000000 - LAC_default.output_need_secondary / 1000000)
-                standing_carbon.append(LAC_default.total_C_stand_pool_cum_secondary_regrowth_combined / 1000000)
-
-
-        def make_dataframe(list):
-
-            df = pd.DataFrame(list, columns=range(2010, 2051, 1), index=codes)
-            df['Country Name'] = countrynames
-            # shift column 'Name' to first position
-            first_column = df.pop('Country Name')
-            # insert column using insert(position,column_name, first_column) function
-            df.insert(0, 'Country Name', first_column)
-
-            return df
-
-        # # Save to the excel file
-        def write_excel(filename, sheetname, dataframe):
-            "This function will overwrite the Outputs sheet"
-            with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
-                workbook = writer.book
-                try:
-                    workbook.remove(workbook[sheetname])
-                    print("Updating Outputs sheet...")
-                except:
-                    print("Creating Outputs sheet...")
-                finally:
-                    dataframe.to_excel(writer, sheet_name=sheetname, index=False)
-                    writer.save()
-
-        # Prepare output tab name
-        output_tabname = '{}-{}'.format('Standing carbon', future_demand_level_input)
-        write_excel(datafile, output_tabname, make_dataframe(standing_carbon))
-        output_tabname = '{}-{}'.format('Secondary wood', future_demand_level_input)
-        write_excel(datafile, output_tabname, make_dataframe(secondary_wood))
-        output_tabname = '{}-{}'.format('Plantation wood', future_demand_level_input)
-        write_excel(datafile, output_tabname, make_dataframe(plantation_wood))
-
-    ################## Run the experiments ###################
-    def run_single_input(future_demand_level, substitution_mode, vslp_input_control):
-        "Run model with a set of parameters"
-        single_run_with_combination_input(future_demand_level_input=future_demand_level,
-                                          substitution_mode_input=substitution_mode,
-                                          vslp_input_control_input=vslp_input_control)
-        return
-
-    run_single_input('BAU', 'SUBON', 'ALL')
-    run_single_input('CST', 'SUBON', 'ALL')
-
-    return
-
-
-def run_model_mitigation_scenarios():
+def run_model_mitigation_scenarios(discount_rate, years_filename):
     """
     Created and Edited: 2022/01
     This is an updated driver for running global analysis for forestry land and carbon consequences.
     Adding several scenarios based on the run_model_five_scenarios
     """
     # Read input/output data excel file.
-    # datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Feb 2 2022.xlsx'.format(root)
+    # sensitivity analysis
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - GR 25U.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - GR 25D.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - GR2_GR1 25D.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - GR2_GR1 25U.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - GR2_GR1 50D.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - RSR 25U.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - RSR 25D.xlsx'.format(root, discount_rate, years_filename)
+    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - trade 50U.xlsx'.format(root, discount_rate, years_filename)
+    datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - trade 50D.xlsx'.format(root, discount_rate, years_filename)
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -697,75 +609,122 @@ def run_model_mitigation_scenarios():
                 print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
             else:
                 ################################### Execute model runs ##################################
+                nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=code, nyears_run_control='harvest')
+                nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=code, nyears_run_control='growth')
                 ### Default plantation scenarios, (1) secondary harvest regrowth and (2) conversion
                 ### Read in global parameters ###
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code,
-                                                               future_demand_level=future_demand_level_input,
-                                                               substitution_mode=substitution_mode_input,
-                                                               vslp_input_control=vslp_input_control_input)
+                global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings,
+                                                                        country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input)
+                global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input)
                 # run different policy scenarios
-                result_plantation_default = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings)
-                result_conversion_default = Secondary_conversion_scenario.CarbonTracker(global_settings)
-                result_regrowth_default = Secondary_regrowth_scenario.CarbonTracker(global_settings)
-                result_agriland_default = Agricultural_land_tropical_scenario.CarbonTracker(global_settings)
+                result_plantation_default = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_harvest_settings)
+                result_conversion_default = Secondary_conversion_scenario.CarbonTracker(global_harvest_settings)
+                result_regrowth_default = Secondary_regrowth_scenario.CarbonTracker(global_harvest_settings)
+                result_agriland_default = Agricultural_land_tropical_scenario.CarbonTracker(global_harvest_settings)
 
                 # run the land area calculator
-                LAC_default = Land_area_calculator.LandCalculator(global_settings)
-                if global_settings.rotation_length_harvest == 10:
-                    output_ha_agriland_default = LAC_default.output_ha_agriland[global_settings.year_index_harvest_plantation[1]-1]
+                LAC_default = Land_area_calculator.LandCalculator(global_harvest_settings)
+                if global_harvest_settings.rotation_length_harvest == 10:
+                    output_ha_agriland_default = LAC_default.output_ha_agriland[global_harvest_settings.year_index_harvest_plantation[1]-1]
                 else:
                     output_ha_agriland_default = 0
+                # run the carbon cost calculator
+                CCC_default = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC_default)
+
 
                 ### scenario (3) secondary harvest regrowth: 50% middle aged and 50% mature secondary forest
                 ### Read in global parameters ###
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code,
+                global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings,
+                                                                       country_iso=code,
                                                                future_demand_level=future_demand_level_input,
                                                                substitution_mode=substitution_mode_input,
                                                                vslp_input_control=vslp_input_control_input,
                                                                secondary_mature_wood_share=0.5)
+                global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input,
+                                                                       secondary_mature_wood_share=0.5)
                 # run different policy scenarios
                 # result_plantation_mixture = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings)
                 # result_regrowth_mixture = Secondary_regrowth_scenario.CarbonTracker(global_settings)
-                result_regrowth_mature_mixture = Secondary_mature_regrowth_scenario.CarbonTracker(global_settings)
+                result_regrowth_mature_mixture = Secondary_mature_regrowth_scenario.CarbonTracker(global_harvest_settings)
 
                 # run the land area calculator
-                LAC_mixture = Land_area_calculator.LandCalculator(global_settings)
+                LAC_mixture = Land_area_calculator.LandCalculator(global_harvest_settings)
+                # run the carbon cost calculator
+                CCC_mixture = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC_mixture)
 
                 ### scenario (4) secondary harvest regrowth: 125% productivity increase in plantation
                 ### Read in global parameters ###
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code,
+                global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings,
+                                                               country_iso=code,
                                                                future_demand_level=future_demand_level_input,
                                                                substitution_mode=substitution_mode_input,
                                                                vslp_input_control=vslp_input_control_input,
                                                                plantation_growth_increase_ratio=1.25)
+                global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input,
+                                                                       plantation_growth_increase_ratio=1.25)
                 # run different policy scenarios
                 result_plantation_highGR = Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(
-                    global_settings)
+                    global_harvest_settings)
 
                 # run the land area calculator
-                LAC_highGR = Land_area_calculator.LandCalculator(global_settings)
+                LAC_highGR = Land_area_calculator.LandCalculator(global_harvest_settings)
+                # run the carbon cost calculator
+                CCC_highGR = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC_highGR)
 
                 ### scenario (5) secondary harvest regrowth: optimal slash rate in tropical secondary forests
                 ### Read in global parameters ###
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code,
-                                                               future_demand_level=future_demand_level_input,
-                                                               substitution_mode=substitution_mode_input,
-                                                               vslp_input_control=vslp_input_control_input,
-                                                               slash_rate_mode='optimal')
+                global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input,
+                                                                       slash_rate_mode='optimal')
+                global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input,
+                                                                       slash_rate_mode='optimal')
                 # run different policy scenarios
-                result_regrowth_optimalSL = Secondary_regrowth_scenario.CarbonTracker(global_settings)
+                result_regrowth_optimalSL = Secondary_regrowth_scenario.CarbonTracker(global_harvest_settings)
                 # run the land area calculator
-                LAC_optimalSL = Land_area_calculator.LandCalculator(global_settings)
+                LAC_optimalSL = Land_area_calculator.LandCalculator(global_harvest_settings)
+                # run the carbon cost calculator
+                CCC_optimalSL = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC_optimalSL)
 
                 ### scenario (6) secondary harvest regrowth: 50% reduction in VSLP-WFL production
                 # read in global parameters
-                global_settings = Global_by_country.Parameters(datafile, country_iso=code,
+                global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings,
+                                                               country_iso=code,
                                                                future_demand_level=future_demand_level_input,
                                                                substitution_mode=substitution_mode_input,
                                                                vslp_input_control=vslp_input_control_input,
                                                                vslp_future_demand='WFL50less')
+                global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings,
+                                                                       country_iso=code,
+                                                                       future_demand_level=future_demand_level_input,
+                                                                       substitution_mode=substitution_mode_input,
+                                                                       vslp_input_control=vslp_input_control_input,
+                                                                       vslp_future_demand='WFL50less')
                 # run the land area calculator
-                LAC_WFL50less = Land_area_calculator.LandCalculator(global_settings)
+                LAC_WFL50less = Land_area_calculator.LandCalculator(global_harvest_settings)
+                # run the carbon cost calculator
+                CCC_WFL50less = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC_WFL50less)
 
                 ################################### Prepare output ##################################
                 countrynames.append(country)
@@ -786,21 +745,21 @@ def run_model_mitigation_scenarios():
                 # Default situation
                 secondary_wood_default.append(sum(LAC_default.output_need_secondary / 1000000))
                 plantation_wood_default.append(sum(LAC_default.product_total_carbon) / 1000000 - sum(LAC_default.output_need_secondary) / 1000000)
-                area_plantation.append(sum(LAC_default.area_harvested_new_plantation))
+                area_plantation.append(sum(CCC_default.area_harvested_new_plantation))
 
                 # Scenario 1
                 area_regrowth.append(sum(LAC_default.area_harvested_new_secondary_regrowth_combined))
-                carbon_regrowth.append(LAC_default.total_pdv_plantation_secondary_regrowth)
-                carbon_existing_plantation.append(LAC_default.total_pdv_plantation_sum)
-                carbon_secondary_regrowth.append(LAC_default.total_pdv_secondary_regrowth_sum)
+                carbon_regrowth.append(CCC_default.total_pdv_plantation_secondary_regrowth)
+                carbon_existing_plantation.append(CCC_default.total_pdv_plantation_sum)
+                carbon_secondary_regrowth.append(CCC_default.total_pdv_secondary_regrowth_sum)
 
                 # Scenario 2
                 area_conversion.append(sum(LAC_default.area_harvested_new_secondary_conversion))
-                carbon_conversion.append(LAC_default.total_pdv_plantation_secondary_conversion)
+                carbon_conversion.append(CCC_default.total_pdv_plantation_secondary_conversion)
 
                 # Scenario 3: 50:50 secondary supply
                 area_mixture.append(sum(LAC_mixture.area_harvested_new_secondary_regrowth_combined))
-                carbon_mixture.append(LAC_mixture.total_pdv_plantation_secondary_regrowth)
+                carbon_mixture.append(CCC_mixture.total_pdv_plantation_secondary_regrowth)
                 area_mixture_middle.append(sum(LAC_mixture.area_harvested_new_secondary_regrowth))
                 area_mixture_mature.append(sum(LAC_mixture.area_harvested_new_secondary_mature_regrowth))
 
@@ -809,20 +768,20 @@ def run_model_mitigation_scenarios():
                 secondary_wood_highGR.append(sum(LAC_highGR.output_need_secondary / 1000000))
                 plantation_wood_highGR.append(sum(LAC_highGR.product_total_carbon) / 1000000 - sum(LAC_highGR.output_need_secondary) / 1000000)
                 area_regrowth_highGR.append(sum(LAC_highGR.area_harvested_new_secondary_regrowth_combined))
-                carbon_regrowth_highGR.append(LAC_highGR.total_pdv_plantation_secondary_regrowth)
+                carbon_regrowth_highGR.append(CCC_highGR.total_pdv_plantation_secondary_regrowth)
 
                 # Scenario 5: Secondary forest slash rate reduction
                 # Productivity increase
                 secondary_wood_optimalSL.append(sum(LAC_optimalSL.output_need_secondary / 1000000))
                 plantation_wood_optimalSL.append(sum(LAC_optimalSL.product_total_carbon) / 1000000 - sum(LAC_optimalSL.output_need_secondary) / 1000000)
                 area_regrowth_optimalSL.append(sum(LAC_optimalSL.area_harvested_new_secondary_regrowth_combined))
-                carbon_regrowth_optimalSL.append(LAC_optimalSL.total_pdv_plantation_secondary_regrowth)
+                carbon_regrowth_optimalSL.append(CCC_optimalSL.total_pdv_plantation_secondary_regrowth)
 
                 # Scenario 6: VSLP-WFL 50% reduction
                 secondary_wood_WFL50less.append(sum(LAC_WFL50less.output_need_secondary / 1000000))
                 plantation_wood_WFL50less.append( sum(LAC_WFL50less.product_total_carbon) / 1000000 - sum(LAC_WFL50less.output_need_secondary) / 1000000)
                 area_regrowth_WFL50less.append(sum(LAC_WFL50less.area_harvested_new_secondary_regrowth_combined))
-                carbon_regrowth_WFL50less.append(LAC_WFL50less.total_pdv_plantation_secondary_regrowth)
+                carbon_regrowth_WFL50less.append(CCC_WFL50less.total_pdv_plantation_secondary_regrowth)
 
 
         # Save to the excel file
@@ -920,12 +879,13 @@ def run_model_mitigation_scenarios():
     return
 
 
+
 if __name__ == "__main__":
     # run_model_five_scenarios()
     # run_model_baseline_scenarios()
-    # run_model_yearly_carbon_stock()
-    run_model_mitigation_scenarios()
-
+    # run_model_mitigation_scenarios('4p', '40yr')
+    # run_model_mitigation_scenarios('0p', '100yr')
+    run_model_mitigation_scenarios('4p', '40yr')
 
     exit()
 
