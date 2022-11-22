@@ -18,10 +18,10 @@ import matplotlib.pyplot as plt
 import Global_by_country, Plantation_counterfactual_secondary_plantation_age_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator, Carbon_cost_calculator
 # import Pasture_with_counterfactual_scenario, Pasture_zero_counterfactual_scenario
 
-################################################### TESTING ####################################################
-
+### Datafile
 root = '../../'
 
+################################################### TESTING ####################################################
 def test_carbon_tracker():
     """
     TEST Carbon tracker, create the stand level figure with the 2010 harvest product share
@@ -144,6 +144,7 @@ def output_C_pools_counterfactual_time_series_all():
 
 # output_C_pools_counterfactual_time_series_all()
 # exit()
+
 
 #############################################RUNNING MODEL###########################################
 def run_model_all_scenarios(discount_rate, years_filename):
@@ -474,8 +475,8 @@ def run_model_all_scenarios(discount_rate, years_filename):
                     single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
         return
 
-    def run_partial_input_permutations():
-        "Run model only for sensitivity analysis"
+    def run_key_input_permutations():
+        "Run the key BAU and CST without substitution, only for sensitivity analysis"
         for vslp_input_control in ['ALL']:
             for substitution_mode in ['NOSUB']:
                 for future_demand_level in ['BAU', 'CST']:
@@ -483,7 +484,7 @@ def run_model_all_scenarios(discount_rate, years_filename):
         return
 
     # run_all_input_permutations()
-    run_partial_input_permutations()
+    run_key_input_permutations()
 
     return
 
