@@ -19,21 +19,22 @@ import Global_by_country, Agricultural_land_tropical_scenario
 
 ### Datafile
 root = '../..'
+# figdir = '{}/../Paper/Figure'.format(root)
+
 discount_filename = '4p'
 years_filename = '40yr'
 # Sensitivity analysis
-experiments = ['GR 25U', 'GR 25D', 'GR2_GR1 25U', 'GR2_GR1 25D', 'GR2_GR1 50D', 'RSR 25U', 'RSR 25D', 'trade 50U', 'trade 50D']
-exp_filename = experiments[8]
+growth_exps = ['GR 25U', 'GR 25D', 'GR2_GR1 25D', 'GR2_GR1 25U', 'GR2_GR1 50D']
+rootshoot_exps = ['RSR 25U', 'RSR 25D']
+trade_exps = ['trade 50U', 'trade 50D']
+demand_exps = ['demand OECD', 'demand IIASA', 'demand LINE']
+exp_filename = demand_exps[2]
 
 # datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022.xlsx'.format(root, discount_filename)
 # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_filename, years_filename)
 datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - {}.xlsx'.format(root, discount_filename, years_filename, exp_filename)
-
-# outdir = '{}/data/processed/derivative'.format(root)
 outdir = '{}/data/processed/derivative/sensitivity_analysis'.format(root)
-
-# figdir = '{}/../Paper/Figure'.format(root)
-
+# outdir = '{}/data/processed/derivative'.format(root)
 
 #############################################Read in model inputs###########################################
 ### Default parameters
@@ -324,9 +325,87 @@ def export_results_to_excel():
 
     return
 
-export_results_to_excel()
-exit()
+# export_results_to_excel()
+# exit()
 
+def export_results_to_excel_ALL_NOSUB():
+    # 2 demand and sub levels x (6+1) scenarios
+    carbon_costs = np.zeros((2, 7))
+    # 2 demand and sub levels x (6+1) scenarios + 2 columns for plantation areas
+    required_area = np.zeros((2, 9))
+    # 2 demand and sub levels x (4+1) scenarios x 2
+    wood_supply = np.zeros((2, 10))
+    row = 0
+    row_index = []
+    vslp_input_control = 'ALL'
+    substitution_mode = 'NOSUB'
+    for future_demand_level in ['BAU', 'CST']:
+        output_tabname = '{}_{}_{}'.format(future_demand_level, substitution_mode, vslp_input_control)
+        row_index.append(output_tabname)
+        results = pd.read_excel(datafile, sheet_name=output_tabname)
+        carbon_main, land_main = extract_global_outputs_summary(results)
+        wood_main = extract_global_wood_supply(results)
+        carbon_last, secondary_land_last, new_tropical_land_last, secondary_wood_last, plantation_wood_last = run_new_tropical_plantations_scenario(results)
+        carbon_costs[row, :3] = carbon_main.values[:3]
+        carbon_costs[row, 4:7] = carbon_main.values[3:]
+        required_area[row, :3] = land_main.values[1:4]
+        required_area[row, 4:7] = land_main.values[4:]
+        wood_supply[row, :2] = wood_main.values[:2]
+        wood_supply[row, 4:10] = wood_main.values[2:]
+        # The 4th scenario new tropical plantation
+        carbon_costs[row, 3] = carbon_last
+        required_area[row, 3] = secondary_land_last
+
+        required_area[row, 7] = land_main.values[0]  # The existing plantation
+        required_area[row, 8] = new_tropical_land_last  # The new plantation
+
+        wood_supply[row, 2] = plantation_wood_last
+        wood_supply[row, 3] = secondary_wood_last
+
+        row = row + 1
+
+    def write_excel(filename, sheetname, dataframe):
+        "This function will overwrite the Outputs sheet"
+        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
+            workbook = writer.book
+            try:
+                workbook.remove(workbook[sheetname])
+                print("Updating Outputs sheet...")
+            except:
+                print("Creating Outputs sheet...")
+            finally:
+                dataframe.to_excel(writer, sheet_name=sheetname)
+                writer.save()
+
+    outfile = '{}/CHARM_global_carbon_land_summary - {} - {}.xlsx'.format(outdir, years_filename, exp_filename)
+
+    # Convert to pandas dataframe
+    scenarios = ['S1 Secondary forest harvest + regrowth', 'S2 Secondary forest harvest + conversion', 'S3 Secondary forest mixed harvest',
+     'S4 New tropical plantations', 'S5 Higher plantation productivity', 'S6 Higher harvest efficiency', 'S7 50% less 2050 wood fuel demand']
+    carbon_df = pd.DataFrame(carbon_costs, index=row_index, columns=scenarios)
+    write_excel(outfile, 'CO2 (Gt per yr) DR_{}'.format(discount_filename), carbon_df)
+    # For land and wood supply, no matter what discount it is, the land area does not change
+    if discount_filename == '4p':
+        land_areas = scenarios + ['Existing plantations', 'New plantations']
+        wood_supply_items = ['Default: Plantation supply wood (mega tC)',
+                             'Default: Secondary forest supply wood (mega tC)',
+                             'Agriland: Plantation supply wood (mega tC)',
+                             'Agriland: Secondary forest supply wood (mega tC)',
+                             '125% GR: Plantation supply wood (mega tC)',
+                             '125% GR: Secondary forest supply wood (mega tC)',
+                             '62% SL: Plantation supply wood (mega tC)',
+                             '62% SL: Secondary forest supply wood (mega tC)',
+                             'WFL50less: Plantation supply wood (mega tC)',
+                             'WFL50less: Secondary forest supply wood (mega tC)']
+        area_df = pd.DataFrame(required_area, index=row_index, columns=land_areas)
+        wood_df = pd.DataFrame(wood_supply, index=row_index, columns=wood_supply_items)
+        write_excel(outfile, 'Land (Mha) DR_{}'.format(discount_filename), area_df)
+        write_excel(outfile, 'Wood supply (mega tC) DR_{}'.format(discount_filename), wood_df)
+
+    return
+
+export_results_to_excel_ALL_NOSUB()
+exit()
 
 def collect_all_discount_rates_results():
     "For Appendix 3"
