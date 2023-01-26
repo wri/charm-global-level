@@ -119,7 +119,7 @@ class CarbonTracker:
 
         # Set up the threshold where the aboveground biomass will shift to second growth rate for plantation.
         # 20 years is the IPCC threshold for young forest growth period
-        self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_young_plantation * 20
+        self.aboveground_biomass_middlegrowth_threshold = self.Global.GR_converted_plantation * 20
 
     def carbon_pool_simulator_per_cycle(self):
         ######################## STEP 2: Carbon tracker ##############################
@@ -172,9 +172,9 @@ class CarbonTracker:
             for year in range(st_cycle, ed_cycle):
                 # FIXME grows at young growth rate until reach the old growth threshold
                 if self.aboveground_biomass_secondary[cycle, year - 1] < self.aboveground_biomass_middlegrowth_threshold:
-                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_young_plantation
+                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_converted_plantation
                 else:
-                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_old_plantation
+                    self.aboveground_biomass_secondary[cycle, year] = self.aboveground_biomass_secondary[cycle, year - 1] + self.Global.GR_converted_plantation
 
                 self.belowground_biomass_live_secondary[cycle, year] = self.calculate_belowground_biomass(self.aboveground_biomass_secondary[cycle, year])
 
