@@ -111,6 +111,8 @@ class Parameters:
         ### Plantation
         self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
         self.GR_old_plantation = self.input_country['Middle Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
+        # Add the converted plantation GR for secondary conversion scenario
+        self.GR_converted_plantation = self.input_country['Converted Plantation GR (MgC/ha/year)'].values[0]
         self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
 
         ### Secondary forest
