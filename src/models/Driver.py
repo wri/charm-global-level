@@ -6,11 +6,11 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "Polyform Strict License 1.0.0"
-__version__ = "2022.11.1"
+__version__ = "2023.1.1"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
-# fixme: 1) the code-implementation folder when doing sensitivity analysis 2) useless main functions
+
 
 import numpy as np
 import pandas as pd
@@ -19,149 +19,18 @@ import Global_by_country, Plantation_counterfactual_secondary_plantation_age_sce
 # import Pasture_with_counterfactual_scenario, Pasture_zero_counterfactual_scenario
 
 ### Datafile
-root = '../../'
-
-################################################### TESTING ####################################################
-def test_carbon_tracker():
-    """
-    TEST Carbon tracker, create the stand level figure with the 2010 harvest product share
-    """
-    # set up the country
-    iso = 'USA'
-    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Feb 10 2022.xlsx'.format(root)
-    nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='harvest')
-    global_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso=iso, substitution_mode='NOSUB', future_demand_level='BAU', slash_rate_mode='natural')
-    Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Plantation_counterfactual_secondary_plantation_age_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Secondary_mature_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Pasture_with_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Pasture_zero_counterfactual_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-    # Agricultural_land_tropical_scenario.CarbonTracker(global_settings, year_start_for_PDV=0).plot_C_pools_counterfactual_print_PDV()
-
-    return
-
-# test_carbon_tracker()
-# exit()
-
-def test_PDV_module():
-    """
-        TEST PDV, create the stand level figure with the 2010 harvest product share
-    """
-    iso = 'BRA'
-    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Nov 1 2022 - GR 25U.xlsx'.format(root)
-    nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='growth')
-    global_settings = Global_by_country.Parameters(datafile, nyears_growth_settings, country_iso=iso, slash_rate_mode='natural')
-    obj = Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
-
-    # obj = Secondary_conversion_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
-    # obj = Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
-    df = pd.DataFrame({'Harvest scenario': obj.total_carbon_benefit[1:],
-                       'Counterfactual': obj.counterfactual_biomass[1:],
-                       'Annual carbon impact': obj.annual_discounted_value,
-                       'Harvest scenario - Counterfactual': obj.total_carbon_benefit[1:]-obj.counterfactual_biomass[1:]
-                       }, index=np.arange(2010, 2010+nyears_growth_settings.nyears))
-    df.plot(color=["k", "limegreen", 'Red', 'Blue'], lw=2)
-
-    plt.title('Brazil Secondary Regrowth Carbon impact (tC/ha)')
-    plt.annotate('Harvest scenario - Counterfactual SUM: {:.0f}'.format(np.sum(df['Harvest scenario - Counterfactual'])), xy=(0.05, 0.45), xycoords='axes fraction', fontsize=12)
-    plt.annotate('Annual carbon impact (0% discount) SUM: {:.0f}'.format(np.sum(df['Annual carbon impact'])), xy=(0.05, 0.38), xycoords='axes fraction', fontsize=12)
-    plt.show()
-
-    return
-
-# test_PDV_module()
-# exit()
-
-
-def test_land_area_calculator():
-    "TEST land area calculator"
-    iso = 'BRA'
-    datafile = '{}/data/processed/CHARM regional - DR_4p - 40yr - Nov 1 2022 - GR 25U.xlsx'.format(root)
-
-    nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='harvest')
-    nyears_growth_settings = Global_by_country.SetupTime(datafile, country_iso=iso, nyears_run_control='growth')
-
-    global_harvest_settings = Global_by_country.Parameters(datafile, nyears_harvest_settings, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
-    global_growth_settings = Global_by_country.Parameters(datafile, nyears_growth_settings, country_iso=iso, future_demand_level='BAU', secondary_mature_wood_share=0)
-
-    # global_settings = Global_by_country.Parameters(datafile, country_iso=iso, vslp_future_demand='WFL50less')
-    # run the land area calculator
-    LAC = Land_area_calculator.LandCalculator(global_harvest_settings)
-    CCC = Carbon_cost_calculator.CarbonCalculator(global_harvest_settings, global_growth_settings, LAC)
-
-
-    return
-
-# test_land_area_calculator()
-# exit()
-
-
-def output_C_pools_counterfactual_time_series_all():
-    # set up the country
-    iso = 'JPN'
-    datafile = '{}/data/processed/CHARM regional - DR_4p - Jan 11 2022.xlsx'.format(root)
-    mode = 'natural'
-    global_settings = Global_by_country.Parameters(datafile, country_iso=iso, future_demand_level='BAU', slash_rate_mode=mode)
-    results = Secondary_regrowth_scenario.CarbonTracker(global_settings, year_start_for_PDV=0)
-
-    def prepare_dataframe(results):
-        df = pd.DataFrame({'Live tree stand & root storage': results.totalC_stand_pool,
-                           'decaying root storage': results.totalC_root_decay_pool,
-                       'Slash': results.totalC_slash_pool,
-                       'Wood products storage': results.totalC_product_pool,
-                       'LLP products pool': results.totalC_product_LLP_pool,
-                       'SLP products pool': results.totalC_product_SLP_pool,
-                       'LLP products storage': results.totalC_product_LLP_harvest_stock,
-                       'VSLP products storage': results.totalC_product_VSLP_harvest_stock,
-                       'Landfill storage': results.totalC_landfill_pool,
-                        'Methane emission': results.totalC_methane_emission,
-                        'Displaced concrete & steel emissions': results.LLP_substitution_benefit,
-                        'Displaced VSLP emissions': results.VSLP_substitution_benefit
-                           }, index=np.arange(2009, 2051))
-        return df
-
-    def write_excel(filename, sheetname, dataframe):
-        "This function will overwrite the Outputs sheet"
-        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
-            workbook = writer.book
-            try:
-                workbook.remove(workbook[sheetname])
-                print("Updating Outputs sheet...")
-            except:
-                print("Creating Outputs sheet...")
-            finally:
-                dataframe.to_excel(writer, sheet_name=sheetname)
-                writer.save()
-
-    df = prepare_dataframe(results)
-    name = '{}-{}-{}'.format(iso, 'Secondary Regrowth', mode)
-    outfile = '{}/data/processed/test.xlsx'.format(root)
-    write_excel(outfile, name, df)
-
-
-    return
-
-# output_C_pools_counterfactual_time_series_all()
-# exit()
-
+root = '../..'
 
 #############################################RUNNING MODEL###########################################
-def run_model_all_scenarios(discount_rate, years_filename):
+def run_model_all_scenarios(years, discount_rate, version, path):
     """
     Created and Edited: 2022/01
     This is an updated driver for running global analysis for forestry land and carbon consequences.
     Adding several scenarios based on the run_model_five_scenarios
     """
+    ## Standard runs
     # Read input/output data excel file.
-    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_rate, years_filename)
-    # sensitivity analysis
-    growth_exps = ['GR 25U', 'GR 25D', 'GR2_GR1 25D', 'GR2_GR1 25U', 'GR2_GR1 50D']
-    rootshoot_exps = ['RSR 25U', 'RSR 25D']
-    trade_exps = ['trade 50U', 'trade 50D']
-    demand_exps = ['demand OECD', 'demand IIASA', 'demand LINE']
-    experiment = demand_exps[2]
-    datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - {}.xlsx'.format(root, discount_rate, years_filename, experiment)
+    datafile = '{}/data/processed/CHARM regional - YR_{} - DR_{} - V{}.xlsx'.format(path, years, discount_rate, version)
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -232,7 +101,7 @@ def run_model_all_scenarios(discount_rate, years_filename):
 
                 # run the land area calculator
                 LAC_default = Land_area_calculator.LandCalculator(global_harvest_settings)
-                if global_harvest_settings.rotation_length_harvest == 10:
+                if global_harvest_settings.rotation_length_harvest <= 10:
                     output_ha_agriland_default = LAC_default.output_ha_agriland[global_harvest_settings.year_index_harvest_plantation[1]-1]
                 else:
                     output_ha_agriland_default = 0
@@ -460,13 +329,6 @@ def run_model_all_scenarios(discount_rate, years_filename):
 
 
     ################## Run the experiments ###################
-    def run_single_input(future_demand_level, substitution_mode, vslp_input_control):
-        "Run model with a set of parameters"
-        single_run_with_combination_input(future_demand_level_input=future_demand_level,
-                                          substitution_mode_input=substitution_mode,
-                                          vslp_input_control_input=vslp_input_control)
-        return
-
     def run_all_input_permutations():
         "Run model based on the different combination of the three parameters"
         for vslp_input_control in ['ALL', 'IND', 'WFL']:
@@ -475,16 +337,7 @@ def run_model_all_scenarios(discount_rate, years_filename):
                     single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
         return
 
-    def run_key_input_permutations():
-        "Run the key BAU and CST without substitution, only for sensitivity analysis"
-        for vslp_input_control in ['ALL']:
-            for substitution_mode in ['NOSUB']:
-                for future_demand_level in ['BAU', 'CST']:
-                    single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
-        return
-
-    # run_all_input_permutations()
-    run_key_input_permutations()
+    run_all_input_permutations()
 
     return
 
@@ -642,14 +495,6 @@ def run_model_main_scenario(discount_rate, years_filename):
                                           vslp_input_control_input=vslp_input_control)
         return
 
-    def run_all_input_permutations():
-        "Run model based on the different combination of the three parameters"
-        for vslp_input_control in ['ALL', 'IND', 'WFL']:
-            for substitution_mode in ['NOSUB', 'SUBON']:
-                for future_demand_level in ['BAU', 'CST']:
-                    single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
-        return
-
     def run_key_input_permutations():
         "Run the key BAU and CST without substitution, only for sensitivity analysis"
         for vslp_input_control in ['ALL']:
@@ -665,10 +510,20 @@ def run_model_main_scenario(discount_rate, years_filename):
 
 
 if __name__ == "__main__":
-    # run_model_all_scenarios('4p', '40yr')
-    # run_model_all_scenarios('0p', '100yr')
-    # run_model_all_scenarios('4p', '40yr')
-    run_model_main_scenario('4p', '40yr')
 
-    exit()
+    import argparse
+
+    parser = argparse.ArgumentParser(prog='Driver', description='Run the CHARM regional model', usage='%(prog)s [options]')
+    parser.add_argument('--path', metavar='path', default=root, help='The root path of running the model')
+    parser.add_argument('--years-growth', metavar='YR', help='The number of years of growth')
+    parser.add_argument('--discount-rate', metavar='DR', help='The discount rate')
+    args = parser.parse_args()
+
+    # Run the model through command line
+    # for discount_rate in ['4p', '0p', '2p', '6p']:
+    #     run_model_all_scenarios(args.years_growth, discount_rate, '20230125', args.path)
+
+    # Run the model through pycharm
+    run_model_all_scenarios('100', '6p', '20230125', root)
+    # run_model_main_scenario('4p', '40yr')
 
