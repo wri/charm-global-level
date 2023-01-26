@@ -3,7 +3,7 @@
 This is the main file for model execution.
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
+__copyright__ = "Copyright (C) 2020-2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "Polyform Strict License 1.0.0"
 __version__ = "2023.1.1"
@@ -14,9 +14,7 @@ __status__ = "Dev"
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import Global_by_country, Plantation_counterfactual_secondary_plantation_age_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator, Carbon_cost_calculator
-# import Pasture_with_counterfactual_scenario, Pasture_zero_counterfactual_scenario
 
 ### Datafile
 root = '../..'
@@ -342,21 +340,14 @@ def run_model_all_scenarios(years, discount_rate, version, path):
     return
 
 
-def run_model_main_scenario(discount_rate, years_filename):
+def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, path):
     """
     Created and Edited: 2022/11
     This is a driver for running global analysis for forestry land and carbon consequences.
-    This is only for the main regrowth scenario, to save running time for sensitivity analysis
+    This is only for the main regrowth scenario 1, to save running time for sensitivity analysis
     """
     # Read input/output data excel file.
-    # datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_rate, years_filename)
-    # sensitivity analysis
-    growth_exps = ['GR 25U', 'GR 25D', 'GR2_GR1 25D', 'GR2_GR1 25U', 'GR2_GR1 50D']
-    rootshoot_exps = ['RSR 25U', 'RSR 25D']
-    trade_exps = ['trade 50U', 'trade 50D']
-    demand_exps = ['demand OECD', 'demand IIASA', 'demand LINE']
-    experiment = demand_exps[2]
-    datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Nov 1 2022 - {}.xlsx'.format(root, discount_rate, years_filename, experiment)
+    datafile = '{}/data/processed/{}/CHARM regional - YR_{} - DR_{} - V{} - {}.xlsx'.format(path, sensdir, years, discount_rate, version, sensexp)
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -503,27 +494,38 @@ def run_model_main_scenario(discount_rate, years_filename):
                     single_run_with_combination_input(future_demand_level_input=future_demand_level, substitution_mode_input=substitution_mode, vslp_input_control_input=vslp_input_control)
         return
 
-    # run_all_input_permutations()
     run_key_input_permutations()
 
     return
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # to avoid import run
 
+    ############# Local run: through pycharm (single run) ################
+    # run_model_all_scenarios('100', '6p', '20230125', root)
+
+    ################# Terminal run: through command line #################
     import argparse
-
     parser = argparse.ArgumentParser(prog='Driver', description='Run the CHARM regional model', usage='%(prog)s [options]')
-    parser.add_argument('--path', metavar='path', default=root, help='The root path of running the model')
-    parser.add_argument('--years-growth', metavar='YR', help='The number of years of growth')
-    parser.add_argument('--discount-rate', metavar='DR', help='The discount rate')
+    parser.add_argument('--run-main', default=False, type=lambda x: (str(x).lower() in ['true', '1', 'yes']), help='Determine if it is a main model run')
+    parser.add_argument('--run-sensitivity', default=False, type=lambda x: (str(x).lower() in ['true', '1', 'yes']), help='Determine if it is a sensitivity run')
+    parser.add_argument('--years-growth', default=40, help='The number of years of growth')
+    parser.add_argument('--discount-rate', default='4p', help='The discount rate')
+    parser.add_argument('--path', default=root, help='The root path of running the model')
+
     args = parser.parse_args()
 
-    # Run the model through command line
-    # for discount_rate in ['4p', '0p', '2p', '6p']:
-    #     run_model_all_scenarios(args.years_growth, discount_rate, '20230125', args.path)
+    if args.run_main == True:
+        for discount_rate in ['4p', '0p', '2p', '6p']:
+            run_model_all_scenarios(args.years_growth, discount_rate, '20230125', args.path)
 
-    # Run the model through pycharm
-    run_model_all_scenarios('100', '6p', '20230125', root)
-    # run_model_main_scenario('4p', '40yr')
+    if args.run_sensitivity == True:
+
+        growth_exps = ['GR 25U', 'GR 25D', 'GR2_GR1 25D', 'GR2_GR1 25U', 'GR2_GR1 50D']
+        rootshoot_exps = ['RSR 25U', 'RSR 25D']
+        demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
+        trade_exps = ['Trade_50U', 'Trade_50D']
+
+        for experiment in trade_exps:
+            run_model_main_scenario(args.years_growth, args.discount_rate, '20230125', 'run_NatSensitivity_20230125', experiment, args.path)
 
