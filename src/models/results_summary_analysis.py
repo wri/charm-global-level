@@ -26,8 +26,8 @@ version = '20230125'
 discount_rates = ['4p', '0p', '2p', '6p']
 years_list = [40, 100]
 # Sensitivity analysis
-growth_exps = ['GR 25U', 'GR 25D', 'GR2_GR1 25D', 'GR2_GR1 25U', 'GR2_GR1 50D']
-rootshoot_exps = ['RSR 25U', 'RSR 25D']
+growth_exps = ['GR_25U', 'GR_25D', 'GR1_GR2_25D', 'GR1_GR2_25U', 'GR1_GR2_50U']
+rootshoot_exps = ['RSR_25U', 'RSR_25D']
 demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
 trade_exps = ['Trade_50U', 'Trade_50D']
 
@@ -55,18 +55,19 @@ def extract_global_wood_supply(results):
 
     return wood_supply
 
-def extract_secondary_carbon_costs(results):
+def extract_secondary_carbon_costs(results, years):
     """Extract the 1-5th scenarios output"""
     ###The major scenarios
     cf_MtC_GtCO2 = 1/1000 * 44 / 12
     # Fixme change 40 to 41
+    nyears = years + 1
     carbon_costs_annual = results[['S1 regrowth: total PDV (mega tC)','S1 regrowth: PDV plantation (mega tC)', 'S1 regrowth: PDV secondary (mega tC)',]].sum() / 0.8 * cf_MtC_GtCO2 / nyears
 
     return carbon_costs_annual
 
 
 ############################################## Results Summary ##########################################
-def summarize_results_all(outfile, years, discount_rate):
+def summarize_results_all(datafile, outfile, years, discount_rate):
     ### Prepare the data arrays
     # 12 demand and sub levels x (6+1) scenarios
     carbon_costs = np.zeros((12, 7))
@@ -141,15 +142,6 @@ def summarize_results_all(outfile, years, discount_rate):
 
     return
 
-
-for years in years_list:
-    for discount_rate in discount_rates:
-        datafile = '{}/data/processed/CHARM regional - YR_{} - DR_{} - V{}.xlsx'.format(root, years, discount_rate, version)
-        outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
-        summarize_results_all(outfile, years, discount_rate)
-        print(discount_rate)
-        exit()
-exit()
 
 def summarize_results_sensitivity():
     "This is for the sensitivity analysis only"
@@ -234,33 +226,30 @@ def summarize_results_sensitivity():
 # exit()
 
 
-def collect_all_discount_rates_results():
-    "For Appendix 3"
-    # infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
-    infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
+def collect_all_discount_rates_results(infile, outfile):
+    "For Appendix 3 table"
     df_list = []
     for dr in ('0p', '2p', '4p', '6p'):
         carbon = pd.read_excel(infile, sheet_name='CO2 (Gt per yr) DR_{}'.format(dr), index_col=0)
         carbon_sel = carbon.loc[['BAU_NOSUB_ALL', 'BAU_SUBON_ALL']]
         df_list.append(carbon_sel.rename(index={'BAU_NOSUB_ALL': 'Gross emissions', 'BAU_SUBON_ALL':'Net emissions including substitution savings'}))
     big_table = pd.concat(df_list)
-    big_table.to_csv('{}/data/processed/derivative/carbon_results_all_discountrate - {}.csv'.format(root, years_filename))
+    big_table.to_csv(outfile)
 
-# collect_all_discount_rates_results()
-# exit()
+    return
 
 
-def export_secondary_carbon_costs_to_excel():
-    "This is to compare 100yr and 40yr on secondary carbon costs only, excluding plantation"
+def collect_secondary_carbon_costs_all_years():
+    "This is to compare 100yr and 40yr on secondary carbon costs only, excluding plantation, for bar charts"
     # 4 demand and 2x4 scenarios
     carbon_costs = np.zeros((4, 8))
     col_index = []
     col = 0
     vslp_input_control = 'ALL'
-    for years_filename in ['40yr', '100yr']:
-        for discount_filename in ['0p', '2p', '4p', '6p']:
-            datafile = '{}/data/processed/CHARM regional - DR_{} - {} - Feb 10 2022.xlsx'.format(root, discount_filename, years_filename)
-            col_index.append('{}-{}'.format(years_filename, discount_filename))
+    for years in [40, 100]:
+        for discount_rate in ['0p', '2p', '4p', '6p']:
+            datafile = '{}/data/processed/CHARM regional - YR_{} - DR_{} - V{}.xlsx'.format(root, years, discount_rate, version)
+            col_index.append('YR{}-DR{}'.format(years, discount_rate))
             row_index = []
             row = 0
             for substitution_mode in ['NOSUB', 'SUBON']:
@@ -268,30 +257,33 @@ def export_secondary_carbon_costs_to_excel():
                     output_tabname = '{}_{}_{}'.format(future_demand_level, substitution_mode, vslp_input_control)
                     row_index.append(output_tabname)
                     results = pd.read_excel(datafile, sheet_name=output_tabname)
-                    carbon_main = extract_secondary_carbon_costs(results)
+                    carbon_main = extract_secondary_carbon_costs(results, years)
                     carbon_costs[row, col] = carbon_main.values[2]  # S1 regrowth: PDV secondary (mega tC)
 
                     row = row + 1
             col = col + 1
 
-    def write_excel(filename, sheetname, dataframe):
-        "This function will overwrite the Outputs sheet"
-        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
-            workbook = writer.book
-            try:
-                workbook.remove(workbook[sheetname])
-                print("Updating Outputs sheet...")
-            except:
-                print("Creating Outputs sheet...")
-            finally:
-                dataframe.to_excel(writer, sheet_name=sheetname)
-                writer.save()
-
     # Convert to pandas dataframe
     carbon_df = pd.DataFrame(carbon_costs, index=row_index, columns=col_index)
-    carbon_df.to_csv('{}/data/processed/derivative/carbon_results_40vs100yr.csv'.format(root))
+    carbon_df.to_csv('{}/data/processed/derivative/secondary_carbon_costs_40vs100yr.csv'.format(root))
 
     return
 
-# export_secondary_carbon_costs_to_excel()
+
+
+# Step 1
+# for years in years_list:
+#     for discount_rate in discount_rates:
+#         datafile = '{}/data/processed/CHARM regional - YR_{} - DR_{} - V{}.xlsx'.format(root, years, discount_rate, version)
+#         outfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
+#         summarize_results_all(datafile, outfile, years, discount_rate)
+
+# Step 2
+# for years in years_list:
+#     infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
+#     outfile = '{}/data/processed/derivative/carbon_results_all_discountrate - YR_{} - V{}.csv'.format(root, years, version)
+#     collect_all_discount_rates_results(infile, outfile)
+
+# Step 3 Fig E3
+collect_secondary_carbon_costs_all_years()
 # exit()
