@@ -146,10 +146,11 @@ class Parameters:
         # This constant approach is depreciated, used only in the Plantation scenario as a reference
         # Mokany 2006
         self.root_shoot_coef = 0.489
-        # FIXME Experiment 1: root_shoot_coef increases 25%, in the future, build the parameter into the parameter file
-        # self.root_shoot_coef = 0.489 * 1.25
-        # Experiment 2: root_shoot_coef decreases 25%
-        # self.root_shoot_coef = 0.489 * 0.75
+
+        # Experiment 1: root_shoot_coef increases 25 %, Experiment 2: root_shoot_coef decreases 25%
+        # self.root_shoot_coef = 0.489 * self.input_country['Root to Shoot ratio scaling factor'].values[0]
+        # FIXME in the future, build the parameter into the parameter file
+
         self.root_shoot_power = 0.89
         self.carbon_wood_ratio = 0.5
 
