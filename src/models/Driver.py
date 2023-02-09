@@ -525,7 +525,8 @@ if __name__ == "__main__": # to avoid import run
         rootshoot_exps = ['RSR_25U', 'RSR_25D']
         demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
         trade_exps = ['Trade_50U', 'Trade_50D']
+        old_exps = ['Old_GRRL', 'Old_PGR', 'Old_SGR', 'Old_RL', 'Old_SR']
 
-        for experiment in rootshoot_exps:
+        for experiment in old_exps:
             run_model_main_scenario(args.years_growth, args.discount_rate, '20230125', 'run_NatSensitivity_20230125', experiment, args.path)
 
