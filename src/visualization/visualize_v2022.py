@@ -18,8 +18,6 @@ import matplotlib.pyplot as plt
 ### Datafile
 root = '../..'
 discount_filename = '4p'
-# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
-# datafile = '{}/data/processed/CHARM regional - DR_{} - Jan 11 2022.xlsx'.format(root, discount_filename)
 
 figdir = '{}/../Paper/Figure'.format(root)
 
@@ -115,10 +113,10 @@ def barplot_all_scenarios_percentage(infile, years_filename):
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion',
-                         'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity',
-                         'S6 Higher\nharvest efficiency', 'S7 50% less 2050\nWood fuel demand']
+        xticks_labels = ['(1) Secondary forest\nharvest and regrowth', '(2) Secondary forest\nharvest and conversion',
+                         '(3) Secondary forest\nmixed harvest',
+                         '(4) New\ntropical plantations', '(5) Higher\nplantation productivity',
+                         '(6) Higher\nharvest efficiency', '(7) Reduced wood fuel demand']
 
         plt.xticks(result_df_secondary.columns, labels=xticks_labels)
         # bar labels
@@ -160,8 +158,8 @@ def barplot_all_scenarios_percentage(infile, years_filename):
         # Convert carbon impact to carbon cost
         result_df[result_df.select_dtypes(include=['number']).columns] *= -1
         # Calculate the area for IND and the area for WFL
-        plt.bar(result_df.columns, result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_IND']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), color='#ab5b1a', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_WFL']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), bottom=result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_IND']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), color='#d48f57', width=0.5)
+        plt.bar(result_df.columns, result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_IND']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), color="#c67d52", width=0.5)
+        plt.bar(result_df.columns, result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_WFL']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), bottom=result_df.loc['BAU_NOSUB_ALL']*result_df.loc['BAU_NOSUB_IND']/(result_df.loc['BAU_NOSUB_IND']+result_df.loc['BAU_NOSUB_WFL']), color="#874c27", width=0.5)
         # plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
         # x and y limits
         # plt.xlim(-0.6, 10.5)
@@ -176,10 +174,10 @@ def barplot_all_scenarios_percentage(infile, years_filename):
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
-        xticks_labels = ['(1) Secondary forest\nharvest and regrowth', '(2) Secondary forest\nharvest and conversion',
+        xticks_labels = ['(1) Secondary forest\nharvest and\nregrowth', '(2) Secondary forest\nharvest and\nconversion',
                          '(3) Secondary forest\nmixed harvest',
                          '(4) New\ntropical plantations', '(5) Higher\nplantation productivity',
-                         '(6) Higher\nharvest efficiency', '(7) Reduced wood fuel demand']
+                         '(6) Higher\nharvest efficiency', '(7) Reduced\nwood fuel\ndemand']
         plt.xticks(result_df.columns, labels=xticks_labels)
         # bar labels
         base = result_df.loc['BAU_NOSUB_ALL']
@@ -189,7 +187,7 @@ def barplot_all_scenarios_percentage(infile, years_filename):
             bar_scenario_group = number%7
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height / 2,
                     "{:.0f}%".format(height/base[bar_scenario_group]*100),
-                      ha='center', va='bottom')
+                      ha='center', va='bottom', fontsize=12)
         # Add the final absolute numbers at the top
         for number, rec in enumerate(ax.patches[:7]):
             # This is to make sure the turn of the group of scenario
@@ -201,8 +199,8 @@ def barplot_all_scenarios_percentage(infile, years_filename):
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
         # plt.show()
-        # plt.savefig('{}/carbon_cost_annual_percentage_IND_WFL_7scenarios_{}.png'.format(figdir, years_filename))
-        plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_{}.svg'.format(figdir, years_filename))
+        plt.savefig('{}/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years_filename))
+        # plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_{}.svg'.format(figdir, years_filename))
 
         return
 
@@ -274,7 +272,7 @@ def barplot_all_scenarios_percentage(infile, years_filename):
 
 
     carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    stacked_barplot_attribute_IND_WFL_carbon(carbon_df, 'Carbon costs', 'Carbon costs (Gt CO$_2$e yr$^{-1}$)')
     # stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
 
     # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
@@ -305,7 +303,7 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
-        plt.ylabel(ylabel, fontsize=14)
+        plt.ylabel(ylabel, fontsize=16)
         # remove spines
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
@@ -316,8 +314,10 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion', 'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 Higher\nharvest efficiency', 'S7 50% less 2050\nWood fuel demand']
+        xticks_labels = ['(1) Secondary forest\nharvest and\nregrowth', '(2) Secondary forest\nharvest and\nconversion',
+                         '(3) Secondary forest\nmixed harvest',
+                         '(4) New\ntropical plantations', '(5) Higher\nplantation productivity',
+                         '(6) Higher\nharvest efficiency', '(7) Reduced\nwood fuel\ndemand']
         plt.xticks(result_df.columns, labels=xticks_labels)
         # bar labels
         # base = result_df.loc['BAU_NOSUB_ALL']
@@ -339,9 +339,9 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit', 'Net carbon impact']
         plt.legend(legend_label, ncol=4, bbox_to_anchor=([1, 1.05, 0, 0]), frameon=False, fontsize=13)
         plt.title('{}\n'.format(title), loc='left', fontsize=16)
-        # plt.savefig('{}/annual_carbon_cost_7scenarios_{}.png'.format(figdir, years_filename))
+        plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}.png'.format(figdir, years_filename))
         # plt.savefig('{}/svg/annual_carbon_cost_7scenarios_{}.svg'.format(figdir, years_filename))
-        plt.show()
+        # plt.show()
 
         return
 
@@ -362,7 +362,7 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
-        plt.ylabel(ylabel, fontsize=14)
+        plt.ylabel(ylabel, fontsize=16)
         # remove spines
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
@@ -372,8 +372,10 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion', 'S3 Secondary forest\nMixed harvest',
-     'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity', 'S6 Higher\nharvest efficiency', 'S7 50% less 2050\nWood fuel demand']
+        xticks_labels = ['(1) Secondary forest\nharvest and\nregrowth', '(2) Secondary forest\nharvest and\nconversion',
+                         '(3) Secondary forest\nmixed harvest',
+                         '(4) New\ntropical plantations', '(5) Higher\nplantation productivity',
+                         '(6) Higher\nharvest efficiency', '(7) Reduced\nwood fuel\ndemand']
         plt.xticks(result_df_secondary.columns, labels=xticks_labels)
         # bar labels
         base = result_df_secondary.loc['BAU_NOSUB_ALL'] + result_df_secondary.loc['Existing plantations'] + result_df_secondary.loc['New plantations']
@@ -402,8 +404,8 @@ def barplot_all_scenarios_quantity(infile, years_filename):
         # sort both labels and handles by labels
         plt.subplots_adjust(top=0.83)
         plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        # plt.savefig('{}/land_requirement_7scenarios_{}.png'.format(figdir, years_filename))
-        plt.savefig('{}/svg/land_requirement_7scenarios_{}.svg'.format(figdir, years_filename))
+        plt.savefig('{}/land_requirement_7scenarios_YR{}.png'.format(figdir, years_filename))
+        # plt.savefig('{}/svg/land_requirement_7scenarios_{}.svg'.format(figdir, years_filename))
         # plt.show()
 
         return
@@ -520,7 +522,7 @@ def barplot_all_scenarios_quantity(infile, years_filename):
 
 
     carbon_df = read_dataframe('CO2 (Gt per yr) DR_{}'.format(discount_filename))
-    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'GtCO2/year')
+    stacked_barplot_attribute_demand_substitution_carbon(carbon_df, 'Carbon costs', 'Carbon costs (Gt CO$_2$e yr$^{-1}$)')
     # land_df = read_dataframe('Land (Mha) DR_{}'.format(discount_filename))
     # stacked_barplot_attribute_demand_substitution_land(land_df, 'Land requirements 2010-2050', 'Mha')
 
@@ -528,9 +530,9 @@ def barplot_all_scenarios_quantity(infile, years_filename):
 
 
 # infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary.xlsx'.format(root)
-years, years_filename = 40, '40yr'
-# years, years_filename = 100, '100yr'
-infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
+# years, years_filename = 40, '40'
+years, years_filename = 100, '100'
+infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V20230125.xlsx'.format(root, years_filename)
 
 barplot_all_scenarios_quantity(infile, years_filename)
 # barplot_all_scenarios_percentage(infile, years_filename)
