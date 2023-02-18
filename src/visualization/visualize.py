@@ -11,9 +11,11 @@ __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
 
+import matplotlib
 import pandas as pd
 import matplotlib.pyplot as plt
-
+matplotlib.rcParams['font.sans-serif'] = "Arial"
+matplotlib.rcParams['font.family'] = "sans-serif"
 
 ### Directory
 root = '../..'
@@ -69,19 +71,24 @@ def setup_xticks(xticks_loc):
 
     return
 
-def setup_legend_carbon():
+def setup_legend_carbon(bar_mode):
     # title and legend
-    legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit', 'Net carbon impact']
-    plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.8, -0.18, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
-    plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.25)
+    if bar_mode == 'clean':
+        legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit']
+        plt.legend(legend_label, ncol=3, bbox_to_anchor=([0.9, -0.18, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
+        plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.25)
+    else: # original
+        legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit', 'Net carbon impact']
+        plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.8, -0.18, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
+        plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.25)
 
     return
 
 def setup_legend_land():
     # title and legend
     legend_label = ['Existing plantations', '2010 supply level', 'Additional BAU demand', 'New tropical plantations',
-                    'Total secondary forest area']
-    plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.82, -0.15, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
+                    'Total secondary forest area', 'Total secondary forest area converted to plantations']
+    plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.92, -0.15, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
     # sort both labels and handles by labels
     plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.25)
 
@@ -89,14 +96,15 @@ def setup_legend_land():
 
 def setup_legend_IND_WFL():
     # title and legend
-    legend_label =  ['Industrial roundwood', 'Wood fuel']
+    legend_label = ['Industrial roundwood', 'Wood fuel']
     plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.75, -0.15, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
     # sort both labels and handles by labels
     plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.2)
 
     return
 
-def setup_bar_label_carbon(ax, base, label_type, label_mode):
+
+def setup_bar_label_carbon(ax, base, label_type):
     "Set up bar number labels for carbon"
     # Options for numbers
     def add_quantity_center(height):
@@ -113,19 +121,18 @@ def setup_bar_label_carbon(ax, base, label_type, label_mode):
                 "{:.0f}%".format(height / base[bar_scenario_group] * 100),
                 ha='center', va='bottom')
 
-    if label_mode == 'original':
-        for number, rec in enumerate(ax.patches):
-            height = rec.get_height()
-            # fixme update the hardcoded 21
-            if number < 21:  # This is for the three bar groups: CST, additional BAU, SUB
-                if label_type == 'quantity':
-                    add_quantity_center(height)
-                elif label_type == 'percentage':
-                    add_percentage_center(height)
-                else:
-                    add_quantity_center(height)
-            else:# This is for the last bar group: NET carbon impact
-                add_quantity_top(height)
+    for number, rec in enumerate(ax.patches):
+        height = rec.get_height()
+        # fixme update the hardcoded 21
+        if number < 21:  # This is for the three bar groups: CST, additional BAU, SUB
+            if label_type == 'quantity':
+                add_quantity_center(height)
+            elif label_type == 'percentage':
+                add_percentage_center(height)
+            else:
+                add_quantity_center(height)
+        else:# This is for the last bar group: NET carbon impact
+            add_quantity_top(height)
 
     return ax
 
@@ -169,14 +176,15 @@ def setup_bar_label_land(ax, base, area_total, label_type):
 
 
 ############################################## Plot Wrapper ##################################################
-def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', label_mode='original'):
+def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', bar_mode='clean'):
     "Plot the total carbon costs"
     fig, ax = plt.subplots(1, figsize=(9, 6))
     result_df[result_df.select_dtypes(include=['number']).columns] *= -1
     plt.bar(result_df.columns, result_df.loc['CST_NOSUB_ALL'], color='#DB4444', width=0.5)
     plt.bar(result_df.columns, result_df.loc['NewDemand_NOSUB_ALL'], bottom=result_df.loc['CST_NOSUB_ALL'], color='#E17979', width=0.5)
     plt.bar(result_df.columns, result_df.loc['BAU_SubEffect_ALL'], color='#337AE3', width=0.5)
-    plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
+    if bar_mode == 'original':
+        plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
 
     # set up the axis and grid lines
     ax = setup_axis(ax, 'Carbon costs (Gt CO$_2$e yr$^{-1}$)')
@@ -184,9 +192,10 @@ def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', label_mode='ori
     setup_xticks(result_df.columns)
     # set up the bar labels
     base = result_df.loc['BAU_NOSUB_ALL']
-    ax = setup_bar_label_carbon(ax, base, label_type, label_mode)
+    if bar_mode == 'original':
+        ax = setup_bar_label_carbon(ax, base, label_type)
     # set up the legend
-    setup_legend_carbon()
+    setup_legend_carbon(bar_mode)
 
     return ax
 
@@ -199,12 +208,13 @@ def barplot_land_BAU_CST(result_df, label_type='quantity'):
     result_df_secondary.loc['New plantations', 'S4 New tropical plantations'] = result_df.loc['BAU_SUBON_ALL', 'New plantations']
 
     fig, ax = plt.subplots(1, figsize=(9, 6))
-    plt.bar(result_df_secondary.columns, result_df_secondary.loc['Existing plantations'], color='#7cc096', edgecolor='w', width=0.5, hatch='//')
+    plt.bar(result_df_secondary.columns, result_df_secondary.loc['Existing plantations'], color='#00C5CD', edgecolor='#BBFFFF', width=0.5, hatch='//') # facecolor turquoise3 00C5CD, edge paleturquoise4 BBFFFF
     plt.bar(result_df_secondary.columns, result_df_secondary.loc['CST_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations'], color='#408107', width=0.5)
     plt.bar(result_df_secondary.columns, result_df_secondary.loc['NewDemand_NOSUB_ALL'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL'], color='#76aa08', width=0.5)
-    plt.bar(result_df_secondary.columns, result_df_secondary.loc['New plantations'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL']+result_df_secondary.loc['NewDemand_NOSUB_ALL'], edgecolor='w', color='#48f2a8', width=0.5, hatch='//')
+    plt.bar(result_df_secondary.columns, result_df_secondary.loc['New plantations'], bottom=result_df_secondary.loc['Existing plantations']+result_df_secondary.loc['CST_NOSUB_ALL']+result_df_secondary.loc['NewDemand_NOSUB_ALL'], edgecolor='#BBFFFF', color='#96CDCD', width=0.5, hatch='//') # turquoise
     plt.bar(result_df_secondary.columns, result_df_secondary.loc['BAU_SUBON_ALL'], bottom=result_df_secondary.loc['Existing plantations'], facecolor="None", edgecolor='k', width=0.5)
-
+    # FIXME set the conversion area to converted forests
+    plt.bar(result_df_secondary.columns[1], result_df_secondary.loc['BAU_SUBON_ALL'][1], bottom=result_df_secondary.loc['Existing plantations'][1], facecolor="None", edgecolor='#96CDCD', width=0.5, hatch='//') # paleturquoise3
     # set up the axis and grid lines
     setup_axis(ax, 'Land use for wood products (2010-50) (Mha)')
     # set up the xtick labels
@@ -236,7 +246,7 @@ def barplot_carbon_IND_WFL(result_df, label_type='percentage'):
     setup_xticks(result_df.columns)
     # bar labels
     base = result_df.loc['BAU_NOSUB_ALL']
-    ax = setup_bar_label_carbon(ax, base, label_type, label_mode='original')
+    ax = setup_bar_label_carbon(ax, base, label_type)
     # set up the legend
     setup_legend_IND_WFL()
 
@@ -282,15 +292,18 @@ infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} 
 carbon_df = read_dataframe(infile, 'CO2 (Gt per yr) DR_{}'.format(discount_rate))
 land_df = read_dataframe(infile, 'Land (Mha) DR_{}'.format(discount_rate))
 
-# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='percentage', label_mode='original')
+# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='clean')
 # plt.show()
-# plt.savefig('{}/annual_carbon_cost_7scenarios_{}.png'.format(figdir, years_filename))
-# ax = barplot_land_BAU_CST(land_df, label_type='percentage')
+# plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
+
+# ax = barplot_land_BAU_CST(land_df, label_type='quantity')
 # plt.show()
-# plt.savefig('{}/land_requirement_7scenarios_{}.png'.format(figdir, years_filename))# barplot_all_scenarios_percentage(infile, years_filename)
+# plt.savefig('{}/land_requirement_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
+
 # ax = barplot_carbon_IND_WFL(carbon_df, label_type='percentage')
 # plt.show()
-# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_{}.svg'.format(figdir, years_filename))
-ax = barplot_land_IND_WFL(land_df, label_type='percentage')
-plt.show()
-# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_{}.svg'.format(figdir, years_filename))
+# plt.savefig('{}/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
+
+# ax = barplot_land_IND_WFL(land_df, label_type='percentage')
+# plt.show()
+# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years))
