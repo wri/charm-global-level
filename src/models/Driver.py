@@ -501,7 +501,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
 
 if __name__ == "__main__": # to avoid import run
 
-    ############# Local run: through pycharm (single run) ################
+    ##################### Local run (single run) ########################
     # run_model_all_scenarios('100', '6p', '20230125', root)
 
     ################# Terminal run: through command line #################
