@@ -13,7 +13,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.1.20"
+__version__ = "2022.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -35,11 +35,6 @@ class CarbonTracker:
         # Product share for one (stand-level) run has the length of years of growth.
         self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [np.zeros((self.Global.nyears)) for _ in range(3)]
 
-        # self.product_share_LLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_LLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-        # self.product_share_SLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_SLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-        # self.product_share_VSLP_plantation[:(self.Global.nyears - year_start_for_PDV)] = self.Global.product_share_VSLP[year_start_for_PDV:] * (1 - self.Global.slash_percentage_plantation[(year_start_for_PDV+1):])
-        # self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation = [self.staircase(product_share) for product_share in (self.product_share_LLP_plantation, self.product_share_SLP_plantation, self.product_share_VSLP_plantation)]
-
         # Very important assumption: assume the years of product share over the years of growth will be the same as 2050
         # The product share after years beyond 2050 is unknown, extend the year beyond 2050 using 2050's product share
         # 2022/02/08 Separate the nyears_product_demand from the years of growth
@@ -52,8 +47,6 @@ class CarbonTracker:
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
-        # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
@@ -234,7 +227,6 @@ class CarbonTracker:
                 ### Product pool
                 self.product_LLP_pool_plantation[cycle, year] = self.product_LLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_LLP * (year - year_harvest_thinning))
                 self.product_SLP_pool_plantation[cycle, year] = self.product_SLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_SLP * (year - year_harvest_thinning))
-                # Original version of VSLP product pool uses the exponential decay. Now we need to change it to immediate loss. Just remove the exponential decay
                 # Current version 06/02/21: the VSLP product pool does not mean the leftover of VSLP, it means the burnt emission (it should be considered emission pool, not the product pool)
                 # self.product_VSLP_pool_plantation[cycle, year] = self.product_VSLP_pool_plantation[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_VSLP * (year - year_harvest_thinning))
                 self.slash_pool_plantation[cycle, year] = self.slash_pool_plantation[cycle, year_harvest_thinning] * (1 - self.Global.slash_burn) * np.exp(- np.log(2) / self.Global.half_life_slash * (year - year_harvest_thinning))
@@ -292,23 +284,6 @@ class CarbonTracker:
         Counterfactural scenario
         """
         ### Steady growth no-harvest
-        ## Remove the old capping system. Old version: before 06/09 2021 Depending on rotation length
-        ## Version 2021/06/09
-        # The time series must have a length longer than 120 to store the full three growing stage, but it can have longer optional > 120 years.
-        # tstep_max = max(self.Global.rotation_length_harvest + self.Global.nyears, 120+1)
-        # counterfactual_biomass_start_zero = np.zeros((tstep_max))
-        # # For three period
-        # for tstep in range(1, 20):
-        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_young_secondary
-        # for tstep in range(20, 80):
-        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_middle_secondary
-        # for tstep in range(80, tstep_max):
-        #     counterfactual_biomass_start_zero[tstep] = counterfactual_biomass_start_zero[tstep-1] + self.Global.GR_mature_secondary
-        #
-        # counterfactual_biomass_start_zero = counterfactual_biomass_start_zero + self.calculate_belowground_biomass(counterfactual_biomass_start_zero)
-        # # Update: year 0 = 0, year 1 onwards are cropped from the counterfactual_biomass_start_zero
-        # self.counterfactual_biomass[1:] = counterfactual_biomass_start_zero[self.Global.rotation_length_harvest:self.Global.rotation_length_harvest+self.Global.nyears]
-
         # Version 2022/01/20
         # The counterfactual initial is starting from one rotation length
         for year in range(1, self.Global.arraylength):
@@ -341,15 +316,6 @@ class CarbonTracker:
         else:
             for year in range(0, self.Global.nyears):
                 discounted_year[year] = year
-
-        # for cycle in range(0, len(self.Global.year_index_harvest_plantation)):
-        #     st_cycle = cycle * self.Global.rotation_length_harvest + 1
-        #     ed_cycle = (cycle * self.Global.rotation_length_harvest + self.Global.rotation_length_harvest) * (
-        #                 cycle < len(self.Global.year_index_harvest_plantation) - 1) + self.Global.nyears * (
-        #                            cycle == len(self.Global.year_index_harvest_plantation) - 1)
-        #
-        #     for year in range(st_cycle, ed_cycle):
-        #         discounted_year[year] = year - st_cycle + 1
 
         self.annual_discounted_value = self.benefit_minus_counterfactual_diff / (1 + self.Global.discount_rate) ** discounted_year
 
