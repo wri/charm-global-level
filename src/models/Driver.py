@@ -3,9 +3,9 @@
 This is the main file for model execution.
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2020-2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
+__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
-__license__ = "Polyform Strict License 1.0.0"
+__license__ = "MIT"
 __version__ = "2023.1.1"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"

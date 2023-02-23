@@ -10,9 +10,9 @@ The growth rate depends on the stand age (0-20, 20-80, 80-120), not related to r
 3. Harvest with potential thinnings
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
+__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
-__license__ = "Polyform Strict License 1.0.0"
+__license__ = "MIT"
 __version__ = "2022.1.20"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
