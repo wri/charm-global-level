@@ -9,7 +9,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.1.20"
+__version__ = "2022.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -42,8 +42,6 @@ class CarbonTracker:
 
         ##### Set up carbon flow variables
         ### Biomass pool: Aboveground biomass leftover + belowground/roots
-        # 2021/06/10: turn off the maximum cap for counterfactual secondary growth
-        # self.aboveground_biomass_secondary_maximum = self.Global.C_harvest_density_secondary * 2.0 #1.50
         self.aboveground_biomass_secondary, self.belowground_biomass_decay_secondary, self.belowground_biomass_live_secondary = [np.zeros((self.Global.ncycles_regrowth, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
         # Original, VSLP pool exists.
@@ -162,7 +160,6 @@ class CarbonTracker:
                 ### Product pool
                 self.product_LLP_pool_secondary[cycle, year] = self.product_LLP_pool_secondary[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_LLP * (year - year_harvest_thinning))
                 self.product_SLP_pool_secondary[cycle, year] = self.product_SLP_pool_secondary[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_SLP * (year - year_harvest_thinning))
-                # Original version of VSLP product pool uses the exponential decay. Now we need to change it to immediate loss
                 # self.product_VSLP_pool_secondary[cycle, year] = self.product_VSLP_pool_secondary[cycle, year_harvest_thinning] * np.exp(- np.log(2) / self.Global.half_life_VSLP * (year - year_harvest_thinning))
                 # Current version 06/02/21: the VSLP product pool does not mean the leftover of VSLP, it means the burnt emission (it should be considered emission pool, not the product pool)
                 self.slash_pool_secondary[cycle, year] = self.slash_pool_secondary[cycle, year_harvest_thinning] * (1 - self.Global.slash_burn) * np.exp(- np.log(2) / self.Global.half_life_slash * (year - year_harvest_thinning))
