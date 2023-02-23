@@ -6,7 +6,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2023.1.1"
+__version__ = "2023.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -525,8 +525,8 @@ if __name__ == "__main__": # to avoid import run
         rootshoot_exps = ['RSR_25U', 'RSR_25D']
         demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
         trade_exps = ['Trade_50U', 'Trade_50D']
-        old_exps = ['Old_GRRL', 'Old_PGR', 'Old_SGR', 'Old_RL', 'Old_SR']
+        # old_exps = ['Old_GRRL', 'Old_PGR', 'Old_SGR', 'Old_RL', 'Old_SR']
 
-        for experiment in old_exps:
+        for experiment in growth_exps:
             run_model_main_scenario(args.years_growth, args.discount_rate, '20230125', 'run_NatSensitivity_20230125', experiment, args.path)
 
