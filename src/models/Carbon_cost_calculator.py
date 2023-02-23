@@ -10,7 +10,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.02.1"
+__version__ = "2022.11"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -122,9 +122,8 @@ class CarbonCalculator:
 
     def calculate_annual_carbon_stock(self):
 
-        # 2022/01/25 FIXME For stand carbon stock accumulation
         # 2022/02/02 wrong formula turn off
-        # FIXME add the accumulate carbon, the end of 40 years of growth 2050 tC/ha for 40-years
+        # FIXME add the accumulate carbon, the end of 40 years of growth 2050 tC/ha for 40 years
         self.total_C_stand_pool_cum_secondary_conversion = self.Land_area.area_harvested_new_secondary_conversion * Secondary_conversion_scenario.CarbonTracker(self.Global_harvest, year_start_for_PDV=0).totalC_stand_pool[-1]
         self.total_C_stand_pool_cum_secondary_regrowth = self.Land_area.area_harvested_new_secondary_regrowth * Secondary_regrowth_scenario.CarbonTracker(self.Global_harvest,year_start_for_PDV=0).totalC_stand_pool[-1]
         self.total_C_stand_pool_cum_secondary_mature_regrowth = self.Land_area.area_harvested_new_secondary_mature_regrowth * Secondary_mature_regrowth_scenario.CarbonTracker(self.Global_harvest, year_start_for_PDV=0).totalC_stand_pool[-1]
