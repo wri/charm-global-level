@@ -23,7 +23,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.02.1"
+__version__ = "2023.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -68,10 +68,6 @@ class SetupTime:
 
         self.arraylength = self.nyears + 1
 
-        # # both are the same number of years
-        # # self.nyears = years + 1   # Number of the total years, including the initial year 2010.
-        # self.nyears = self.nyears_growth_PDV + 1  # Number of the total years, including the initial year 2010.
-        # self.arraylength = self.nyears + 1  # Length of array (The number of columns of the array) = number of future years + initial condition
 
 
 class Parameters:
@@ -264,12 +260,6 @@ class Parameters:
             product_SLP[year] = product_SLP[0] + (product_SLP[40] - product_SLP[0]) / 40 * year
             product_VSLP[year] = product_VSLP[0] + (product_VSLP[40] - product_VSLP[0]) / 40 * year
 
-        # plt.plot(product_LLP, label='LLP')
-        # plt.plot(product_SLP, label='SLP')
-        # plt.plot(product_VSLP, label='VSLP')
-        # plt.legend()
-        # plt.show()
-        # exit()
 
         # Create an array of the TOTAL wood products for each year (sum of LLP,SLP,VSLP).
         self.product_total = product_LLP + product_SLP + product_VSLP
@@ -348,8 +338,6 @@ class Parameters:
         # Periods
         self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
         self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
-        # self.rotation_length_harvest = 10
-        # self.rotation_length_thinning = 5
 
     def setup_harvest_thinning_events(self):
         ### Combine harvest and thinning together in the time index
