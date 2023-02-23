@@ -22,7 +22,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2021.11.1"
+__version__ = "2022.11"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -59,15 +59,6 @@ class LandCalculator:
         self.output_ha_agriland = self.calculate_output_ha(Agricultural_land_tropical_scenario.CarbonTracker(self.Global, year_start_for_PDV=0),
             self.Global.slash_percentage_plantation)
 
-        # # plt.plot(self.output_ha_plantation.T, label='plantation')
-        # print(self.Global.slash_percentage_secondary_regrowth.shape)
-        # print(self.output_ha_secondary_regrowth.shape)
-        # plt.plot(self.output_ha_secondary_conversion.T, label='conversion')
-        # # plt.plot(self.output_ha_secondary_regrowth.T, label='regrowth')
-        # # plt.plot(self.output_ha_secondary_mature_regrowth.T, label='mature regrowth')
-        # plt.legend()
-        # plt.show()
-        # exit()
 
         ### For plantation scenario, calculate plantation area
         self.calculate_plantation_area()
@@ -83,14 +74,6 @@ class LandCalculator:
         # Add secondary regrowth and secondary mature regrowth together
         self.area_harvested_new_secondary_regrowth_combined = self.area_harvested_new_secondary_regrowth + self.area_harvested_new_secondary_mature_regrowth
 
-        # land area check
-        # print("secondary area conversion", sum(self.area_harvested_new_secondary_conversion))
-        # print("secondary area regrowth", sum(self.area_harvested_new_secondary_regrowth))
-        # plt.plot(self.area_harvested_new_secondary_regrowth, label='regrowth')
-        # plt.plot(self.area_harvested_new_secondary_conversion, label='conversion')
-        # print(np.sum(self.area_harvested_new_secondary_regrowth_combined) / 1000000)
-        #
-        # plt.legend();plt.show();exit()
 
     ####################################################### OUTPUT per ha ###########################################################
 
