@@ -50,7 +50,6 @@ class CarbonTracker:
         self.aboveground_biomass_plantation, self.belowground_biomass_decay_plantation, self.belowground_biomass_live_plantation = [
             np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(3)]
         ### Product pool: VSLP/SLP/LLP
-        # Original, VSLP pool exists.
         # Update: 06/03/21. Now VSLP pool no longer exists, because VSLP disappear when the harvest happens
         self.product_LLP_pool_plantation, self.product_SLP_pool_plantation = [np.zeros((self.Global.ncycles_harvest, self.Global.arraylength)) for _ in range(2)]
         # Update: 06/03/21. Adding LLP harvest and VSLP harvest for substitution benefit calculation.
