@@ -73,7 +73,7 @@ def setup_xticks(xticks_loc):
 
 def setup_legend_carbon(bar_mode):
     # title and legend
-    if bar_mode == 'clean':
+    if bar_mode == 'simple':
         legend_label = ['2010 supply level', 'Additional BAU demand', 'Substitution benefit']
         plt.legend(legend_label, ncol=3, bbox_to_anchor=([0.9, -0.18, 0, 0]), handlelength=0.7, frameon=False, fontsize=12)
         plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.25)
@@ -127,11 +127,13 @@ def setup_bar_label_carbon(ax, base, label_type):
         if number < 21:  # This is for the three bar groups: CST, additional BAU, SUB
             if label_type == 'quantity':
                 add_quantity_center(height)
+                if number < 7: # adding total numbers at the top
+                    add_quantity_top(base[number])
             elif label_type == 'percentage':
                 add_percentage_center(height)
             else:
                 add_quantity_center(height)
-        else:# This is for the last bar group: NET carbon impact
+        else:# This is for the last bar group: NET carbon impact, with the fourth group of bars
             add_quantity_top(height)
 
     return ax
@@ -176,14 +178,14 @@ def setup_bar_label_land(ax, base, area_total, label_type):
 
 
 ############################################## Plot Wrapper ##################################################
-def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', bar_mode='clean'):
+def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', bar_mode='simple'):
     "Plot the total carbon costs"
     fig, ax = plt.subplots(1, figsize=(9, 6))
     result_df[result_df.select_dtypes(include=['number']).columns] *= -1
     plt.bar(result_df.columns, result_df.loc['CST_NOSUB_ALL'], color='#DB4444', width=0.5)
     plt.bar(result_df.columns, result_df.loc['NewDemand_NOSUB_ALL'], bottom=result_df.loc['CST_NOSUB_ALL'], color='#E17979', width=0.5)
     plt.bar(result_df.columns, result_df.loc['BAU_SubEffect_ALL'], color='#337AE3', width=0.5)
-    if bar_mode == 'original':
+    if bar_mode == 'net':
         plt.bar(result_df.columns, result_df.loc['BAU_SUBON_ALL'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
 
     # set up the axis and grid lines
@@ -192,8 +194,7 @@ def barplot_carbon_BAU_CST_SUB(result_df, label_type='quantity', bar_mode='clean
     setup_xticks(result_df.columns)
     # set up the bar labels
     base = result_df.loc['BAU_NOSUB_ALL']
-    if bar_mode == 'original':
-        ax = setup_bar_label_carbon(ax, base, label_type)
+    ax = setup_bar_label_carbon(ax, base, label_type)
     # set up the legend
     setup_legend_carbon(bar_mode)
 
@@ -292,7 +293,7 @@ infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} 
 carbon_df = read_dataframe(infile, 'CO2 (Gt per yr) DR_{}'.format(discount_rate))
 land_df = read_dataframe(infile, 'Land (Mha) DR_{}'.format(discount_rate))
 
-# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='clean')
+# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='simple')
 # plt.show()
 # plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
 
@@ -306,4 +307,4 @@ land_df = read_dataframe(infile, 'Land (Mha) DR_{}'.format(discount_rate))
 
 # ax = barplot_land_IND_WFL(land_df, label_type='percentage')
 # plt.show()
-# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years))
+# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
