@@ -106,6 +106,7 @@ def setup_legend_IND_WFL():
 
 def setup_bar_label_carbon(ax, base, label_type):
     "Set up bar number labels for carbon"
+    # fixme update the hardcoded 21, 7
     # Options for numbers
     def add_quantity_center(height):
         ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height / 2,
@@ -123,18 +124,18 @@ def setup_bar_label_carbon(ax, base, label_type):
 
     for number, rec in enumerate(ax.patches):
         height = rec.get_height()
-        # fixme update the hardcoded 21
         if number < 21:  # This is for the three bar groups: CST, additional BAU, SUB
             if label_type == 'quantity':
                 add_quantity_center(height)
-                if number < 7: # adding total numbers at the top
-                    add_quantity_top(base[number])
             elif label_type == 'percentage':
                 add_percentage_center(height)
             else:
                 add_quantity_center(height)
         else:# This is for the last bar group: NET carbon impact, with the fourth group of bars
             add_quantity_top(height)
+        # adding total numbers at the top
+        if number < 7:
+            add_quantity_top(base[number])
 
     return ax
 
@@ -291,11 +292,11 @@ version = '20230125'
 discount_rate = '4p'
 infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
 carbon_df = read_dataframe(infile, 'CO2 (Gt per yr) DR_{}'.format(discount_rate))
-land_df = read_dataframe(infile, 'Land (Mha) DR_{}'.format(discount_rate))
+land_df = read_dataframe(infile, 'Land (Mha) DR_4p'.format(discount_rate))
 
-# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='simple')
+# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='net')
 # plt.show()
-# plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
+# plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}_DR{}.png'.format(figdir, years, discount_rate), dpi=300)
 
 # ax = barplot_land_BAU_CST(land_df, label_type='quantity')
 # plt.show()
