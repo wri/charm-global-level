@@ -24,10 +24,10 @@ import matplotlib.pyplot as plt
 
 ### Datafile
 root = '../../'
+version = '20230125'
+years = '40'
 discount_filename = '4p'
-years_filename = '40yr'
-# datafile = '{}/data/processed/CHARM regional - DR_{} - Nov 1.xlsx'.format(root, discount_filename)
-sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - {}.xlsx'.format(root, years_filename)
+sumfile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
 figdir = '{}/../Paper/Figure'.format(root)
 
 
@@ -317,8 +317,10 @@ def barplot_all_scenarios():
         return
 
     land_df = read_dataframe('Land construction (Mha) DR_{}'.format(discount_filename))
-    # stacked_barplot_attribute_demand_substitution_land_total(land_df, 'Land requirements 2010-2050', 'Mha')
-    stacked_barplot_attribute_demand_substitution_land_IND_quantity(land_df, 'Land requirements 2010-2050', 'Mha')
+    barplot_land_IND_WFL(land_df)
+    # plt.savefig('{}/land_requirement_IND_quantity_Churkina_6scenarios.png'.format(figdir))
+    # plt.savefig('{}/svg/land_requirement_IND_quantity_Churkina_6scenarios.svg'.format(figdir))
+    # plt.show()
 
     return
 
