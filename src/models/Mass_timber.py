@@ -20,7 +20,9 @@ __status__ = "Dev"
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-
+import matplotlib
+matplotlib.rcParams['font.sans-serif'] = "Arial"
+matplotlib.rcParams['font.family'] = "sans-serif"
 
 ### Datafile
 root = '../../'
@@ -119,7 +121,7 @@ def export_results_to_excel():
     result_df.loc['New plantations'] = 0
     result_df.loc['New plantations', 'S4 New tropical plantations'] = land_df.loc[
         'BAU_SUBON_IND', 'New plantations']
-    select_df = result_df.loc[['BAU_SUBON_ALL', 'CST_SUBON_ALL', 'BAU_SUBON_IND', 'CST_SUBON_IND', 'Existing plantations', 'New plantations']]
+    select_df = result_df.loc[['BAU_SUBON_ALL', 'CST_SUBON_ALL', 'BAU_SUBON_IND', 'CST_SUBON_IND', 'Existing plantations', 'New plantations']] # SUBON = NOSUB for land
     wood_percentages = ['10% construction using wood', '50% construction using wood', '90% construction using wood']
     for ipercentage, name in enumerate(wood_percentages):
         select_df.loc[name] = calculate_additional_secondary_area_for_construction(ipercentage)
@@ -157,80 +159,48 @@ def barplot_all_scenarios():
         df.loc['50-10 additional'] = df.loc['50% construction using wood'] - df.loc['10% construction using wood']
         return df
 
-    def stacked_barplot_attribute_demand_substitution_land_total(result_df, title, ylabel):
-        "Plot multiple scenarios for all"
-        # Land area requirement from additional demand is the secondary area added upon the CST.
-        fig, ax = plt.subplots(1, figsize=(14, 8))
-        plt.bar(result_df.columns, result_df.loc['Existing plantations'], color='#7cc096', edgecolor='w', width=0.5, hatch='//')
-        plt.bar(result_df.columns, result_df.loc['CST_SUBON_ALL'], bottom=result_df.loc['Existing plantations'], color='#408107', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['NewDemand_SUBON_ALL'], bottom=result_df.loc['Existing plantations']+result_df.loc['CST_SUBON_ALL'], color='#76aa08', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['New plantations'], bottom=result_df.loc['Existing plantations']+result_df.loc['CST_SUBON_ALL']+result_df.loc['NewDemand_SUBON_ALL'], edgecolor='w', color='#48f2a8', width=0.5, hatch='//')
-        plt.bar(result_df.columns, result_df.loc['10% construction using wood'], bottom=result_df.loc['Existing plantations']+result_df.loc['CST_SUBON_ALL']+result_df.loc['NewDemand_SUBON_ALL']+result_df.loc['New plantations'], color='#f9af41', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['50-10 additional'], bottom=result_df.loc['Existing plantations']+result_df.loc['CST_SUBON_ALL']+result_df.loc['NewDemand_SUBON_ALL']+result_df.loc['New plantations']+result_df.loc['10% construction using wood'], color='#b98653', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['Existing plantations']+result_df.loc['BAU_SUBON_ALL']+result_df.loc['New plantations'], facecolor="None", edgecolor='k', width=0.5)
-        plt.bar(result_df.columns, result_df.loc['50% construction using wood'], bottom=result_df.loc['Existing plantations']+result_df.loc['BAU_SUBON_ALL']+result_df.loc['New plantations'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
-
+    def setup_axis(ax, ylabel='Carbon costs (Gt CO$_2$e yr$^{-1}$)'):
         # x and y limits
         # plt.xlim(-0.6, 10.5)
         # plt.ylim(-1600, 2000)
-        plt.ylabel(ylabel, fontsize=14)
+        plt.ylabel(ylabel, fontsize=12)
         # remove spines
         ax.spines['right'].set_visible(False)
         ax.spines['left'].set_visible(False)
         ax.spines['top'].set_visible(False)
         # ax.spines['bottom'].set_visible(False)
+        plt.axhline(y=0, color='k', lw=1, linestyle='-', label='_nolegend_')  # skip legend
         # grid
         ax.set_axisbelow(True)
         ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
+
+        return ax
+
+    def setup_xticks(xticks_loc):
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion',
-                         'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity',
-                         'S6 Higher\nharvest efficiency']
-        plt.xticks(result_df.columns, labels=xticks_labels)
-        # # bar labels
-        area_total = result_df.loc['BAU_SUBON_ALL'] + result_df.loc['Existing plantations'] + result_df.loc['New plantations']+result_df.loc['50% construction using wood']
-        for number, rec in enumerate(ax.patches[:21]):
-            height = rec.get_height()
-            # This is to make sure the turn of the group of scenario
-            bar_scenario_group = number%7
-            ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.44,
-                    "{:.0f}%".format(height/area_total[bar_scenario_group]*100),
-                      ha='center', va='bottom')
-        # Add the fourth scenario's new tropical plantations percentage
-        ax.text(ax.patches[24].get_x() + ax.patches[24].get_width() / 2, ax.patches[24].get_y() + ax.patches[24].get_height()*0.44,
-                "{:.0f}%".format(ax.patches[24].get_height() / area_total[3] * 100),
-                ha='center', va='bottom')
-        # other two areas
-        for number, rec in enumerate(ax.patches[28:42]):
-            height = rec.get_height()
-            # This is to make sure the turn of the group of scenario
-            bar_scenario_group = number%7
-            ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height *0.44,
-                    "{:.0f}%".format(height/area_total[bar_scenario_group]*100),
-                      ha='center', va='bottom')
-        # Add the final absolute numbers at the top
-        for number, rec in enumerate(ax.patches[:7]):
-            # This is to make sure the turn of the group of scenario
-            ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + area_total[number],
-                    "{:.0f}".format(area_total[number]),
-                      ha='center', va='bottom', fontweight='bold')
+        xticks_labels = ['(1) Secondary\nforest harvest\nand regrowth', '(2) Secondary\nforest harvest\nand conversion',
+                         '(3) Secondary\nforest mixed\nharvest',
+                         '(4) New tropical\nplantations', '(5) Higher\nplantation\nproductivity',
+                         '(6) Higher\nharvest\nefficiency']
+        plt.xticks(xticks_loc, labels=xticks_labels)
 
-        # title and legend
-        legend_label = ['Existing plantations', '2010 supply level', 'Additional BAU demand', 'New tropical plantations', '10% construction using wood', 'Additional 40% construction using wood', 'BAU (0.5% construction using wood)', '50% construction using wood']
-        plt.legend(legend_label, ncol=2, bbox_to_anchor=([1, 1.15, 0, 0]), frameon=False, fontsize=14)
-
-        # sort both labels and handles by labels
-        plt.subplots_adjust(top=0.83)
-        plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.08)
-        plt.savefig('{}/land_requirement_Churkina_6scenarios.png'.format(figdir))
-        # plt.show()
         return
 
-    def stacked_barplot_attribute_demand_substitution_land_IND_quantity(result_df, title, ylabel):
+    def setup_legend_land():
+        legend_label = ['Existing plantations', '2010 supply level', 'Additional BAU demand',
+                        'New tropical plantations', '10% construction using wood',
+                        'Additional 40% construction using wood', 'Secondary forest area: BAU',
+                        'Secondary forest area: 50% construction using wood', 'Total secondary forest area converted to plantations']
+        plt.legend(legend_label, ncol=2, bbox_to_anchor=([0.92, -0.14, 0, 0]), handlelength=0.7, frameon=False,
+                   fontsize=12)
+        # sort both labels and handles by labels
+        plt.subplots_adjust(top=0.95, left=0.1, right=0.95, bottom=0.3)
+        return
+
+    def barplot_land_IND_WFL(result_df):
         "Plot five scenarios, ignore the last scenario, and only use INDustrial roundwood"
         # Land area requirement from additional demand is the secondary area added upon the CST.
-        fig, ax = plt.subplots(1, figsize=(14, 8))
+        fig, ax = plt.subplots(1, figsize=(9, 6))
         result_df = result_df.iloc[:,:6]
         plt.bar(result_df.columns, result_df.loc['Existing plantations'], color='#7cc096', edgecolor='w', width=0.5,
                 hatch='//')
@@ -253,25 +223,16 @@ def barplot_all_scenarios():
         plt.bar(result_df.columns, result_df.loc['50% construction using wood'],
                 bottom=result_df.loc['Existing plantations'] + result_df.loc['BAU_SUBON_IND'] + result_df.loc[
                     'New plantations'], ls='dashed', facecolor="None", edgecolor='k', width=0.5)
+        # FIXME set the conversion area to converted forests
+        plt.bar(result_df.columns[1], result_df.loc['BAU_SUBON_ALL'][1],
+                bottom=result_df.loc['Existing plantations'][1], facecolor="None", edgecolor='#96CDCD',
+                width=0.5, hatch='//')  # paleturquoise3
 
         # x and y limits
-        # plt.xlim(-0.6, 10.5)
-        plt.ylim(0, 1000)
-        plt.ylabel(ylabel, fontsize=14)
-        # remove spines
-        ax.spines['right'].set_visible(False)
-        ax.spines['left'].set_visible(False)
-        ax.spines['top'].set_visible(False)
-        # ax.spines['bottom'].set_visible(False)
-        # grid
-        ax.set_axisbelow(True)
-        ax.yaxis.grid(color='gray', linestyle='dashed', alpha=0.7)
+        setup_axis(ax, ylabel='Land use for wood products (2010-50) (Mha)')
         # x ticks
-        xticks_labels = ['S1 Secondary forest\nHarvest + Regrowth', 'S2 Secondary forest\nHarvest + Conversion',
-                         'S3 Secondary forest\nMixed harvest',
-                         'S4 New\nTropical plantations', 'S5 Higher\nPlantation productivity',
-                         'S6 Higher\nharvest efficiency']
-        plt.xticks(result_df.columns, labels=xticks_labels)
+        setup_xticks(result_df.columns)
+
         # # bar labels
         area_total = result_df.loc['BAU_SUBON_IND'] + result_df.loc['Existing plantations'] + result_df.loc[
             'New plantations'] + result_df.loc['50% construction using wood']
@@ -280,7 +241,7 @@ def barplot_all_scenarios():
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.44,
                     "{:.0f}".format(height),
-                    ha='center', va='bottom')
+                    ha='center', va='center')
         # Add the fourth scenario's new tropical plantations percentage
         ax.text(ax.patches[21].get_x() + ax.patches[21].get_width() / 2,
                 ax.patches[21].get_y() + ax.patches[21].get_height() * 0.2,
@@ -292,7 +253,7 @@ def barplot_all_scenarios():
             # This is to make sure the turn of the group of scenario
             ax.text(rec.get_x() + rec.get_width() / 2, rec.get_y() + height * 0.4,
                     "{:.0f}".format(height),
-                    ha='center', va='bottom')
+                    ha='center', va='center')
         # Add the final absolute numbers at the top
         for number, rec in enumerate(ax.patches[:6]):
             # This is to make sure the turn of the group of scenario
@@ -301,18 +262,7 @@ def barplot_all_scenarios():
                     ha='center', va='bottom', fontweight='bold')
 
         # title and legend
-        legend_label = ['Existing plantations', '2010 supply level', 'Additional BAU demand',
-                        'New tropical plantations', '10% construction using wood',
-                        'Additional 40% construction using wood', 'Secondary forest area: BAU',
-                        'Secondary forest area: 50% construction using wood']
-        plt.legend(legend_label, ncol=2, frameon=False, fontsize=14, bbox_to_anchor=([1, 1.2, 0, 0]))
-
-        # sort both labels and handles by labels
-        plt.subplots_adjust(top=0.78, bottom=0.07)
-        plt.title('{}\n'.format(title), loc='left', fontsize=16, y=1.2)
-        # plt.savefig('{}/land_requirement_IND_quantity_Churkina_6scenarios.png'.format(figdir))
-        plt.savefig('{}/svg/land_requirement_IND_quantity_Churkina_6scenarios.svg'.format(figdir))
-        # plt.show()
+        setup_legend_land()
 
         return
 
@@ -324,7 +274,7 @@ def barplot_all_scenarios():
 
     return
 
-barplot_all_scenarios()
+# barplot_all_scenarios()
 
 
 
