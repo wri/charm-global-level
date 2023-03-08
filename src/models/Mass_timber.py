@@ -12,7 +12,7 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2021.11.1"
+__version__ = "2023.03"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __status__ = "Dev"
@@ -147,9 +147,8 @@ def export_results_to_excel():
 # exit()
 
 
-# Plot the land area results
 def barplot_all_scenarios():
-
+    "Plot the land area results"
     def read_dataframe(tabname):
         # Read in the excel file using the first column as the index
         df = pd.read_excel(sumfile, sheet_name=tabname, index_col=0)
