@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-This is an updated Pasture with counterfactual scenario for the fifth scenario
+This is an updated Pasture with counterfactual scenario for the 4th scenario
 1. Aboveground biomass in year 0 is 0
-2. Counterfactual starting from 0
-3. First harvest occurs at the first year
+2. Counterfactual starting from 0 and grows back
+3. First harvest occurs at the end of first rotation, no harvest in year 0.
 """
 __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
