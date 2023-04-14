@@ -105,16 +105,16 @@ class Parameters:
     def setup_biophysical_parameters(self):
         """Growth rates, C density"""
         ### Plantation
-        self.GR_young_plantation = self.input_country['Young Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
-        self.GR_old_plantation = self.input_country['Middle Plantation GR (MgC/ha/year) (Harris)'].values[0] * self.plantation_growth_increase_ratio
+        self.GR_young_plantation = self.input_country['Young Plantation GR'].values[0] * self.plantation_growth_increase_ratio
+        self.GR_old_plantation = self.input_country['Middle Plantation GR'].values[0] * self.plantation_growth_increase_ratio
         # Add the converted plantation GR for secondary conversion scenario
-        self.GR_converted_plantation = self.input_country['Converted Plantation GR (MgC/ha/year)'].values[0]
-        self.physical_area_plantation = self.input_country['Plantation Area (ha) (FAO)'].values[0]
+        self.GR_converted_plantation = self.input_country['Converted Plantation GR'].values[0]
+        self.physical_area_plantation = self.input_country['Plantation Area'].values[0]
 
         ### Secondary forest
         # Growth rates GR1 and GR2 inputs
-        self.GR_young_secondary = self.input_country['Young Secondary GR (MgC/ha/year)'].values[0]     # Stand age 0-20
-        self.GR_middle_secondary = self.input_country['Middle Secondary GR (MgC/ha/year)'].values[0]   # Stand age 20-100
+        self.GR_young_secondary = self.input_country['Young Secondary GR'].values[0]     # Stand age 0-20
+        self.GR_middle_secondary = self.input_country['Middle Secondary GR'].values[0]   # Stand age 20-100
         # Read the ratio between mature secondary forest (stand age 80-120) growth rate and middle aged secondary forest (20-100)
         # 2022/1/20: turn off the ratio
         # self.GR_mature_secondary = self.GR_middle_secondary * self.input_country['Mature to middle secondary GR ratio'].values[0]
@@ -129,7 +129,7 @@ class Parameters:
         self.agb_max = C_first / age_first * (age_first + self.age_50perc)
 
         # C density
-        self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density (MgC/ha) (Harris)'].values[0]
+        self.C_harvest_density_secondary = self.input_country['Avg Secondary C Density'].values[0]
         # Calculate the equivalent age of the C density based on the Monod function
         age_eq_C_secondary = self.age_50perc * self.C_harvest_density_secondary / (self.agb_max - self.C_harvest_density_secondary)
         # The harvesting year is 20 years after the equivalent age, but at least to be 40 years (lower bound in case some C density too low)
@@ -175,10 +175,10 @@ class Parameters:
             self.product_share_slash_secondary_llp = self.input_country['% slash optimal for LLP'].values[0]
             self.product_share_slash_secondary_slp = self.input_country['% slash optimal for SLP'].values[0]
             self.product_share_slash_secondary_vslp = self.input_country['% slash optimal for VSLP'].values[0]
-        else: # natural
-            self.product_share_slash_secondary_llp = self.input_country['% slash natural for LLP'].values[0]
-            self.product_share_slash_secondary_slp = self.input_country['% slash natural for SLP'].values[0]
-            self.product_share_slash_secondary_vslp = self.input_country['% slash natural for VSLP'].values[0]
+        else: # secondary
+            self.product_share_slash_secondary_llp = self.input_country['% slash secondary for LLP'].values[0]
+            self.product_share_slash_secondary_slp = self.input_country['% slash secondary for SLP'].values[0]
+            self.product_share_slash_secondary_vslp = self.input_country['% slash secondary for VSLP'].values[0]
 
         self.product_share_VSLP_thinning = self.input_country['% in VSLP thinning'].values[0]
         self.product_share_SLP_thinning = self.input_country['% in SLP thinning'].values[0]
@@ -188,18 +188,18 @@ class Parameters:
         # Dry matter
         # This is to control whether the 2050 uses BAU demand level or 2010 level
         if self.future_demand_level == 'BAU':
-            product_year = '50'
+            product_year = '2050'
         else:  # CST constant demand, 2010 level remain
-            product_year = '10'
+            product_year = '2010'
         if self.vslp_input_control == 'WFL':
             SLP_2010 = 0
             SLP_2050 = 0
             LLP_2010 = 0
             LLP_2050 = 0
         else:
-            SLP_2010 = self.input_country['SLP 10'].values[0] * self.overbark_underbark_ratio
+            SLP_2010 = self.input_country['SLP 2010'].values[0] * self.overbark_underbark_ratio
             SLP_2050 = self.input_country['SLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
-            LLP_2010 = self.input_country['LLP 10'].values[0] * self.overbark_underbark_ratio
+            LLP_2010 = self.input_country['LLP 2010'].values[0] * self.overbark_underbark_ratio
             LLP_2050 = self.input_country['LLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         ### Fifth scenario: "vslp_future_demand" is to control whether the 2050 uses 50% less WFL VSLP input scenario.
@@ -208,41 +208,41 @@ class Parameters:
             # BAU and including WFL. The 2010 uses current level, but 2050 has 50% reduction of the WFL compared to the BAU.
             if (self.vslp_input_control == 'ALL') & (self.future_demand_level == 'BAU'):
                 # This is a default mode that only works with BAU and ALL wood: VSLP includes WFL. AND WFL is included as well
-                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = (self.input_country['VSLP-IND {}'.format(product_year)].values[0] + self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5) * self.overbark_underbark_ratio
             # CST and including WFL. The 2010 and 2050 uses current level.
             elif (self.vslp_input_control == 'ALL') & (self.future_demand_level == 'CST'):
                 # CST. The 2010 uses current level, and 2050 uses the same 2010 level. nothing changed. 50% less will not work.
-                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             # Excluding WFL. When VSLP does not include WFL, then the 50% reduction does not work on the WFL at all
             elif self.vslp_input_control == 'IND':
-                VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP-IND 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             elif (self.vslp_input_control == 'WFL') & (self.future_demand_level == 'BAU'):
-                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP-WFL 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5 * self.overbark_underbark_ratio
             elif (self.vslp_input_control == 'WFL') & (self.future_demand_level == 'CST'):
-                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP-WFL 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             else:
-                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = (self.input_country['VSLP-IND {}'.format(product_year)].values[0] + self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * 0.5) * self.overbark_underbark_ratio
 
         # self.vslp_future_demand == 'default':  # For 1-4th scenario, not active.
         else:
             ## This is to control whether the VSLP includes WFL or not
             if self.vslp_input_control == 'ALL':  # This is a default mode: VSLP includes WFL.
-                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             elif self.vslp_input_control == 'IND':  # This is industrial roundwood only for comparison purpose: VSLP excludes WFL.
-                VSLP_2010 = self.input_country['VSLP-IND 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP-IND 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-IND {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             elif self.vslp_input_control == 'WFL':  # This is wood fuel only for comparison purpose: VSLP excludes WFL.
-                VSLP_2010 = self.input_country['VSLP-WFL 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP-WFL 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP-WFL {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
             else:
-                VSLP_2010 = self.input_country['VSLP 10'].values[0] * self.overbark_underbark_ratio
+                VSLP_2010 = self.input_country['VSLP 2010'].values[0] * self.overbark_underbark_ratio
                 VSLP_2050 = self.input_country['VSLP {}'.format(product_year)].values[0] * self.overbark_underbark_ratio
 
         # Create array of VSLP,SLP,LLP ratios AND quantities for every year. This is important because the ratios will change each year.
@@ -278,7 +278,6 @@ class Parameters:
         self.llp_construct_ratio = self.input_country['% LLP for construction'].values[0]
         self.llp_displaced_CS_ratio = self.input_country['% LLP displacing concrete and steel'].values[0]
         CF_CO2_C = 44 / 12
-        CF_wood_C = 0.5
 
         # Production emission substitution factor for LLP
         # net tC fossil energy saved per t carbon in wood use
@@ -312,7 +311,7 @@ class Parameters:
             # Third, substitution value.
             # = (avoided carbon emission from concrete/steel - emission from wood)/(wood quantity in carbon)
             # This number is the quantity of fossil emissions(CO2) from production of a steel or concrete building minus the emissions from alterative construction of wood per kilogram of wood used
-            self.coef_construt_substitution = (saved_concrete_by_wooduse * EF_concrete + saved_steel_by_wooduse * EF_steel - 1 * EF_timber) / CF_CO2_C / CF_wood_C
+            self.coef_construt_substitution = (saved_concrete_by_wooduse * EF_concrete + saved_steel_by_wooduse * EF_steel - 1 * EF_timber) / CF_CO2_C / self.carbon_wood_ratio
 
     def setup_VSLP_substitution(self):
         if self.substitution_mode == 'NOSUB':
@@ -336,8 +335,8 @@ class Parameters:
     def setup_time_period(self):
         """Time settings"""
         # Periods
-        self.rotation_length_harvest = int(self.input_country['Rotation Period (years)'].values[0])    # Rotation length for harvest
-        self.rotation_length_thinning = int(self.input_country['Thinning period (years between thinning of managed secondary forest)'].values[0])
+        self.rotation_length_harvest = int(self.input_country['Rotation Period'].values[0])    # Rotation length for harvest
+        self.rotation_length_thinning = int(self.input_country['Thinning period'].values[0])
 
     def setup_harvest_thinning_events(self):
         ### Combine harvest and thinning together in the time index
