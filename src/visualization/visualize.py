@@ -3,13 +3,13 @@
 Plot the barplots for carbon costs and land use
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2020-2021 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
+__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "Polyform Strict License 1.0.0"
-__version__ = "2021.11.1"
+__date__ = "2023.3"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
-__status__ = "Dev"
+__version__ = "1.0"
 
 import matplotlib
 import pandas as pd
@@ -19,7 +19,7 @@ matplotlib.rcParams['font.family'] = "sans-serif"
 
 ### Directory
 root = '../..'
-figdir = '{}/../Paper/Figure'.format(root)
+figdir = f'{root}/../Paper/Figure'
 
 def read_dataframe(infile, tabname):
     # Read in the excel file using the first column as the index
@@ -290,22 +290,25 @@ def barplot_land_IND_WFL(result_df, label_type='percentage'):
 years = 40 #100
 version = '20230125'
 discount_rate = '4p'
-infile = '{}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{} - V{}.xlsx'.format(root, years, version)
-carbon_df = read_dataframe(infile, 'CO2 (Gt per yr) DR_{}'.format(discount_rate))
-land_df = read_dataframe(infile, 'Land (Mha) DR_4p'.format(discount_rate))
+infile = f'{root}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{years} - V{version}.xlsx'
+carbon_df = read_dataframe(infile, f'CO2 (Gt per yr) DR_{discount_rate}')
+land_df = read_dataframe(infile, 'Land (Mha) DR_4p')
 
-# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity', bar_mode='net')
+# ax = barplot_carbon_BAU_CST_SUB(carbon_df, label_type='quantity')
 # plt.show()
-# plt.savefig('{}/annual_carbon_cost_7scenarios_YR{}_DR{}.png'.format(figdir, years, discount_rate), dpi=300)
-
+# plt.savefig(f'{figdir}/annual_carbon_cost_7scenarios_YR{years}_DR{discount_rate}.png', dpi=300)
+# plt.savefig(f'{figdir}/svg/annual_carbon_cost_7scenarios_YR{years}_DR{discount_rate}.svg', dpi=300)
+#
 # ax = barplot_land_BAU_CST(land_df, label_type='quantity')
 # plt.show()
-# plt.savefig('{}/land_requirement_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
-
+# plt.savefig(f'{figdir}/land_requirement_7scenarios_YR{years}.png', dpi=300)
+# plt.savefig(f'{figdir}/svg/land_requirement_7scenarios_YR{years}.svg', dpi=300)
+#
 # ax = barplot_carbon_IND_WFL(carbon_df, label_type='percentage')
 # plt.show()
-# plt.savefig('{}/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
-
+# plt.savefig(f'{figdir}/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{years}.png', dpi=300)
+# plt.savefig(f'{figdir}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{years}.svg', dpi=300)
+#
 # ax = barplot_land_IND_WFL(land_df, label_type='percentage')
 # plt.show()
-# plt.savefig('{}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{}.png'.format(figdir, years), dpi=300)
+# plt.savefig(f'{figdir}/svg/carbon_cost_annual_percentage_IND_WFL_7scenarios_YR{years}.png', dpi=300)
