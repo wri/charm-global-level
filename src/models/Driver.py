@@ -16,10 +16,7 @@ import numpy as np
 import pandas as pd
 import Global_by_country, Plantation_counterfactual_secondary_plantation_age_scenario, Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario, Land_area_calculator, Carbon_cost_calculator
 
-### Datafile
-root = '../..'
 
-#############################################RUNNING MODEL###########################################
 def run_model_all_scenarios(years, discount_rate, version, path):
     """
     Created and Edited: 2022/01
@@ -500,6 +497,8 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
 
 
 if __name__ == "__main__": # to avoid import run
+
+    root = '../..'
 
     ##################### Local run (single run) ########################
     # Uncomment the line below to run the script without input arguments
