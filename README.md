@@ -8,7 +8,7 @@ Copyright (c) 2023 [World Resources Institute](https://www.wri.org/), The Carbon
 
 Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
 
-Contributors: WRI Food Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
+Contributors: WRI Food & Agriculture Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
 
 This software is made available under the [The MIT License (MIT)](https://mit-license.org/) and under no other licenses.
 A copy of the license is available in the `LICENSE` file at the root of this repository.
@@ -33,7 +33,10 @@ Download and prepare the scripts and data files in your computer. Create a new m
 - Land_area_calculator.py
 - Carbon_cost_calculator.py
 - Tropical_new_plantation_calculator.py
+
+./src/analysis/
 - results_summary_analysis.py
+- visualize.py
 
 ./data/processed/
 - CHARM regional - YR_40 - DR_4p - V20230125.xlsx
@@ -102,15 +105,16 @@ Download and prepare the scripts and data files in your computer. Create a new m
     ```python
     if __name__ == "__main__":
         ##################### Local run (single run) ########################
+        # Uncomment the line below to run the script without input arguments
         run_model_all_scenarios('40', '4p', '20230125', root)
     ```
     
     Make sure you have changed the location to the model folder, then type the following:
 
     ```powershell
-    C:\Users\USERNAME\Documents\charm-regional-level\src\models>python Driver.py
+    C:\Users\USERNAME\Documents\charm-global-level\src\models>python Driver.py
     ```
-    Running one full model run (including all seven scenarios) takes about 1-2 hours depending on the computational power.
+    Running one full model run (including all seven scenarios) takes about 0.5-1.5 hours depending on the computational power.
 
 5. Run the model - Serial Run option
 
