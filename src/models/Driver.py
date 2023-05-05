@@ -6,10 +6,10 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2023.2"
+__date__ = "2023.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
-__status__ = "Dev"
+__version__ = "1.0"
 
 
 import numpy as np
@@ -28,7 +28,7 @@ def run_model_all_scenarios(years, discount_rate, version, path):
     """
     ## Standard runs
     # Read input/output data excel file.
-    datafile = '{}/data/processed/CHARM regional - YR_{} - DR_{} - V{}.xlsx'.format(path, years, discount_rate, version)
+    datafile = f'{path}/data/processed/CHARM regional - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -347,7 +347,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
     This is only for the main regrowth scenario 1, to save running time for sensitivity analysis
     """
     # Read input/output data excel file.
-    datafile = '{}/data/processed/{}/CHARM regional - YR_{} - DR_{} - V{} - {}.xlsx'.format(path, sensdir, years, discount_rate, version, sensexp)
+    datafile = f'{path}/data/processed/{sensdir}/CHARM regional - YR_{years} - DR_{discount_rate} - V{version} - {sensexp}.xlsx'
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -502,6 +502,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
 if __name__ == "__main__": # to avoid import run
 
     ##################### Local run (single run) ########################
+    # Uncomment the line below to run the script without input arguments
     # run_model_all_scenarios('40', '4p', '20230125', root)
 
     ################# Terminal run: through command line #################
@@ -525,7 +526,6 @@ if __name__ == "__main__": # to avoid import run
         rootshoot_exps = ['RSR_25U', 'RSR_25D']
         demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
         trade_exps = ['Trade_50U', 'Trade_50D']
-        # old_exps = ['Old_GRRL', 'Old_PGR', 'Old_SGR', 'Old_RL', 'Old_SR']
 
         for experiment in growth_exps:
             run_model_main_scenario(args.years_growth, args.discount_rate, '20230125', 'run_NatSensitivity_20230125', experiment, args.path)
