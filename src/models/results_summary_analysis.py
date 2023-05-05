@@ -18,11 +18,12 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__date__ = "2023.2"
+__date__ = "2023.5"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __version__ = "1.0"
 
+import os
 import numpy as np
 import pandas as pd
 import Tropical_new_plantation_calculator
@@ -33,6 +34,10 @@ indir = f'{root}/data/processed'
 outdir = f'{root}/data/processed/derivative'
 sensoutdir = f'{root}/data/processed/derivative/sensitivity_analysis'
 
+if not os.path.exists(outdir):
+    os.makedirs(outdir)
+if not os.path.exists(sensoutdir):
+    os.makedirs(sensoutdir)
 
 ##############################################Read in model outputs##########################################
 # 2022/01 Lists
@@ -80,6 +85,27 @@ def extract_regrowth_scenario(results):
 
     return carbon_costs_annual, area_total
 
+def write_excel(filename, sheetname, dataframe):
+    "This function will overwrite the Outputs sheet"
+    if not os.path.isfile(filename):
+        # If the file doesn't exist, create a new workbook and sheet
+        writer = pd.ExcelWriter(filename, engine='openpyxl')
+        print("Creating new workbook...")
+    else:
+        # If the file exists, open it and remove the specified sheet (if it exists)
+        writer = pd.ExcelWriter(filename, engine='openpyxl', mode='a')
+        workbook = writer.book
+        try:
+            workbook.remove(workbook[sheetname])
+            print("Updating Outputs sheet...")
+        except:
+            print("Creating Outputs sheet...")
+            pass
+    # Add the dataframe to the workbook as a new sheet
+    dataframe.to_excel(writer, sheet_name=sheetname)
+    writer.save()
+
+
 ############################################## Results Summary ##########################################
 def summarize_results_all(datafile, outfile, discount_rate):
     ### Prepare the data arrays
@@ -118,18 +144,6 @@ def summarize_results_all(datafile, outfile, discount_rate):
 
                 row = row + 1
 
-    def write_excel(filename, sheetname, dataframe):
-        "This function will overwrite the Outputs sheet"
-        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
-            workbook = writer.book
-            try:
-                workbook.remove(workbook[sheetname])
-                print("Updating Outputs sheet...")
-            except:
-                print("Creating Outputs sheet...")
-            finally:
-                dataframe.to_excel(writer, sheet_name=sheetname)
-                writer.save()
 
     # Convert to pandas dataframe
     scenarios = ['S1 Secondary forest harvest + regrowth', 'S2 Secondary forest harvest + conversion', 'S3 Secondary forest mixed harvest',
@@ -229,22 +243,7 @@ def summarize_results_sensitivity(outfile, years, discount_rate):
         carbon_costs[row, 0] = -carbon_main.values[0]  # minus - cost
         required_area[row, 0] = land_main.values[0] + land_main.values[1]
 
-    def write_excel(filename, sheetname, dataframe):
-        "This function will overwrite the Outputs sheet"
-        with pd.ExcelWriter(filename, engine='openpyxl', mode='a') as writer:
-            workbook = writer.book
-            try:
-                workbook.remove(workbook[sheetname])
-                print("Updating Outputs sheet...")
-            except:
-                print("Creating Outputs sheet...")
-            finally:
-                dataframe.to_excel(writer, sheet_name=sheetname)
-                writer.save()
-
-
     # Convert to pandas dataframe
-
     carbon_df = pd.DataFrame(carbon_costs, index=['BAU_NOSUB_ALL', 'CST_NOSUB_ALL'], columns=names)
     write_excel(outfile, f'CO2 (Gt per yr) DR_{discount_rate}', carbon_df)
     area_df = pd.DataFrame(required_area, index=['BAU_NOSUB_ALL', 'CST_NOSUB_ALL'], columns=names)
