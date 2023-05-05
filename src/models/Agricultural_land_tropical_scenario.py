@@ -9,10 +9,10 @@ __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.2"
+__date__ = "2022.2"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
-__status__ = "Dev"
+__version__ = "1.0"
 
 import numpy as np
 import pandas as pd
