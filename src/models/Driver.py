@@ -74,7 +74,7 @@ def run_model_all_scenarios(years, discount_rate, version, path):
             input_country = input_data.loc[input_data['Country'] == country]
             input_country = input_country.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
             if input_country.isnull().values.any():
-                print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
+                print(f"Please fill in the abbreviation and all the missing parameters for country '{country}'!")
             else:
                 ################################### Execute model runs ##################################
                 nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=code, nyears_run_control='harvest')
@@ -322,7 +322,7 @@ def run_model_all_scenarios(years, discount_rate, version, path):
                     writer.save()
 
         # Prepare output tab name
-        output_tabname = '{}_{}_{}'.format(future_demand_level_input, substitution_mode_input, vslp_input_control_input)
+        output_tabname = f'{future_demand_level_input}_{substitution_mode_input}_{vslp_input_control_input}'
         write_excel(datafile, output_tabname, dataframe)
 
 
@@ -382,7 +382,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
             input_country = input_data.loc[input_data['Country'] == country]
             input_country = input_country.drop(['Emissions substitution factor for LLP (tC saved/tons C in LLP)'], axis=1)
             if input_country.isnull().values.any():
-                print("Please fill in the abbreviation and all the missing parameters for country '{}'!".format(country))
+                print(f"Please fill in the abbreviation and all the missing parameters for country '{country}'!")
             else:
                 ################################### Execute model runs ##################################
                 nyears_harvest_settings = Global_by_country.SetupTime(datafile, country_iso=code, nyears_run_control='harvest')
@@ -474,7 +474,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
                     writer.save()
 
         # Prepare output tab name
-        output_tabname = '{}_{}_{}'.format(future_demand_level_input, substitution_mode_input, vslp_input_control_input)
+        output_tabname = f'{future_demand_level_input}_{substitution_mode_input}_{vslp_input_control_input}'
         write_excel(datafile, output_tabname, dataframe)
 
 
