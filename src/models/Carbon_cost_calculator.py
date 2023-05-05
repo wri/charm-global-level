@@ -1,19 +1,20 @@
 #!/usr/bin/env python
 """
 Carbon cost calculator
-Separate the PDV module from the original Land_area_calculator
+Calculate discounted total carbon costs for the period
 
+Update
 2022/02/14:
-Major update: change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
+    - change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
 """
 __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.11"
+__date__ = "2022.11"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
-__status__ = "Dev"
+__version__ = "1.0"
 
 import numpy as np
 import pandas as pd

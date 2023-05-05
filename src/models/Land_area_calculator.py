@@ -9,27 +9,21 @@ Produce the area required from plantation, secondary forest by year
 # LLP initial and final
 # Area of plantation
 
-# Scenarios:
-1. secondary forest harvest and regrowth from the middle aged forest
-2. secondary forest harvest and conversion to plantation
-3. secondary forest harvest and regrowth from 50% of the middle aged forest and mature forest
-4. 125% of the plantation growth rates
-
+Update
 2021/07/01:
-Major update: change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
+    - change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
 """
 __author__ = "Liqing Peng"
 __copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
 __credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
 __license__ = "MIT"
-__version__ = "2022.11"
+__date__ = "2022.11"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
-__status__ = "Dev"
+__version__ = "1.0"
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 import Secondary_conversion_scenario, Secondary_regrowth_scenario, Secondary_mature_regrowth_scenario, Agricultural_land_tropical_scenario
 import Plantation_counterfactual_secondary_plantation_age_scenario
 
