@@ -79,8 +79,8 @@ Download and prepare the scripts and data files in your computer. Create a new m
     In the command prompt/Powershell (Windows) or Terminal (OSX/Linux), use **cd** to change directory to the model folder location. Use **pip** to install required python packages. This should take a few minutes to install the packages.
 
     ```powershell
-    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\charm-regional-level\
-    C:\Users\USERNAME\Documents\charm-regional-level>pip install -r requirements.txt
+    C:\Users\USERNAME>cd C:\Users\USERNAME\Documents\charm-global-level\
+    C:\Users\USERNAME\Documents\charm-global-level>pip install -r requirements.txt
     ```
 
 ## Usage
@@ -96,11 +96,11 @@ Download and prepare the scripts and data files in your computer. Create a new m
 3. Edit the input parameters and the filename
 
     Everytime you change the parameters for a model experiment, you should change the version name in the filename to avoid overwriting. We currently have the version name in the format of "YYYYMMDD", but you can create other names.
-    We change "YR_XX" in the filename based on the years of growth (e.g., YR_40 means 40 years), and "DR_XX" based on different discount rates (e.g., DR_4p means 4% discount rate). 
+    We change "YR_XX" in the filename based on the years of growth (e.g., YR_40 means 40 years of growth), and "DR_XX" based on different discount rates (e.g., DR_4p means 4% discount rate). 
 
 4. Run the model - Single Run option
     
-    If you want to run one single experiment (one data file), uncomment the line of "run_model_all_scnearios()" under the Local run (single run) section:
+    If you want to run one single experiment (one data file), uncomment the line of "run_model_all_scenarios()" under the Local run (single run) section:
 
     ```python
     if __name__ == "__main__":
