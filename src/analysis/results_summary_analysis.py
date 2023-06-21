@@ -23,9 +23,10 @@ __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
 __version__ = "1.0"
 
-import os
+import os, sys
 import numpy as np
 import pandas as pd
+sys.path.append('../models')
 import Tropical_new_plantation_calculator
 
 #############################################Path###########################################
@@ -282,7 +283,6 @@ for years in years_list:
 # rootshoot_exps = ['RSR_25U', 'RSR_25D']
 # demand_exps = ['Demand_OECD', 'Demand_IIASA', 'Demand_LINE']
 # trade_exps = ['Trade_50U', 'Trade_50D']
-# old_exps = ['Old_GRRL', 'Old_PGR', 'Old_SGR', 'Old_RL', 'Old_SR']
 # experiments = growth_exps + rootshoot_exps + demand_exps + trade_exps
 #
 # growth_names = ['GRs 25% Up', 'GRs 25% Down', 'GR1/GR2 25% Up', 'GR1/GR2 25% Down', 'GR1/GR2 50% Up']
@@ -298,8 +298,5 @@ for years in years_list:
 # years = 100
 # discount_rate = '4p'
 # outfile = f'{sensoutdir}/CHARM_global_carbon_land_summary - YR_{years} - V{version} - sensitivity Old.xlsx'
-
-# experiments = old_exps
-# names = ['Baseline'] + old_exps
 
 # summarize_results_sensitivity(outfile, years, discount_rate)
