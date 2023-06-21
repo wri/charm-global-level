@@ -10,8 +10,8 @@
 - [Download](#Download)
 - [Installation](#Installation)
 - [Usage](#Usage)
-- [Results analysis](#Results analysis)
-- [Copyright and License](#Copyright and License)
+- [Results analysis](#Results-analysis)
+- [Copyright and License](#Copyright-and-License)
 - [Citation](#Citation)
 
 ## Overview
@@ -108,7 +108,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 4. Run the model - Single Run option
     
-    The main script ./src/models/Driver.py can run CHARM under different discount rates and years of growth. If you want to run one single experiment (one data file), in the Driver.py, uncomment the line of "run_model_all_scenarios()" under the Local run (single run) section:
+    The main script **./src/models/Driver.py** can run CHARM under different discount rates and years of growth. If you want to run one single experiment (one data file), in the Driver.py, uncomment the line of "run_model_all_scenarios()" under the Local run (single run) section:
 
     ```python
     if __name__ == "__main__":
@@ -189,7 +189,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 ## Results analysis
 
-1. Perform global level summary
+1. Global level summary
 
    We use ./src/analysis/results_summary_analysis.py to calculate the total carbon costs and land use of global forestry for seven scenarios, as described in our paper and report. 
 
