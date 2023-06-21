@@ -1,23 +1,31 @@
-# CHARM
+# Carbon HARvest Model (CHARM)
 
-CHARM (Carbon Harvest Model) is a timber carbon tracker model developed by the World Resources Institute Food and Forest Program. It analyzes future changes in timber demand and their effects on land use and carbon stocks under various policy decision scenarios.
+[//]: # ([![DOI]&#40;https://zenodo.org/badge/DOI/10.1038/s41586-023-06187-1.svg&#41;]&#40;https://doi.org/10.1038/s41586-023-06187-1&#41;)
 
-## Copyright and License
+[//]: # ([![Github downloads]&#40;https://img.shields.io/github/downloads/wri/charm-global-level/total.svg&#41;]&#40;&#41;)
 
-Copyright (c) 2023 [World Resources Institute](https://www.wri.org/), The Carbon Harvest Model (CHARM) Project
+## Contents
 
-Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
+- [Overview](#Overview)
+- [Download](#Download)
+- [Installation](#Installation)
+- [Usage](#Usage)
+- [Results analysis](#Results analysis)
+- [Copyright and License](#Copyright and License)
+- [Citation](#Citation)
 
-Contributors: WRI Food & Agriculture Team - Liqing Peng, Jessica Zionts, Tim Searchinger, Richard Waite
+## Overview
 
-This software is made available under the [The MIT License (MIT)](https://mit-license.org/) and under no other licenses.
-A copy of the license is available in the `LICENSE` file at the root of this repository.
-World Resources Institute believes in the open and transparent exchange of information and strives to embody this value in our analyses and knowledge products.
+CHARM is a biophysical model that estimates the GHG consequences and land-use requirements to meet wood consumption levels. It is developed by the World Resources Institute Food and Forest Program. 
 
+CHARM starts with existing wood sources and demands as of the year 2010. The model uses estimates of three major wood product categories of consumption by country to estimate harvest levels.
+The model tracks the carbon consequences of harvesting these forests under allocation and regrowth management rules specified by the scenario.
+It separates wood supplied by existing plantation forests and that supplied by secondary forests, each based on their harvest efficiencies and growth rates. 
+Land requirements are the quantity of wood generated per hectare at the estimated efficiencies by country at present levels, assuming all hectares affected are clear-cut 
 
 ## Download
 
-Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-regional-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
+Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-global-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
 
 - requirements.txt
 - README.md
@@ -39,7 +47,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 - visualize.py
 
 ./data/processed/
-- CHARM regional - YR_40 - DR_4p - V20230125.xlsx
+- CHARM global - YR_40 - DR_4p - V20230125.xlsx
 
 
 ## Installation
@@ -87,11 +95,11 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 1. Check the data file
 
-    Make sure the current sample data file **CHARM regional - YR_40 - DR_4p - V20230125.xlsx** is under the ./data/processed/ directory. The current sample file consists of model outputs; running the model will overwrite the existing outputs.
+    Make sure the current sample data file **CHARM global - YR_40 - DR_4p - V20230125.xlsx** is under the ./data/processed/ directory. The current sample file consists of model outputs; running the model will overwrite the existing outputs.
 
 2. Review the input parameters
 
-    Open the **CHARM regional - YR_40 - DR_4p - V20230125.xlsx** and click on *Inputs* tab. We provide the country name and ISO in columns A and B and input associated parameters in the same row (columns C:AY).
+    Open the **CHARM global - YR_40 - DR_4p - V20230125.xlsx** and click on *Inputs* tab. We provide the country name and ISO in columns A and B and input associated parameters in the same row (columns C:AY).
 
 3. Edit the input parameters and the filename
 
@@ -100,7 +108,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 4. Run the model - Single Run option
     
-    If you want to run one single experiment (one data file), uncomment the line of "run_model_all_scenarios()" under the Local run (single run) section:
+    The main script ./src/models/Driver.py can run CHARM under different discount rates and years of growth. If you want to run one single experiment (one data file), in the Driver.py, uncomment the line of "run_model_all_scenarios()" under the Local run (single run) section:
 
     ```python
     if __name__ == "__main__":
@@ -129,9 +137,9 @@ Download and prepare the scripts and data files in your computer. Create a new m
     | --path        | The root path of running the model | user directory |
 
 
-6. Check the results
+6. Check the outputs
 
-    The results are updated in CHARM regional - YR_40 - DR_4p - V20230125.xlsx. The tab name is based on there experiment input parameters. 
+    The model outputs are updated in CHARM global - YR_40 - DR_4p - V20230125.xlsx. The tab name is based on there experiment input parameters. 
     
     1. future wood demand level
         - BAU (Bussiness-as-usual)
@@ -178,3 +186,29 @@ Download and prepare the scripts and data files in your computer. Create a new m
     | S5 62% SL: Secondary area (ha)   | Secondary forest area required for S5                                                                                     |
     | S6 WFL 50% less: total PDV (mega tC) | Total carbon consequences of S1, except with reduced wood fuel demand in 2050                                             |
     | S6 WFL 50% less: Secondary area (ha) | Secondary forest area required for S6                                                                                     |
+
+## Results analysis
+
+1. Perform global level summary
+
+   We use ./src/analysis/results_summary_analysis.py to calculate the total carbon costs and land use of global forestry for seven scenarios, as described in our paper and report. 
+
+2. Visualization
+
+   We use ./src/analysis/visualize.py to produce the figures in our paper and report. 
+
+
+## Copyright and License
+
+Copyright (c) 2023 [World Resources Institute](https://www.wri.org/), The Carbon Harvest Model (CHARM) Project
+
+Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
+
+Contributors: WRI Food & Agriculture Team - Liqing Peng, Tim Searchinger, Jessica Zionts, Richard Waite
+
+This software is made available under the [The MIT License (MIT)](https://mit-license.org/) and under no other licenses.
+A copy of the license is available in the `LICENSE` file at the root of this repository.
+World Resources Institute believes in the open and transparent exchange of information and strives to embody this value in our analyses and knowledge products.
+
+
+## Citation
