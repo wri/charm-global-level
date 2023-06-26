@@ -25,7 +25,7 @@ def run_model_all_scenarios(years, discount_rate, version, path):
     """
     ## Standard runs
     # Read input/output data excel file.
-    datafile = f'{path}/data/processed/CHARM regional - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
+    datafile = f'{path}/data/processed/CHARM global - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -344,7 +344,7 @@ def run_model_main_scenario(years, discount_rate, version, sensdir, sensexp, pat
     This is only for the main regrowth scenario 1, to save running time for sensitivity analysis
     """
     # Read input/output data excel file.
-    datafile = f'{path}/data/processed/{sensdir}/CHARM regional - YR_{years} - DR_{discount_rate} - V{version} - {sensexp}.xlsx'
+    datafile = f'{path}/data/processed/{sensdir}/CHARM global - YR_{years} - DR_{discount_rate} - V{version} - {sensexp}.xlsx'
 
     # Read in countries
     countries = pd.read_excel(datafile, sheet_name='Inputs', usecols="A:B", skiprows=1)
@@ -506,7 +506,7 @@ if __name__ == "__main__": # to avoid import run
 
     ################# Terminal run: through command line #################
     import argparse
-    parser = argparse.ArgumentParser(prog='Driver', description='Run the CHARM regional model', usage='%(prog)s [options]')
+    parser = argparse.ArgumentParser(prog='Driver', description='Run the CHARM global model', usage='%(prog)s [options]')
     parser.add_argument('--run-main', default=False, type=lambda x: (str(x).lower() in ['true', '1', 'yes']), help='Determine if it is a main model run')
     parser.add_argument('--run-sensitivity', default=False, type=lambda x: (str(x).lower() in ['true', '1', 'yes']), help='Determine if it is a sensitivity run')
     parser.add_argument('--years-growth', default=40, help='The number of years of growth')

@@ -191,7 +191,7 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 1. Global level summary
 
-   We use ./src/analysis/results_summary_analysis.py to calculate the total carbon costs and land use of global forestry for seven scenarios, as described in our paper and report. 
+   We use ./src/analysis/results_summary_analysis.py to calculate the total carbon costs and land use of global forestry for seven scenarios, as described in our paper and report. The summary file CHARM_global_carbon_land_summary - YR_XX - VYYYYMMDD.xlsx will be generated under the ./data/processed/derivative/ folder.
 
 2. Visualization
 

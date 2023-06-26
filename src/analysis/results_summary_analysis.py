@@ -194,7 +194,7 @@ def collect_secondary_carbon_costs_all_years():
     vslp_input_control = 'ALL'
     for years in [40, 100]:
         for discount_rate in ['0p', '2p', '4p', '6p']:
-            datafile = f'{root}/data/processed/CHARM regional - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
+            datafile = f'{root}/data/processed/CHARM global - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
             col_index.append(f'YR{years}-DR{discount_rate}')
             row_index = []
             row = 0
@@ -227,7 +227,7 @@ def summarize_results_sensitivity(outfile, years, discount_rate):
     vslp_input_control = 'ALL'
     substitution_mode = 'NOSUB'
     for col, exp in enumerate(experiments):
-        datafile = f'{indir}/{sensindir}/CHARM regional - YR_{years} - DR_{discount_rate} - V{version} - {exp}.xlsx'
+        datafile = f'{indir}/{sensindir}/CHARM global - YR_{years} - DR_{discount_rate} - V{version} - {exp}.xlsx'
         for row, future_demand_level in enumerate(['BAU', 'CST']):
             output_tabname = f'{future_demand_level}_{substitution_mode}_{vslp_input_control}'
             results = pd.read_excel(datafile, sheet_name=output_tabname)
@@ -236,7 +236,7 @@ def summarize_results_sensitivity(outfile, years, discount_rate):
             required_area[row, col+1] = land_main.values[0] + land_main.values[1]
 
     # Add the baseline scenario
-    datafile = f'{indir}/CHARM regional - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
+    datafile = f'{indir}/CHARM global - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
     for row, future_demand_level in enumerate(['BAU', 'CST']):
         output_tabname = f'{future_demand_level}_{substitution_mode}_{vslp_input_control}'
         results = pd.read_excel(datafile, sheet_name=output_tabname)
@@ -263,7 +263,7 @@ years_list = [40]
 # Step 1
 for years in years_list:
     for discount_rate in discount_rates:
-        datafile = f'{root}/data/processed/CHARM regional - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
+        datafile = f'{root}/data/processed/CHARM global - YR_{years} - DR_{discount_rate} - V{version}.xlsx'
         outfile = f'{root}/data/processed/derivative/CHARM_global_carbon_land_summary - YR_{years} - V{version}.xlsx'
         summarize_results_all(datafile, outfile, discount_rate)
 

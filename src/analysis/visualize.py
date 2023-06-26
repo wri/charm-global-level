@@ -19,7 +19,7 @@ matplotlib.rcParams['font.family'] = "sans-serif"
 
 ### Directory
 root = '../..'
-figdir = f'{root}/../Paper/Figure'
+figdir = f'{root}/reports/figures'
 
 def read_dataframe(infile, tabname):
     # Read in the excel file using the first column as the index
