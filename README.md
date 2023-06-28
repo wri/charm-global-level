@@ -172,20 +172,20 @@ Download and prepare the scripts and data files in your computer. Create a new m
     
     >Scenarios
 
-    | Variable                           | Description                                                                                                               |
-    |---------------------------------------------------------------------------------------------------------------------------|-----------|
-    | S1 regrowth: total PDV (mega tC)   | Total carbon consequences of the plantation harvested plus some secondary forest regrowth after a harvest                 |
-    | S1 regrowth: Secondary area (ha)   | Secondary forest area required for S1                                                                                     |
-    | S2 conversion: total PDV (mega tC) | Total carbon consequences of the plantation harvested plus some secondary forest converted to plantations                 |
-    | S2 conversion: Secondary area (ha) | Secondary forest area required for S2                                                                                     |
-    | S3 mixture: total PDV (mega tC)   | Total carbon consequences of the plantation harvested plus some young/old mixed secondary forest regrowth after a harvest |
-    | S3 mixture: Secondary area (ha)   | Secondary forest area required for S3                                                                                     |
-    | S4 125% GR: total PDV (mega tC) | Total carbon consequences of S1, except with higher productivity in existing plantations                                  |
-    | S4 125% GR: Secondary area (ha) | Secondary forest area required for S4                                                                                     |
-    | S5 62% SL: total PDV (mega tC)   | Total carbon consequences of S1, except with increased harvest efficiency of tropical forests                             |
-    | S5 62% SL: Secondary area (ha)   | Secondary forest area required for S5                                                                                     |
-    | S6 WFL 50% less: total PDV (mega tC) | Total carbon consequences of S1, except with reduced wood fuel demand in 2050                                             |
-    | S6 WFL 50% less: Secondary area (ha) | Secondary forest area required for S6                                                                                     |
+    | Variable                           | Description                                                                                                                        |
+    |------------------------------------------------------------------------------------------------------------------------------------|-----------|
+    | S1 regrowth: total PDV (mega tC)   | Total carbon consequences of the existing plantation harvested plus some secondary forest regrowth after a harvest                 |
+    | S1 regrowth: Secondary area (ha)   | Secondary forest area required for S1                                                                                              |
+    | S2 conversion: total PDV (mega tC) | Total carbon consequences of the existing plantation harvested plus some secondary forest converted to plantations                 |
+    | S2 conversion: Secondary area (ha) | Secondary forest area required for S2                                                                                              |
+    | S3 mixture: total PDV (mega tC)   | Total carbon consequences of the existing plantation harvested plus some young/old mixed secondary forest regrowth after a harvest |
+    | S3 mixture: Secondary area (ha)   | Secondary forest area required for S3                                                                                              |
+    | S4 125% GR: total PDV (mega tC) | Total carbon consequences of S1, except with higher productivity in existing plantations                                           |
+    | S4 125% GR: Secondary area (ha) | Secondary forest area required for S4                                                                                              |
+    | S5 62% SL: total PDV (mega tC)   | Total carbon consequences of S1, except with increased harvest efficiency of tropical forests                                      |
+    | S5 62% SL: Secondary area (ha)   | Secondary forest area required for S5                                                                                              |
+    | S6 WFL 50% less: total PDV (mega tC) | Total carbon consequences of S1, except with reduced wood fuel demand in 2050                                                      |
+    | S6 WFL 50% less: Secondary area (ha) | Secondary forest area required for S6                                                                                              |
 
 ## Results analysis
 
