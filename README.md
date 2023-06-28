@@ -1,4 +1,4 @@
-# Carbon HARvest Model (CHARM)
+# CHARM (Carbon Harvest Model)
 
 [//]: # ([![DOI]&#40;https://zenodo.org/badge/DOI/10.1038/s41586-023-06187-1.svg&#41;]&#40;https://doi.org/10.1038/s41586-023-06187-1&#41;)
 
