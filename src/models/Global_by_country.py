@@ -20,8 +20,7 @@ Global parameters required for carbon tracker for different scenarios
 - LLP parameters
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
-__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__copyright__ = "Copyright (C) 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite"
 __license__ = "MIT"
 __date__ = "2023.2"
 __maintainer__ = "Liqing Peng"

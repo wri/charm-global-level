@@ -1,6 +1,6 @@
 # CHARM (Carbon Harvest Model)
 
-[//]: # ([![DOI]&#40;https://zenodo.org/badge/DOI/10.1038/s41586-023-06187-1.svg&#41;]&#40;https://doi.org/10.1038/s41586-023-06187-1&#41;)
+[![DOI](https://zenodo.org/badge/DOI/10.1038/s41586-023-06187-1.svg)](https://doi.org/10.1038/s41586-023-06187-1)
 
 [//]: # ([![Github downloads]&#40;https://img.shields.io/github/downloads/wri/charm-global-level/total.svg&#41;]&#40;&#41;)
 
@@ -200,11 +200,9 @@ Download and prepare the scripts and data files in your computer. Create a new m
 
 ## Copyright and License
 
-Copyright (c) 2023 [World Resources Institute](https://www.wri.org/), The Carbon Harvest Model (CHARM) Project
+Copyright © 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite. All Rights Reserved.
 
 Author & Maintainer: Liqing Peng (liqing.peng@wri.org)
-
-Contributors: WRI Food & Agriculture Team - Liqing Peng, Tim Searchinger, Jessica Zionts, Richard Waite
 
 This software is made available under the [The MIT License (MIT)](https://mit-license.org/) and under no other licenses.
 A copy of the license is available in the `LICENSE` file at the root of this repository.
@@ -212,3 +210,4 @@ World Resources Institute believes in the open and transparent exchange of infor
 
 
 ## Citation
+Peng, L., Searchinger, T.D., Zionts, J. et al. The carbon costs of global wood harvests. Nature (2023). https://doi.org/10.1038/s41586-023-06187-1

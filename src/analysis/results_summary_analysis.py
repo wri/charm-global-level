@@ -15,8 +15,7 @@ This script is used to perform result analysis based on the model outputs for th
 7. reduce wood fuel demand by 50% of 2050 under baseline scenario
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
-__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__copyright__ = "Copyright (C) 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite"
 __license__ = "MIT"
 __date__ = "2023.5"
 __maintainer__ = "Liqing Peng"

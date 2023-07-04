@@ -14,8 +14,7 @@ Update
     - change the slash rate array into a 41x41 year-to-year array, so that one can read in the yearly slash rate.
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
-__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__copyright__ = "Copyright (C) 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite"
 __license__ = "MIT"
 __date__ = "2022.11"
 __maintainer__ = "Liqing Peng"

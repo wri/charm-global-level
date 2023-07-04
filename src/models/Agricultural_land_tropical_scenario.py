@@ -6,8 +6,7 @@ This is an updated Pasture with counterfactual scenario for the 4th scenario
 3. First harvest occurs at the end of first rotation, no harvest in year 0.
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
-__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
+__copyright__ = "Copyright (C) 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite"
 __license__ = "MIT"
 __date__ = "2022.2"
 __maintainer__ = "Liqing Peng"

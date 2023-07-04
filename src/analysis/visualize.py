@@ -3,9 +3,8 @@
 Plot the barplots for carbon costs and land use
 """
 __author__ = "Liqing Peng"
-__copyright__ = "Copyright (C) 2023 World Resources Institute, The Carbon Harvest Model (CHARM) Project"
-__credits__ = ["Liqing Peng", "Jessica Zionts", "Tim Searchinger", "Richard Waite"]
-__license__ = "Polyform Strict License 1.0.0"
+__copyright__ = "Copyright (C) 2023 Liqing Peng, Timothy D. Searchinger, Jessica Zionts, Richard Waite"
+__license__ = "MIT"
 __date__ = "2023.3"
 __maintainer__ = "Liqing Peng"
 __email__ = "liqing.peng@wri.org"
