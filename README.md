@@ -21,7 +21,7 @@ CHARM is a biophysical model that estimates the GHG consequences and land-use re
 CHARM starts with existing wood sources and demands as of the year 2010. The model uses estimates of three major wood product categories of consumption by country to estimate harvest levels.
 The model tracks the carbon consequences of harvesting these forests under allocation and regrowth management rules specified by the scenario.
 It separates wood supplied by existing plantation forests and that supplied by secondary forests, each based on their harvest efficiencies and growth rates. 
-Land requirements are the quantity of wood generated per hectare at the estimated efficiencies by country at present levels, assuming all hectares affected are clear-cut 
+Land requirements are the quantity of wood generated per hectare at the estimated efficiencies by country at present levels, assuming all hectares affected are clear-cut.
 
 ## Download
 
@@ -33,8 +33,8 @@ Download and prepare the scripts and data files in your computer. Create a new m
 ./src/models/
 - Driver.py
 - Global_by_country.py
-- Secondary_regrowth_scnenario.py
-- Secondary_mature_regrowth_scnenario.py
+- Secondary_regrowth_scenario.py
+- Secondary_mature_regrowth_scenario.py
 - Secondary_conversion_scenario.py
 - Plantation_counterfactual_secondary_plantation_age_scenario.py
 - Agricultural_land_tropical_scenario.py
