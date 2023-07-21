@@ -25,7 +25,7 @@ Land requirements are the quantity of wood generated per hectare at the estimate
 
 ## Download
 
-Download and prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-global-level**, but you can make your own one). Copy all the necessary files to this folder so that it includes:
+Download the release asset zip folder charm_input_output_v1.0.zip. Prepare the scripts and data files in your computer. Create a new model folder in your computer (default model folder name is **charm-global-level**, but you can make your own one). The input file is included in the release assets. Copy all the necessary files to this folder so that it includes:
 
 - requirements.txt
 - README.md
